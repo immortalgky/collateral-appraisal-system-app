@@ -421,7 +421,6 @@
       "manual": "手动选择",
       "manualDesc": "选择指定的被分配人",
       "roundrobin": "自动",
-      "roundrobinDesc": "系统根据工作负载自动分配",
       "quotation": "请求报价",
       "quotationDesc": "先向公司请求报价"
     },
@@ -439,10 +438,6 @@
     },
     "followupStaff": {
       "label": "内部跟进人员",
-      "manualLabel": "手动选择",
-      "manualDesc": "选择指定员工",
-      "roundrobinLabel": "轮询",
-      "roundrobinDesc": "系统自动分配",
       "roundrobinInfo": "系统将根据轮询分配自动指定跟进人员。",
       "placeholder": "点击搜索并选择内部跟进人员..."
     },

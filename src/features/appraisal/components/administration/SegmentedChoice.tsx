@@ -13,9 +13,6 @@ export interface SegmentedOption<V extends string = string> {
   disabledReason?: string;
 }
 
-/** The one grey hint line under a choice; also used where a read-only page shows the pick as text. */
-export const CHOICE_HINT_CLASS = 'mt-1.5 text-xs text-(--palette-gray-500)';
-
 interface SegmentedChoiceProps<V extends string> {
   options: SegmentedOption<V>[];
   /** '' = nothing selected. */
@@ -89,7 +86,9 @@ export default function SegmentedChoice<V extends string>({
               <Field key={option.value} className="flex">
                 <Radio
                   value={option.value}
-                  disabled={option.disabled}
+                  // A disabled pick that is still selected stays focusable, or Tab could not reach the
+                  // group at all (Headless UI gives every other option tabIndex -1).
+                  disabled={option.disabled && !checked}
                   className={clsx(
                     'flex flex-1 items-start gap-2.5 rounded-section border px-3 py-2.5 text-left transition-colors select-none',
                     off ? 'cursor-not-allowed' : 'cursor-pointer',
@@ -146,7 +145,7 @@ export default function SegmentedChoice<V extends string>({
             <Radio
               key={option.value}
               value={option.value}
-              disabled={option.disabled}
+              disabled={option.disabled && !checked}
               title={option.label}
               className={clsx(
                 // flex-auto: grow from the label's own width, so a long Thai label gets more room
@@ -171,7 +170,7 @@ export default function SegmentedChoice<V extends string>({
       </RadioGroup>
 
       {hint && (
-        <p id={descriptionId} className={CHOICE_HINT_CLASS}>
+        <p id={descriptionId} className="mt-1.5 text-xs text-(--palette-gray-500)">
           {hint}
         </p>
       )}

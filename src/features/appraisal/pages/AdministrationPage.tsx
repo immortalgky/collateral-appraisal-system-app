@@ -67,7 +67,6 @@ import AssignmentFeeCard from '../components/AssignmentFeeCard';
 import QuotationSection from '../components/QuotationSection';
 import QuotationEntryModal from '../components/QuotationEntryModal';
 import SegmentedChoice, {
-  CHOICE_HINT_CLASS,
   type SegmentedOption,
 } from '../components/administration/SegmentedChoice';
 import AssignmentSlip, {
@@ -1003,7 +1002,7 @@ const AdministrationPage = () => {
     },
   ];
   const keyerOptions = staffMethodOptions(t('administration.offlineExternal.keyerRoundrobinDesc'));
-  const keyerPick = keyerOptions.find(option => option.value === assignmentMethod);
+  const followupOptions = staffMethodOptions(t('administration.followupStaff.roundrobinInfo'));
 
   // The names the saved assignment carries, valid only while the form still holds that same pick.
   const storedAssigneeName =
@@ -1215,33 +1214,20 @@ const AdministrationPage = () => {
                   <FieldLabel id={`${labelsId}-keyer`} required={!isReadOnly} first>
                     {t('administration.offlineExternal.keyerMethodLabel')}
                   </FieldLabel>
-                  {isReadOnly ? (
-                    // Read-only: the chosen method as text (with the hint the control would show),
-                    // not a greyed-out toggle.
-                    // Nothing chosen (or a stale 'quotation') reads as no data, not as manual.
-                    <div className="mb-2">
-                      <p className="text-sm text-(--palette-ink)">
-                        {keyerPick?.label ?? t('administration.noData')}
-                      </p>
-                      {keyerPick?.description && (
-                        <p className={CHOICE_HINT_CLASS}>{keyerPick.description}</p>
-                      )}
-                    </div>
-                  ) : (
-                    <Controller
-                      name="assignmentMethod"
-                      control={control}
-                      render={({ field }) => (
-                        <SegmentedChoice
-                          ariaLabelledBy={`${labelsId}-keyer`}
-                          options={keyerOptions}
-                          value={field.value === 'quotation' ? '' : field.value}
-                          onChange={field.onChange}
-                          className={TWO_WAY_CHOICE_WIDTH}
-                        />
-                      )}
-                    />
-                  )}
+                  <Controller
+                    name="assignmentMethod"
+                    control={control}
+                    render={({ field }) => (
+                      <SegmentedChoice
+                        ariaLabelledBy={`${labelsId}-keyer`}
+                        options={keyerOptions}
+                        value={field.value === 'quotation' ? '' : field.value}
+                        onChange={field.onChange}
+                        disabled={isReadOnly}
+                        className={TWO_WAY_CHOICE_WIDTH}
+                      />
+                    )}
+                  />
 
                   {assignmentMethod === 'manual' && (
                     <div className="mt-2" ref={sectionRef('assignee')}>
@@ -1374,9 +1360,7 @@ const AdministrationPage = () => {
                         render={({ field }) => (
                           <SegmentedChoice
                             ariaLabelledBy={`${labelsId}-followup`}
-                            options={staffMethodOptions(
-                              t('administration.followupStaff.roundrobinInfo'),
-                            )}
+                            options={followupOptions}
                             value={field.value}
                             onChange={handleFollowupMethodChange}
                             disabled={isReadOnly || isLockedByQuotation}

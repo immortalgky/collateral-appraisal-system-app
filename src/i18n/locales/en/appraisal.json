@@ -421,7 +421,6 @@
       "manual": "Manual Selection",
       "manualDesc": "Select specific assignee",
       "roundrobin": "Automatic",
-      "roundrobinDesc": "System auto-assigns based on workload",
       "quotation": "Request Quotation",
       "quotationDesc": "Request quotation from company first"
     },
@@ -439,10 +438,6 @@
     },
     "followupStaff": {
       "label": "Internal Followup Staff",
-      "manualLabel": "Manual Select",
-      "manualDesc": "Select specific staff",
-      "roundrobinLabel": "Round Robin",
-      "roundrobinDesc": "System auto-assigns",
       "roundrobinInfo": "The system will automatically assign a followup staff member based on round-robin distribution.",
       "placeholder": "Click to search and select internal followup staff..."
     },
