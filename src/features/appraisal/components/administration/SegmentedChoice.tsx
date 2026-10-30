@@ -8,7 +8,7 @@ export interface SegmentedOption<V extends string = string> {
   description?: string;
   /** This option only: dimmed, not selectable. */
   disabled?: boolean;
-  /** Cards: shown in place of the description while the option is disabled. */
+  /** Cards: shown in place of the description while the option is disabled (not in a locked group). */
   disabledReason?: string;
 }
 
@@ -83,8 +83,12 @@ export default function SegmentedChoice<V extends string>({
           // Teal only where it can still be chosen; a locked selection is grey.
           const on = checked && !off;
           if (cards) {
+            // The reason says why it cannot be picked now; a locked (read-only) group picks nothing,
+            // so a saved pick keeps its description and does not read as paused.
             const text =
-              option.disabled && option.disabledReason ? option.disabledReason : option.description;
+              option.disabled && !disabled && option.disabledReason
+                ? option.disabledReason
+                : option.description;
             // Field: the card is named by its label and described by the line under it (without
             // it, Headless UI v2 hands a Label inside a Radio to the group).
             return (
@@ -119,7 +123,6 @@ export default function SegmentedChoice<V extends string>({
                   />
                   <span className="min-w-0">
                     <Label
-                      as="span"
                       className={clsx(
                         'block font-semibold',
                         on

@@ -1224,7 +1224,7 @@ const AdministrationPage = () => {
                         options={keyerOptions}
                         value={field.value === 'quotation' ? '' : field.value}
                         onChange={field.onChange}
-                        disabled={isReadOnly}
+                        disabled={isReadOnly || isLockedByQuotation}
                         className={TWO_WAY_CHOICE_WIDTH}
                       />
                     )}

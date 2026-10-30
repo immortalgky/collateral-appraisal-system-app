@@ -275,7 +275,9 @@ border-(--palette-line) bg-(--palette-surface-3)`, options `h-8 rounded-ctl-c te
   option is a white pill (`bg-(--palette-surface)`, small shadow; dark `--palette-line-soft`, no shadow) with
   `text-(--palette-accent-ink)` semibold. The selected option's explanation is one grey hint line under the
   track (`mt-1.5 text-xs text-(--palette-gray-500)`), never a callout box.
-- A locked group (read-only, quotation lock) keeps its selection visible in grey, not teal.
+- A locked group (read-only, quotation lock) keeps its selection visible in grey, not teal, shows no hint line
+  (the hints read as what will happen), and its cards show their description, not the disabled reason (a
+  saved pick must not read as paused). User decision 2026-10-30.
 
 **Badge** (`Badge.tsx`): `inline-flex items-center gap-1.5 font-medium rounded-full`, dot on by default, `badgeStyle="soft"`.
 Sizes: `sm` (default) `px-2 py-0.5 text-xs`; `md` `text-sm`; `lg` `text-base`; `xs` `text-[11px]`.
