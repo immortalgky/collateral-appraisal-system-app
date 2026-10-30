@@ -1122,9 +1122,8 @@ const AdministrationPage = () => {
           labelledBy={o.labelId}
         />
       ) : (
-        isReadOnly && (
-          <p className="text-sm text-(--palette-gray-500)">{t('administration.noData')}</p>
-        )
+        // Nothing stored and nothing to pick (read-only, or held by a quotation lock): say so.
+        <p className="text-sm text-(--palette-gray-500)">{t('administration.noData')}</p>
       )}
       <FieldError>{o.error}</FieldError>
     </>
@@ -1275,7 +1274,11 @@ const AdministrationPage = () => {
                   subtitle={t('administration.offlineExternal.subtitle')}
                 >
                   <div ref={sectionRef('company')}>
-                    <FieldLabel id={`${labelsId}-offline-company`} required={!isReadOnly} first>
+                    <FieldLabel
+                      id={`${labelsId}-offline-company`}
+                      required={canEditAssignment}
+                      first
+                    >
                       {t('administration.offlineExternal.companyLabel')}
                     </FieldLabel>
                     {renderCompanyPicker({

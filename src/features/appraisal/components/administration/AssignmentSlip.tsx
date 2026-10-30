@@ -294,7 +294,7 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
       }
     >
       {/* Two columns once the slip is wider than the sticky rail (the bottom sheet): type and
-          follow-up side by side, recipient and fee full width. */}
+          follow-up (off-system: the company) side by side, recipient and fee full width. */}
       <dl className="grid @lg:grid-cols-2">
         <Row
           label={t('administration.slip.segment.type')}

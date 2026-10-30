@@ -193,8 +193,6 @@ const ValuationEngagementChips = ({
   const companyName =
     selectedCompany?.companyName ?? (showsStoredCompanyId ? assignment.assigneeCompanyId : null);
   if (!companyName && !canEdit) return null;
-  // The keyer's locked company is still loading: nothing yet, rather than a chip with a blank name.
-  if (!companyName && isCompanyLocked) return null;
 
   // Outstanding = the keyer can still record it and has not. Completing the task is blocked on it
   // server-side (RequireOfflineEngagementRecorded), so the chip is styled as a call to action
@@ -202,6 +200,9 @@ const ValuationEngagementChips = ({
   // Both are required. On this path the save endpoint writes them together, so in practice they
   // go missing together — but the pill names whichever is actually absent rather than assuming.
   const isOutstanding = canEdit && (!hasCompany || !bookDate);
+  // The keyer's locked company is still loading and the date is in: nothing to ask for yet, and no
+  // chip with a blank name. (A missing date still shows its pill, which needs no company name.)
+  if (!companyName && !isOutstanding) return null;
 
   return (
     <>
@@ -262,7 +263,7 @@ const ValuationEngagementChips = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-(--palette-ink) mb-2">
+            <label className="mb-1 block text-xs font-medium text-(--palette-ink)">
               {t('offlineEngagement.companyLabel')}
               {!isCompanyLocked && <span className="ml-0.5 text-(--palette-req)">*</span>}
             </label>
@@ -300,7 +301,7 @@ const ValuationEngagementChips = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-(--palette-ink) mb-2">
+            <label className="mb-1 block text-xs font-medium text-(--palette-ink)">
               {t('offlineEngagement.bookDateLabel')}
               <span className="ml-0.5 text-(--palette-req)">*</span>
             </label>
