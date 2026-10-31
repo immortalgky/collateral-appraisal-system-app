@@ -51,6 +51,8 @@ const state = vi.hoisted(() => {
     // Bodies of the writes that reached the network (the create / draft hooks are the real ones).
     posted: [] as unknown[],
     drafted: [] as unknown[],
+    // The order the draft save and the email preview reached the network.
+    calls: [] as string[],
     // What the page reads from its context, and what the company picker hands back next.
     appraisalId: 'A1',
     taskOwner: true,
@@ -168,6 +170,13 @@ vi.mock('../components/AssignmentFeeCard', async importOriginal => {
       ) : null,
   };
 });
+// The email dialog's upload and picker are its own test's concern; the real module also loads the
+// app's i18n instance, which would turn every key below into its translation.
+vi.mock('@/features/request/api/documents', () => ({
+  createUploadSession: vi.fn(),
+  useUploadDocument: () => ({ mutateAsync: vi.fn() }),
+  useGetRequestDocuments: () => ({ data: undefined, isLoading: false }),
+}));
 // Registers a router blocker, which needs a data router.
 vi.mock('@/shared/components/UnsavedChangesDialog', () => ({ default: () => null }));
 
@@ -207,6 +216,17 @@ const draftAssignment = {
   draftSavedAt: '2026-10-20T10:00:00',
 };
 
+const emailPreview = {
+  companyTo: 'co@example.com',
+  extraTo: [],
+  cc: ['IntAdminAll'],
+  subject: 'ขอนำส่งงานประเมิน',
+  bodyHtml: '<p>เรียน {{company}}</p>',
+  attachments: [],
+  maxAttachments: 10,
+  maxAttachmentBytes: 10485760,
+};
+
 const feePreview = {
   systemBaseAmount: 3000,
   baseSource: {
@@ -242,6 +262,7 @@ beforeEach(() => {
   state.twoButtonFeeCard = false;
   state.posted = [];
   state.drafted = [];
+  state.calls = [];
   state.appraisalId = 'A1';
   state.taskOwner = true;
   state.workflowInstanceId = 'W1';
@@ -267,8 +288,13 @@ beforeEach(() => {
       return HttpResponse.json({});
     }),
     http.put('*/appraisals/:id/assignments/draft', async ({ request }) => {
+      state.calls.push('draft');
       state.drafted.push(await request.json());
       return new HttpResponse(null, { status: 204 });
+    }),
+    http.get('*/appraisals/:id/assignment-email/preview', () => {
+      state.calls.push('preview');
+      return HttpResponse.json(emailPreview);
     }),
   );
 });
@@ -756,6 +782,10 @@ const assignButtons = () => screen.getAllByRole('button', { name: 'administratio
 const slipAssign = () => assignButtons().find(button => !bar().contains(button))!;
 const barAssign = () => assignButtons().find(button => bar().contains(button))!;
 
+/** EXT / EXTO open the email dialog at Assign; these tests are about the assignment, not the email. */
+const assignWithoutEmail = async (user: ReturnType<typeof userEvent.setup>) =>
+  user.click(await screen.findByRole('button', { name: 'administration.email.assignWithoutSend' }));
+
 const externalManual = () =>
   setDefaults(null, {
     assignmentType: 'external',
@@ -959,6 +989,7 @@ describe('AdministrationPage: the slip actions', () => {
     expect(slipAssign()).toBeEnabled();
 
     await user.click(slipAssign());
+    await assignWithoutEmail(user);
 
     await waitFor(() => expect(state.posted).toHaveLength(1));
     expect(state.posted[0]).toMatchObject({
@@ -978,6 +1009,7 @@ describe('AdministrationPage: the slip actions', () => {
     await screen.findByText('administration.assignmentType.title');
 
     await user.click(barAssign());
+    await assignWithoutEmail(user);
 
     await waitFor(() => expect(state.posted).toHaveLength(1));
   });
@@ -1039,6 +1071,7 @@ describe('AdministrationPage: the slip actions', () => {
     await user.click(screen.getAllByTitle('administration.assignmentDetails.roundrobin')[0]);
     await waitFor(() => expect(slipAssign()).toBeEnabled());
     await user.click(slipAssign());
+    await assignWithoutEmail(user);
 
     await waitFor(() => expect(state.posted).toHaveLength(1));
     expect(state.posted[0]).toMatchObject({
@@ -1889,7 +1922,8 @@ describe('AdministrationPage: Assign refused by the server', () => {
         HttpResponse.json({ status: 400, ...body }, { status: 400 }),
       ),
     );
-    externalAuto();
+    // Internal: no email dialog, so the refusal is a toast (the dialog shows it for EXT / EXTO).
+    setDefaults(null, { assignmentType: 'internal', assignmentMethod: 'roundrobin' });
     const { user } = render(<AdministrationPage />);
     await screen.findByText('administration.assignmentType.title');
     await waitFor(() => expect(slipAssign()).toBeEnabled());
@@ -1916,6 +1950,105 @@ describe('AdministrationPage: Assign refused by the server', () => {
     await waitFor(() => expect(error).toHaveBeenCalledWith('Other detail'));
     expect(error).not.toHaveBeenCalledWith('administration.slip.reason.feeMissing');
     error.mockRestore();
+  });
+});
+
+describe('AdministrationPage: the email to the company at Assign', () => {
+  const openEmail = async () => {
+    externalAuto();
+    const view = render(<AdministrationPage />);
+    await screen.findByText('administration.assignmentType.title');
+    await waitFor(() => expect(slipAssign()).toBeEnabled());
+    await view.user.click(slipAssign());
+    await screen.findByRole('button', { name: 'administration.email.assignAndSend' });
+    return view;
+  };
+
+  it('saves the assignment draft before it reads the email, and assigns nothing yet', async () => {
+    await openEmail();
+
+    expect(state.calls).toEqual(['draft', 'preview']);
+    expect(state.drafted[0]).toMatchObject({ assignmentType: 'External' });
+    expect(state.posted).toEqual([]);
+  });
+
+  it('assigns with the email when sent', async () => {
+    const { user } = await openEmail();
+
+    await user.click(screen.getByRole('button', { name: 'administration.email.assignAndSend' }));
+
+    await waitFor(() => expect(state.posted).toHaveLength(1));
+    expect(state.posted[0]).toMatchObject({
+      decisionTaken: 'EXT',
+      sendEmail: true,
+      email: {
+        extraTo: [],
+        cc: ['IntAdminAll'],
+        subject: 'ขอนำส่งงานประเมิน',
+        bodyHtml: '<p>เรียน {{company}}</p>',
+        attachments: [],
+      },
+    });
+  });
+
+  it('assigns without the email', async () => {
+    const { user } = await openEmail();
+
+    await assignWithoutEmail(user);
+
+    await waitFor(() => expect(state.posted).toHaveLength(1));
+    expect(state.posted[0]).toMatchObject({ decisionTaken: 'EXT', sendEmail: false });
+    expect(state.posted[0]).not.toHaveProperty('email');
+  });
+
+  it('keeps the dialog open with the reason when the server refuses the email', async () => {
+    const error = vi.spyOn(toast, 'error').mockImplementation(() => '');
+    server.use(
+      http.post('*/appraisals/:id/assignments', () =>
+        HttpResponse.json({ status: 400, detail: 'Attachments exceed 10 MB.' }, { status: 400 }),
+      ),
+    );
+    const { user } = await openEmail();
+
+    await user.click(screen.getByRole('button', { name: 'administration.email.assignAndSend' }));
+
+    expect(await screen.findByText('Attachments exceed 10 MB.')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'administration.email.assignAndSend' }),
+    ).toBeEnabled();
+    error.mockRestore();
+  });
+
+  it('opens for an off-system external assignment too, with its company saved first', async () => {
+    withBase();
+    setDefaults(null, { assignmentType: 'external-offline', assignmentMethod: 'roundrobin' });
+    const { user } = render(<AdministrationPage />);
+    await user.click(await screen.findByText('pick-other-company'));
+    await waitFor(() => expect(slipAssign()).toBeEnabled());
+
+    await user.click(slipAssign());
+    await assignWithoutEmail(user);
+
+    await waitFor(() => expect(state.posted).toHaveLength(1));
+    expect(state.drafted[0]).toMatchObject({
+      assignmentMethod: 'Offline',
+      assigneeCompanyId: 'c-new',
+    });
+    expect(state.posted[0]).toMatchObject({ decisionTaken: 'EXTO', sendEmail: false });
+  });
+
+  it('assigns an internal appraisal straight away, with no email', async () => {
+    setDefaults(null, { assignmentType: 'internal', assignmentMethod: 'roundrobin' });
+    const { user } = render(<AdministrationPage />);
+    await screen.findByText('administration.assignmentType.title');
+    await waitFor(() => expect(slipAssign()).toBeEnabled());
+
+    await user.click(slipAssign());
+
+    await waitFor(() => expect(state.posted).toHaveLength(1));
+    expect(state.posted[0]).toMatchObject({ decisionTaken: 'INT' });
+    expect(state.posted[0]).not.toHaveProperty('sendEmail');
+    expect(state.calls).toEqual([]);
   });
 });
 
@@ -2154,6 +2287,7 @@ describe('AdministrationPage: the off-system (EXTO) company', () => {
     await user.click(await screen.findByText('pick-other-company'));
     await waitFor(() => expect(slipAssign()).toBeEnabled());
     await user.click(slipAssign());
+    await assignWithoutEmail(user);
 
     await waitFor(() => expect(state.posted).toHaveLength(1));
     expect(state.posted[0]).toMatchObject({

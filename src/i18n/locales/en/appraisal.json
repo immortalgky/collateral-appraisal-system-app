@@ -586,6 +586,50 @@
       "bar": {
         "open": "View assignment slip"
       }
+    },
+    "email": {
+      "title": "Email to the company",
+      "loadFailed": "Could not load the email template",
+      "to": "To",
+      "subject": "Subject",
+      "addTo": "Add a recipient",
+      "addCc": "Add a Cc address",
+      "addAddress": "+ Add email",
+      "companyLocked": "The company's address, chosen on the assignment; it cannot be changed here",
+      "companyPending": "The address of the company the system picks",
+      "toHint": "The company comes from the assignment and cannot be changed here · you can add other addresses",
+      "ccHint": "● = recipients by role, resolved to addresses at send · people without an email or inactive are skipped",
+      "restoreTemplate": "Restore template",
+      "placeholderHint": "Dashed yellow = filled in at send (company name, responsible person)",
+      "attachments": "Attachments",
+      "overLimit": "The attachments are over the limit (count or total size) — remove files before sending",
+      "pickDocuments": "Choose from case documents",
+      "uploadButton": "Upload from computer",
+      "upload": "Upload an attachment from your computer",
+      "uploadFailed": "Upload failed",
+      "pickTitle": "Choose from case documents",
+      "noDocuments": "No documents",
+      "attach": "Attach",
+      "footerHint": "The email is sent with the assignment",
+      "assignWithoutSend": "Assign without sending",
+      "assignAndSend": "Assign and send",
+      "source": {
+        "request": "Request document",
+        "appraisal": "Appraisal document",
+        "upload": "Uploaded"
+      },
+      "cc": {
+        "IntAdminAll": "All IntAdmins",
+        "FollowupStaff": "Follow-up officer",
+        "FollowupSupervisor": "Follow-up officer's supervisor",
+        "Keyer": "Book keyer",
+        "KeyerSupervisor": "Book keyer's supervisor"
+      },
+      "ccLabel": "Cc",
+      "removeItem": "Remove {{name}}",
+      "sizeUnknown": "Size unknown",
+      "sizeFailed": "Some attachments' sizes could not be read — remove them or reopen this dialog before sending",
+      "documentsFailed": "Could not load the documents"
     }
   },
   "feePreview": {

@@ -13,6 +13,7 @@ import { useGetRequestById } from '@/features/request/api';
 import { Controller, type FieldErrors, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
+import { errorText } from '@/shared/utils/errorUtils';
 
 import Icon from '@/shared/components/Icon';
 import Textarea from '@/shared/components/inputs/Textarea';
@@ -58,6 +59,8 @@ import {
 } from '../utils/assignmentDefaults';
 
 import SearchStaffModal from '../components/SearchStaffModal';
+import AssignmentEmailDialog from '../components/administration/AssignmentEmailDialog';
+import type { AssignmentEmailInput } from '../api/assignmentEmail';
 import SearchCompanyModal from '../components/SearchCompanyModal';
 import StaffDisplay, { StoredCode } from '../components/StaffDisplay';
 import CompanyDisplay from '../components/CompanyDisplay';
@@ -186,7 +189,15 @@ const AdministrationPage = () => {
   const localReadOnly = !!currentAssignment && !isPendingRow;
   const isReadOnly = pageReadOnly || localReadOnly;
   const { mutate: createAssignment, isPending: isCreating } = useCreateAssignment();
-  const { mutate: saveAssignmentDraft, isPending: isSavingDraft } = useSaveAssignmentDraft();
+  const {
+    mutate: saveAssignmentDraft,
+    mutateAsync: saveAssignmentDraftAsync,
+    isPending: isSavingDraft,
+  } = useSaveAssignmentDraft();
+  // EXT / EXTO: the assign body waiting for the email dialog, and why the last assign was refused.
+  const [emailFor, setEmailFor] = useState<Parameters<typeof createAssignment>[0] | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [preparingEmail, setPreparingEmail] = useState(false);
 
   const navigate = useNavigate();
   const workflowInstanceId = useWorkflowInstanceId();
@@ -696,7 +707,7 @@ const AdministrationPage = () => {
       : feeStatusOf(feePreview, !!quotationWinner);
 
   // Handle form submission
-  const onSubmit = (data: AssignmentFormType) => {
+  const onSubmit = async (data: AssignmentFormType) => {
     if (!appraisalId) return;
 
     if (!workflowInstanceId) {
@@ -775,28 +786,63 @@ const AdministrationPage = () => {
             : null
         : null;
 
+    const body = {
+      appraisalId: appraisalId ?? '',
+      assignmentType: isExternal ? 'External' : 'Internal',
+      // The offline path is External for the backend value object, but the person chosen here is
+      // the INTERNAL appraiser who will key the book in — so the staff id travels exactly as it
+      // does for Internal, and the handler pins them onto int-offline-book-keyin.
+      assigneeUserId:
+        isExternal && !isOfflineExternal ? null : isManualMethod ? data.staffId : null,
+      assigneeCompanyId: resolvedAssigneeCompanyId,
+      assigneeCompanyName: resolvedAssigneeCompanyName,
+      assignmentMethod: data.assignmentMethod,
+      internalAppraiserId: isExternal && !isOfflineExternal ? data.followupStaffId : null,
+      internalFollowupAssignmentMethod:
+        isExternal && !isOfflineExternal ? data.followupStaffMethod : null,
+      assignedBy: currentUser?.username ?? null,
+      workflowInstanceId,
+      decisionTaken,
+      remark: data.remarks,
+    };
+
+    if (decisionTaken === 'INT') {
+      assign(body);
+      return;
+    }
+    // The email is filled from the assignment row as saved (company, EXTO, follow-up, remark), so
+    // the decision on screen is saved as the draft first.
+    setPreparingEmail(true);
+    try {
+      // With the company this assign will set: the email's To is read from the saved row, so a
+      // quotation winner must be on it too (the Save Draft button keeps a manual pick only).
+      await saveAssignmentDraftAsync({
+        appraisalId,
+        ...draftBodyOf(data),
+        assigneeCompanyId: body.assigneeCompanyId,
+      });
+    } catch (error) {
+      toast.error(errorText(error, t('administration.toasts.draftSaveFailed')));
+      return;
+    } finally {
+      setPreparingEmail(false);
+    }
+    // The form stays dirty on purpose: a clean form would be re-seeded from the row just saved
+    // (with the quotation winner as a manual company) and would treat edits made meanwhile as saved.
+    setEmailError(null);
+    setEmailFor(body);
+  };
+
+  /** `email` undefined = INT (the field is not sent); null = EXT / EXTO assigned without the email. */
+  const assign = (
+    body: Parameters<typeof createAssignment>[0],
+    email?: AssignmentEmailInput | null,
+  ) => {
     createAssignment(
-      {
-        appraisalId: appraisalId ?? '',
-        assignmentType: isExternal ? 'External' : 'Internal',
-        // The offline path is External for the backend value object, but the person chosen here is
-        // the INTERNAL appraiser who will key the book in — so the staff id travels exactly as it
-        // does for Internal, and the handler pins them onto int-offline-book-keyin.
-        assigneeUserId:
-          isExternal && !isOfflineExternal ? null : isManualMethod ? data.staffId : null,
-        assigneeCompanyId: resolvedAssigneeCompanyId,
-        assigneeCompanyName: resolvedAssigneeCompanyName,
-        assignmentMethod: data.assignmentMethod,
-        internalAppraiserId: isExternal && !isOfflineExternal ? data.followupStaffId : null,
-        internalFollowupAssignmentMethod:
-          isExternal && !isOfflineExternal ? data.followupStaffMethod : null,
-        assignedBy: currentUser?.username ?? null,
-        workflowInstanceId,
-        decisionTaken,
-        remark: data.remarks,
-      },
+      email === undefined ? body : { ...body, sendEmail: !!email, ...(email && { email }) },
       {
         onSuccess: () => {
+          setEmailFor(null);
           toast.success(t('administration.toasts.assignmentCreated'));
           // The form is still dirty after assigning; skip the unsaved-changes guard for this redirect.
           skipWarning();
@@ -804,11 +850,13 @@ const AdministrationPage = () => {
         },
         onError: (error: any) => {
           // The server's detail is English: this code has its own translated message.
-          toast.error(
+          const message =
             error.apiError?.errorCode === 'FeeBaseMissing'
               ? t('administration.slip.reason.feeMissing')
-              : error.apiError?.detail || t('administration.toasts.assignmentFailed'),
-          );
+              : error.apiError?.detail || t('administration.toasts.assignmentFailed');
+          // Nothing was assigned: the email dialog (EXT / EXTO) stays open and says why itself.
+          if (email === undefined) toast.error(message);
+          setEmailError(message);
         },
       },
     );
@@ -820,11 +868,8 @@ const AdministrationPage = () => {
     navigate(-1);
   };
 
-  // Save the in-progress decision (selections + remark) as a draft without assigning.
-  // Deliberately skips the Assign validation guards so incomplete work can be saved.
-  const handleSaveDraft = () => {
-    if (!appraisalId) return;
-    const data = getValues();
+  // The draft payload: what is on screen, as the Pending assignment row stores it.
+  const draftBodyOf = (data: AssignmentFormType) => {
     // 'external-offline' is External too. Collapsing it to Internal here silently discarded the
     // admin's choice: the draft round-tripped as Internal, the radio re-seeded to "Internal Staff"
     // on reopen, and an unnoticing admin then relayed decisionTaken 'INT' — sending an internal
@@ -834,25 +879,31 @@ const AdministrationPage = () => {
     // Only a manual method has a chosen person or company; a pick left in the form after switching
     // to another method is not saved (the form keeps it, so switching back shows it again).
     const isManualMethod = data.assignmentMethod === 'manual';
+    return {
+      assignmentType: isExternal ? 'External' : 'Internal',
+      // Off-system external DOES carry a staff id — the internal appraiser who will key the book
+      // in. Only a true external assignment has no internal assignee. Dropping it here (as the
+      // plain `isExternal ? null` test did) silently discarded the admin's chosen keyer, so the
+      // draft came back with the picker empty.
+      assigneeUserId:
+        isExternal && !isDraftOfflineExternal ? null : isManualMethod ? data.staffId : null,
+      // Off-system external always keeps its company (a manual pick, whatever the keyer method).
+      assigneeCompanyId:
+        isDraftOfflineExternal || (isExternal && isManualMethod) ? data.companyId : null,
+      assignmentMethod: isDraftOfflineExternal ? OFFLINE_DRAFT_METHOD : data.assignmentMethod,
+      internalAppraiserId: isExternal && !isDraftOfflineExternal ? data.followupStaffId : null,
+      internalFollowupAssignmentMethod:
+        isExternal && !isDraftOfflineExternal ? data.followupStaffMethod : null,
+      remark: data.remarks,
+    };
+  };
+
+  // Save the in-progress decision (selections + remark) as a draft without assigning.
+  // Deliberately skips the Assign validation guards so incomplete work can be saved.
+  const handleSaveDraft = () => {
+    if (!appraisalId) return;
     saveAssignmentDraft(
-      {
-        appraisalId,
-        assignmentType: isExternal ? 'External' : 'Internal',
-        // Off-system external DOES carry a staff id — the internal appraiser who will key the book
-        // in. Only a true external assignment has no internal assignee. Dropping it here (as the
-        // plain `isExternal ? null` test did) silently discarded the admin's chosen keyer, so the
-        // draft came back with the picker empty.
-        assigneeUserId:
-          isExternal && !isDraftOfflineExternal ? null : isManualMethod ? data.staffId : null,
-        // Off-system external always keeps its company (a manual pick, whatever the keyer method).
-        assigneeCompanyId:
-          isDraftOfflineExternal || (isExternal && isManualMethod) ? data.companyId : null,
-        assignmentMethod: isDraftOfflineExternal ? OFFLINE_DRAFT_METHOD : data.assignmentMethod,
-        internalAppraiserId: isExternal && !isDraftOfflineExternal ? data.followupStaffId : null,
-        internalFollowupAssignmentMethod:
-          isExternal && !isDraftOfflineExternal ? data.followupStaffMethod : null,
-        remark: data.remarks,
-      },
+      { appraisalId, ...draftBodyOf(getValues()) },
       {
         onSuccess: () => {
           toast.success(t('administration.toasts.draftSaved'));
@@ -1157,7 +1208,7 @@ const AdministrationPage = () => {
     result: slipResult,
     onFix: handleFix,
     isDirty,
-    isAssigning: isCreating,
+    isAssigning: isCreating || preparingEmail,
     isSavingDraft,
     onAssign: () => {
       void submit();
@@ -1605,6 +1656,15 @@ const AdministrationPage = () => {
                 : null
             }
             internalFollowupAssignmentMethod={followupStaffMethod ?? null}
+          />
+          <AssignmentEmailDialog
+            isOpen={!!emailFor}
+            appraisalId={appraisalId ?? ''}
+            requestId={requestId}
+            isPending={isCreating}
+            error={emailError}
+            onClose={() => setEmailFor(null)}
+            onAssign={email => emailFor && assign(emailFor, email)}
           />
         </>
       )}
