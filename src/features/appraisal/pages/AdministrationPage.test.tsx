@@ -66,8 +66,10 @@ const state = vi.hoisted(() => {
     feesReads: 0,
     // The eligible list never answers: while the page asks for it (enabled) it stays fetching.
     eligiblePending: false,
-    // The `enabled` flag of every useGetEligibleCompanies call, in render order.
+    // The `enabled` flag of every segment-filtered useGetEligibleCompanies call, in render order.
     eligibleEnabled: [] as boolean[],
+    // Every enabled useGetEligibleCompanies call as [segment, requireSegment].
+    eligibleCalls: [] as unknown[][],
   };
 });
 
@@ -113,8 +115,9 @@ vi.mock('../api/administration', async importOriginal => ({
   },
   // What the picker offers for the request's segment; the previous company is preselected only
   // if it is in this list.
-  useGetEligibleCompanies: (_segment: unknown, enabled: boolean) => {
-    state.eligibleEnabled.push(enabled);
+  useGetEligibleCompanies: (segment: unknown, enabled: boolean, requireSegment = true) => {
+    if (requireSegment) state.eligibleEnabled.push(enabled);
+    if (enabled) state.eligibleCalls.push([segment, requireSegment]);
     return {
       // Stable arrays, like react-query's structural sharing: the seed effect depends on the list.
       data: state.eligiblePending
@@ -249,6 +252,7 @@ beforeEach(() => {
   state.feesReads = 0;
   state.eligiblePending = false;
   state.eligibleEnabled = [];
+  state.eligibleCalls = [];
   server.use(
     http.get('*/appraisals/:id/fee-preview', ({ request }) => {
       state.feePreviewQueries.push(new URL(request.url).searchParams);
@@ -1176,7 +1180,7 @@ describe('AdministrationPage: read-only details', () => {
 
   it('shows the stored keyer of an off-system assignment, as the keyer', async () => {
     // A made off-system assignment is stored as External, method 'Offline' (the workflow stamps
-    // it), with the keyer as the assignee and no company.
+    // it), with the keyer as the assignee and no company (made before the admin picked it, #535).
     state.assignments = [
       {
         ...made,
@@ -1190,7 +1194,8 @@ describe('AdministrationPage: read-only details', () => {
     // Form card + the slip in the rail + the slip at the form's end.
     expect(await screen.findAllByText('K-0042')).toHaveLength(3);
     expect(screen.getAllByText('administration.slip.segment.keyer')).toHaveLength(2);
-    expect(screen.queryByText('administration.noData')).not.toBeInTheDocument();
+    // Only the missing company says so (form card + both slips), not the keyer.
+    expect(screen.getAllByText('administration.noData')).toHaveLength(3);
   });
 
   it('shows a made off-system assignment as off-system even once the keyer has recorded its company', async () => {
@@ -2102,5 +2107,151 @@ describe('AdministrationPage: the watched fields drive the form', () => {
 
     expect(await screen.findByText('administration.offlineExternal.title')).toBeInTheDocument();
     expect(typeRadio('externalOffline')).toBeChecked();
+  });
+});
+
+describe('AdministrationPage: the off-system (EXTO) company', () => {
+  const offlineRoundrobin = () =>
+    setDefaults(null, { assignmentType: 'external-offline', assignmentMethod: 'roundrobin' });
+
+  it('asks for the company on the EXTO card and blocks Assign until it is picked', async () => {
+    withBase();
+    offlineRoundrobin();
+    const { user } = render(<AdministrationPage />);
+
+    const label = await screen.findByText('administration.offlineExternal.companyLabel');
+    expect(label).toBeInTheDocument();
+    // The check and the reason Assign is off both name the missing company.
+    expect(
+      within(slipCard()).getAllByText('administration.slip.reason.companyMissing'),
+    ).toHaveLength(2);
+    expect(slipAssign()).toBeDisabled();
+
+    await user.click(
+      within(slipCard()).getByRole('button', { name: 'administration.slip.checks.fixAria' }),
+    );
+    expect(await screen.findByRole('alert')).toHaveTextContent('validation.selectCompany');
+
+    await user.click(screen.getByText('pick-other-company'));
+    await waitFor(() => expect(slipAssign()).toBeEnabled());
+  });
+
+  it('offers every company with an MOU, not only the request segment, and only once the picker opens', async () => {
+    offlineRoundrobin();
+    const { user } = render(<AdministrationPage />);
+    await screen.findByText('administration.offlineExternal.companyLabel');
+    expect(state.eligibleCalls).not.toContainEqual([undefined, false]);
+
+    await user.click(screen.getByText('administration.manualCompany.placeholder'));
+
+    expect(state.eligibleCalls).toContainEqual([undefined, false]);
+  });
+
+  it('sends the picked company with the EXTO assignment', async () => {
+    withBase();
+    offlineRoundrobin();
+    const { user } = render(<AdministrationPage />);
+    await user.click(await screen.findByText('pick-other-company'));
+    await waitFor(() => expect(slipAssign()).toBeEnabled());
+    await user.click(slipAssign());
+
+    await waitFor(() => expect(state.posted).toHaveLength(1));
+    expect(state.posted[0]).toMatchObject({
+      decisionTaken: 'EXTO',
+      assignmentType: 'External',
+      assigneeCompanyId: 'c-new',
+      assigneeCompanyName: 'New Co',
+    });
+  });
+
+  it('saves the picked company with the EXTO draft', async () => {
+    offlineRoundrobin();
+    const { user } = render(<AdministrationPage />);
+    await user.click(await screen.findByText('pick-other-company'));
+    await user.click(within(slipCard()).getByRole('button', { name: 'administration.saveDraft' }));
+
+    await waitFor(() => expect(state.drafted).toHaveLength(1));
+    expect(state.drafted[0]).toMatchObject({
+      assignmentMethod: 'Offline',
+      assigneeCompanyId: 'c-new',
+    });
+  });
+
+  it('restores the company of a reopened EXTO draft', async () => {
+    state.assignments = [
+      {
+        ...draftAssignment,
+        assignmentType: 'External',
+        assignmentMethod: 'Offline',
+        assigneeCompanyId: 'c-old',
+      },
+    ];
+    render(<AdministrationPage />);
+
+    expect(await screen.findByText('Old Co', { selector: 'span' })).toBeInTheDocument();
+    expect(screen.getByText('administration.offlineExternal.companyLabel')).toBeInTheDocument();
+  });
+
+  it('holds the company and the keyer under a quotation lock, like every other choice', async () => {
+    state.staff = [
+      {
+        id: 'K-1',
+        employeeId: 'K-1',
+        name: 'Keyer',
+        email: '',
+        department: '',
+        avatar: null,
+        currentWorkload: 0,
+      },
+    ];
+    state.assignments = [
+      {
+        ...draftAssignment,
+        assignmentType: 'External',
+        assignmentMethod: 'Offline',
+        assigneeUserId: 'K-1',
+        assigneeCompanyId: 'c-old',
+      },
+    ];
+    state.none = [
+      {
+        id: 'SENT',
+        quotationNumber: 'QT-SENT',
+        status: 'Sent',
+        requestDate: '2026-10-01',
+        selectedAt: null,
+      },
+    ];
+    render(<AdministrationPage />);
+
+    expect(await screen.findByText('Old Co', { selector: 'span' })).toBeInTheDocument();
+    expect(screen.getAllByText('Keyer', { exact: false }).length).toBeGreaterThan(0);
+    expect(
+      screen.queryByRole('button', { name: 'administration.clearSelection' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'administration.changeCompanyButton' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows the EXTO company on the read-only page, with no way to change it', async () => {
+    state.assignments = [
+      {
+        ...draftAssignment,
+        assignmentType: 'External',
+        assignmentMethod: 'Offline',
+        assignmentStatus: 'Assigned',
+        draftSavedAt: null,
+        assigneeUserId: 'K-0042',
+        assigneeCompanyId: 'c-old',
+      },
+    ];
+    render(<AdministrationPage />);
+
+    expect((await screen.findAllByText('Old Co')).length).toBeGreaterThan(0);
+    expect(screen.queryByText('pick-other-company')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'administration.clearSelection' }),
+    ).not.toBeInTheDocument();
   });
 });

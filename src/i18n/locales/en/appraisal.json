@@ -411,7 +411,8 @@
       "title": "Offline External Engagement",
       "subtitle": "The company was engaged outside the system",
       "keyerMethodLabel": "Who keys in the book",
-      "keyerRoundrobinDesc": "The system will automatically assign an internal staff member to key in the company's appraisal book."
+      "keyerRoundrobinDesc": "The system will automatically assign an internal staff member to key in the company's appraisal book.",
+      "companyLabel": "External company"
     },
     "assignmentDetails": {
       "titleInternal": "Internal Assignment Details",
@@ -527,7 +528,8 @@
         "assignee": "Assignee",
         "keyer": "Keyed by",
         "followup": "Follow-up",
-        "fee": "Fee"
+        "fee": "Fee",
+        "company": "Company"
       },
       "offlineSuffix": "(appraised offline)",
       "previousCompany": "(previous company)",
@@ -568,7 +570,8 @@
         "winnerTodo": "Winner not finalized yet",
         "feeOk": "Fee amount set",
         "feeMissing": "Fee amount not set",
-        "remarksTooLong": "Remark exceeds {{max}} characters"
+        "remarksTooLong": "Remark exceeds {{max}} characters",
+        "companyOk": "External company selected"
       },
       "reason": {
         "companyMissing": "No external company selected",
@@ -3249,7 +3252,9 @@
     "outstandingCompany": "Record appraisal company",
     "blockedOnSubmit": "Record the external appraisal company and the appraisal date from its book before submitting.",
     "outstandingBoth": "Record appraisal company & date",
-    "outstandingDate": "Record appraisal date"
+    "outstandingDate": "Record appraisal date",
+    "companyLockedHint": "This company is already recorded. If it is wrong, route the case back to assignment to change it.",
+    "hintLocked": "Record the appraisal date printed on this company's appraisal book."
   },
   "photoTopics": {
     "title": "Report photo topics",

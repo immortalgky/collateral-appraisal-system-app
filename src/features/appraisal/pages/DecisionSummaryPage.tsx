@@ -1055,7 +1055,14 @@ const DecisionSummaryPage = () => {
     // (externalCompanyRecorded, from vw_AppraisalValidationContext); failing here just gives a
     // plain message instead of a pipeline error.
     if (canEditOfflineEngagement && !engagementComplete) {
-      toast.error(t('offlineEngagement.blockedOnSubmit'));
+      // A locked company (the assignment holds one) leaves only the book date to record.
+      toast.error(
+        t(
+          engagementAssignment?.assigneeCompanyId
+            ? 'offlineEngagement.validation.bookDateRequired'
+            : 'offlineEngagement.blockedOnSubmit',
+        ),
+      );
       return;
     }
     return persistDecision(formData, true);

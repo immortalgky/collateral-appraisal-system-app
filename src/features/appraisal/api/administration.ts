@@ -331,7 +331,8 @@ export const useCreateQuotation = () => {
  * (PUT /appraisals/{id}/assignments/offline-external-engagement).
  */
 export interface SetOfflineExternalEngagementBody {
-  companyId: string;
+  /** Only when the assignment holds no company yet; once it does, the server keeps that one. */
+  companyId?: string;
   /** Appraisal date printed on the external company's book, as a date-only `yyyy-MM-dd` string. */
   bookDate: string;
   /**

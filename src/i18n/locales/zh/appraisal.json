@@ -411,7 +411,8 @@
       "title": "系统外委托外部公司",
       "subtitle": "该公司在系统外受委托",
       "keyerMethodLabel": "由谁录入报告",
-      "keyerRoundrobinDesc": "系统将自动指派内部人员录入该公司的评估报告。"
+      "keyerRoundrobinDesc": "系统将自动指派内部人员录入该公司的评估报告。",
+      "companyLabel": "外部公司"
     },
     "assignmentDetails": {
       "titleInternal": "内部分配详情",
@@ -527,7 +528,8 @@
         "assignee": "受理人",
         "keyer": "录入人",
         "followup": "跟进",
-        "fee": "费用"
+        "fee": "费用",
+        "company": "公司"
       },
       "offlineSuffix": "（系统外评估）",
       "previousCompany": "（原公司）",
@@ -568,7 +570,8 @@
         "winnerTodo": "尚未确定中标者",
         "feeOk": "已设定费用金额",
         "feeMissing": "尚未设置费用金额",
-        "remarksTooLong": "备注超过 {{max}} 个字符"
+        "remarksTooLong": "备注超过 {{max}} 个字符",
+        "companyOk": "已选择外部公司"
       },
       "reason": {
         "companyMissing": "尚未选择外部公司",
@@ -3249,7 +3252,9 @@
     "outstandingCompany": "请填写评估公司",
     "blockedOnSubmit": "提交前请先填写外部评估公司及其报告上的评估日期。",
     "outstandingBoth": "请填写评估公司及日期",
-    "outstandingDate": "请填写评估日期"
+    "outstandingDate": "请填写评估日期",
+    "companyLockedHint": "该公司已记录。如有错误，请将案件退回分配步骤进行修改。",
+    "hintLocked": "请记录该公司评估报告上所载的评估日期。"
   },
   "photoTopics": {
     "title": "报告照片主题",

@@ -66,7 +66,7 @@ const ValuationEngagementChips = ({
   onCompletenessChange,
   saveHandleRef,
 }: ValuationEngagementChipsProps) => {
-  const { t } = useTranslation('appraisal');
+  const { t } = useTranslation(['appraisal', 'common']);
   const localizeCompanyName = useLocalizedCompanyName();
   const editDialog = useDisclosure();
   const companyModal = useDisclosure();
@@ -75,14 +75,13 @@ const ValuationEngagementChips = ({
   const [bookDate, setBookDate] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
 
-  // Seed each field from the server exactly once, and PER FIELD. The company and the date arrive
-  // from two different queries (the date rides the assignments query, the company needs a second
-  // lookup), so one shared latch closed as soon as the faster one landed and the company never
-  // seeded on a hard refresh. A latch is still needed so clearing a field does not re-restore it.
-  const hasSeededCompany = useRef(false);
+  // Seed the book date from the server exactly once, so clearing it does not re-restore it. The
+  // company needs no seed: a recorded one is locked and read straight from its lookup below.
   const hasSeededBookDate = useRef(false);
 
-  const { data: savedCompany } = useGetCompanyById(assignment?.assigneeCompanyId ?? null);
+  const { data: savedCompany, isError: isCompanyLookupFailed } = useGetCompanyById(
+    assignment?.assigneeCompanyId ?? null,
+  );
   const { mutate: saveEngagement } = useSetOfflineExternalEngagement();
 
   // Deliberately unfiltered by banking segment: that scoping exists for the round-robin pool, where
@@ -97,12 +96,12 @@ const ValuationEngagementChips = ({
   );
 
   const savedBookDate = assignment?.offlineBookDate ?? null;
-
-  useEffect(() => {
-    if (hasSeededCompany.current || !savedCompany) return;
-    setSelectedCompany(savedCompany);
-    hasSeededCompany.current = true;
-  }, [savedCompany]);
+  // The admin names the company on the assignment page (#535); once the assignment holds one it is
+  // locked here and the keyer only enters the book date. A wrong company is fixed by routing back
+  // to appraisal-assignment. Only a case that reached key-in before that still picks it here, and
+  // once that pick is saved the assignment holds it, so it locks too (the server locks it as well).
+  const isCompanyLocked = !!assignment?.assigneeCompanyId;
+  const hasCompany = isCompanyLocked || !!selectedCompany?.id;
 
   useEffect(() => {
     if (hasSeededBookDate.current || !savedBookDate) return;
@@ -111,8 +110,8 @@ const ValuationEngagementChips = ({
   }, [savedBookDate]);
 
   useEffect(() => {
-    onCompletenessChange?.(!!selectedCompany?.id && !!bookDate);
-  }, [selectedCompany, bookDate, onCompletenessChange]);
+    onCompletenessChange?.(hasCompany && !!bookDate);
+  }, [hasCompany, bookDate, onCompletenessChange]);
 
   const markDirty = () => {
     if (isDirty) return;
@@ -126,7 +125,7 @@ const ValuationEngagementChips = ({
   const persistEngagement = (): Promise<boolean> => {
     if (!canEdit || !isDirty) return Promise.resolve(true);
 
-    if (!selectedCompany?.id) {
+    if (!hasCompany) {
       toast.error(t('offlineEngagement.validation.companyRequired'));
       return Promise.resolve(false);
     }
@@ -139,7 +138,8 @@ const ValuationEngagementChips = ({
       saveEngagement(
         {
           appraisalId,
-          companyId: selectedCompany.id,
+          // Omitted once locked: the server keeps the assignment's company.
+          ...(isCompanyLocked ? {} : { companyId: selectedCompany?.id }),
           // Date-only string. DatePickerInput emits an offset-bearing ISO timestamp, which the
           // backend binds to DateTime and converts to server local time — on a node outside UTC+07
           // that lands on the previous calendar day, printing a book date a day early.
@@ -171,22 +171,30 @@ const ValuationEngagementChips = ({
     };
   });
 
-  // selectedCompany is the single source of truth — deliberately WITHOUT falling back to
-  // savedCompany. The seeding effect above copies the server value into it, so the fallback only
-  // ever covered the brief pre-seed render; what it actually did was make a CLEARED company
-  // indistinguishable from an unloaded one, so clearing in the dialog left the old name on the chip.
+  // The company shown: a recorded one straight from its lookup (so it follows the assignment when a
+  // route-back changes it), else the keyer's staged pick on a case that has none yet.
   //
   // Nothing to show for an internal appraisal, or before a company has ever been recorded on a
   // case the current user cannot edit.
-  const companyName = selectedCompany?.companyName ?? null;
+  // The keyer's own pick stands in once saved, until the lookup of the recorded company lands.
+  const shownCompany = isCompanyLocked
+    ? (savedCompany ??
+      (selectedCompany?.id === assignment?.assigneeCompanyId ? selectedCompany : null))
+    : selectedCompany;
+  const companyName = shownCompany?.companyName ?? null;
   if (!companyName && !canEdit) return null;
+  // For the keyer, a recorded company is never blank: "loading" until it loads, its id if the
+  // lookup failed.
+  const lockedCompanyText = isCompanyLookupFailed
+    ? assignment?.assigneeCompanyId
+    : t('common:status.loading');
 
   // Outstanding = the keyer can still record it and has not. Completing the task is blocked on it
   // server-side (RequireOfflineEngagementRecorded), so the chip is styled as a call to action
   // rather than a quiet grey label — it is the one thing on this page nobody else can supply.
   // Both are required. On this path the save endpoint writes them together, so in practice they
   // go missing together — but the pill names whichever is actually absent rather than assuming.
-  const isOutstanding = canEdit && (!companyName || !bookDate);
+  const isOutstanding = canEdit && (!hasCompany || !bookDate);
 
   return (
     <>
@@ -199,9 +207,9 @@ const ValuationEngagementChips = ({
         >
           <Icon name="triangle-exclamation" style="solid" className="w-3.5 h-3.5 text-amber-500" />
           <span>
-            {!companyName && !bookDate
+            {!hasCompany && !bookDate
               ? t('offlineEngagement.outstandingBoth')
-              : !companyName
+              : !hasCompany
                 ? t('offlineEngagement.outstandingCompany')
                 : t('offlineEngagement.outstandingDate')}
           </span>
@@ -214,7 +222,9 @@ const ValuationEngagementChips = ({
           <span className="text-sm leading-none">🏢</span>
           <span>{t('offlineEngagement.companyLabel')}</span>
           <span className="font-semibold text-(--palette-ink)">
-            {localizeCompanyName(companyName ?? '', selectedCompany?.companyNameLocal)}
+            {companyName
+              ? localizeCompanyName(companyName, shownCompany?.companyNameLocal)
+              : lockedCompanyText}
           </span>
           {canEdit && (
             <button
@@ -241,21 +251,30 @@ const ValuationEngagementChips = ({
               style="solid"
               className="w-4 h-4 text-amber-500 shrink-0 mt-0.5"
             />
-            <p className="text-xs text-(--palette-warn)">{t('offlineEngagement.hint')}</p>
+            <p className="text-xs text-(--palette-warn)">
+              {t(isCompanyLocked ? 'offlineEngagement.hintLocked' : 'offlineEngagement.hint')}
+            </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-(--palette-ink) mb-2">
-              {t('offlineEngagement.companyLabel')} <span className="text-danger">*</span>
+            <label className="mb-1 block text-xs font-medium text-(--palette-ink)">
+              {t('offlineEngagement.companyLabel')}
+              {!isCompanyLocked && <span className="ml-0.5 text-(--palette-req)">*</span>}
             </label>
-            {selectedCompany ? (
+            {shownCompany ? (
               <CompanyDisplay
-                company={selectedCompany}
-                onClear={() => {
-                  setSelectedCompany(null);
-                  markDirty();
-                }}
+                company={shownCompany}
+                onClear={
+                  isCompanyLocked
+                    ? undefined
+                    : () => {
+                        setSelectedCompany(null);
+                        markDirty();
+                      }
+                }
               />
+            ) : isCompanyLocked ? (
+              <p className="text-sm text-(--palette-ink)">{lockedCompanyText}</p>
             ) : (
               <button
                 type="button"
@@ -266,11 +285,17 @@ const ValuationEngagementChips = ({
                 {t('offlineEngagement.selectCompany')}
               </button>
             )}
+            {isCompanyLocked && (
+              <p className="mt-1 text-xs text-(--palette-gray-500)">
+                {t('offlineEngagement.companyLockedHint')}
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-(--palette-ink) mb-2">
-              {t('offlineEngagement.bookDateLabel')} <span className="text-danger">*</span>
+            <label className="mb-1 block text-xs font-medium text-(--palette-ink)">
+              {t('offlineEngagement.bookDateLabel')}
+              <span className="ml-0.5 text-(--palette-req)">*</span>
             </label>
             {/* The book is already in hand, so a future date is always wrong. The backend validator
                 rejects it too; this stops it being entered in the first place. */}

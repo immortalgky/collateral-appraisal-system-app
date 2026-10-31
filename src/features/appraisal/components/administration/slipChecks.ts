@@ -7,7 +7,7 @@ import type { FeePreview } from '@/features/appraisal/types/feePreview';
 /**
  * Pre-submit checklist for the assignment slip (the work order), as a pure function of the form and the
  * page's flags. The rules mirror AdministrationPage: the zod refines in schemas/administration.ts
- * (type, assignee, follow-up, remark) and the guards at the top of onSubmit (workflow task, task
+ * (type, off-system company, assignee, follow-up, remark) and the guards at the top of onSubmit (workflow task, task
  * owner, quotation lock, quotation winner). A missing fee base blocks Assign for every type (the
  * server rejects it too); only a loaded fee-preview can say so, so loading / failed never blocks.
  */
@@ -34,6 +34,7 @@ export function feeStatusOf(preview: FeePreview | undefined, winnerReady = false
 
 export type SlipCheckId =
   | 'type'
+  | 'company'
   | 'assignee'
   | 'followup'
   | 'quotationSent'
@@ -51,6 +52,7 @@ export type SlipKey =
   | 'administration.slip.checks.assigneeAuto'
   | 'administration.slip.checks.staffMissing'
   | 'administration.slip.checks.companyMissing'
+  | 'administration.slip.checks.companyOk'
   | 'administration.slip.checks.keyerOk'
   | 'administration.slip.checks.keyerAuto'
   | 'administration.slip.checks.keyerMissing'
@@ -173,12 +175,24 @@ export function computeSlipChecks(input: SlipChecksInput): SlipChecksResult {
   // Zod's refine: manual needs staffId (internal / off-system keyer) or companyId (external).
   const assigneeMissing =
     isManual && (type === 'external' ? !filled(input.companyId) : !filled(input.staffId));
+  // Off-system external: the company the bank engaged is always picked by hand, whatever the keyer method.
+  const offlineCompanyMissing = isOffline && !filled(input.companyId);
   const followupMissing =
     isExternal && input.followupStaffMethod === 'manual' && !filled(input.followupStaffId);
 
   if (!type) {
     add('type', 'error', 'administration.slip.checks.typeMissing');
   } else {
+    if (isOffline) {
+      add(
+        'company',
+        offlineCompanyMissing ? 'error' : 'ok',
+        // "No external company selected": the in-system companyMissing names the recipient.
+        offlineCompanyMissing
+          ? 'administration.slip.reason.companyMissing'
+          : 'administration.slip.checks.companyOk',
+      );
+    }
     if (isQuotation) {
       const sent = input.quotationStatus !== null && SENT_STATUSES.includes(input.quotationStatus);
       add(
@@ -288,6 +302,8 @@ export function computeSlipChecks(input: SlipChecksInput): SlipChecksResult {
       quotationNumber: input.lockedQuotation?.quotationNumber ?? '',
       status: input.lockedQuotation?.status ?? '',
     });
+  } else if (offlineCompanyMissing) {
+    block('administration.slip.reason.companyMissing', 'error', undefined, 'company');
   } else if (assigneeMissing) {
     block(
       isExternal
