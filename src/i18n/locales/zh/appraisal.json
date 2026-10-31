@@ -1019,6 +1019,7 @@
       "fields": {
         "propertyName": "机器名称",
         "machineType": "机器类型",
+        "machineTypeOther": "其他机器类型",
         "brand": "品牌",
         "model": "型号",
         "series": "系列",
@@ -1063,6 +1064,57 @@
         "cannotUse": "不可用",
         "canUse": "可用"
       }
+    },
+    "vehicleInfo": {
+      "groups": {
+        "identification": "车辆信息",
+        "registration": "登记",
+        "purchase": "购买与位置"
+      },
+      "fields": {
+        "propertyName": "车辆名称",
+        "engineNumber": "发动机号",
+        "chassisNumber": "车架号",
+        "licensePlateNumber": "车牌号",
+        "registrationNumber": "登记号",
+        "registrationDate": "登记日期",
+        "color": "颜色",
+        "colorOther": "其他颜色",
+        "brand": "品牌",
+        "model": "型号",
+        "yearOfManufacture": "制造年份",
+        "vehicleType": "车辆类型",
+        "vehicleTypeOther": "其他车辆类型",
+        "purchaseDate": "购买日期",
+        "purchasePrice": "购买价格",
+        "energyUse": "能源使用",
+        "energyUseOther": "其他能源",
+        "location": "位置"
+      }
+    },
+    "vesselInfo": {
+      "groups": {
+        "identification": "船舶信息",
+        "engineAndTonnage": "发动机与吨位",
+        "purchase": "购买、位置与状况"
+      },
+      "fields": {
+        "propertyName": "船舶名称",
+        "model": "型号",
+        "yearOfManufacture": "制造年份",
+        "vesselType": "船舶类型",
+        "vesselTypeOther": "其他船舶类型",
+        "capacity": "发动机功率 (马力/千瓦)",
+        "numberOfEngines": "发动机数量",
+        "hullNumber": "船体识别号",
+        "registrationNumber": "登记号",
+        "purchaseDate": "购买日期",
+        "purchasePrice": "购买价格",
+        "grossTonnage": "总吨位",
+        "netTonnage": "净吨位",
+        "location": "位置",
+        "conditionUse": "使用状况"
+      }
     }
   },
   "properties": {
@@ -1101,7 +1153,9 @@
       "noPhotos": "尚无照片",
       "rowHint": "双击编辑 · 右键更多操作",
       "emptyHint": "尚无资产——可从左侧分组中添加。",
-      "emptyReadOnly": "尚无资产。"
+      "emptyReadOnly": "尚无资产。",
+      "grossTonnage": "总吨位",
+      "yearOfManufacture": "制造年份"
     },
     "toolbar": {
       "groups": "个组",
@@ -1198,7 +1252,8 @@
       "machineAge": "机龄 {{n}} 年",
       "leaseRemaining": "租期剩余 {{n}} 年",
       "leaseEnded": "租约已到期",
-      "leaseRent": "租金 ฿{{n}}"
+      "leaseRent": "租金 ฿{{n}}",
+      "grossTonnage": "{{n}} 总吨"
     },
     "machinerySummary": {
       "title": "机器汇总",
@@ -1208,7 +1263,7 @@
         "drift": "数量与清单不符"
       },
       "hint": {
-        "none": "本估价共有 {{n}} 台机器 — 请保存汇总",
+        "none": "本估价共有 {{n}} 项机器、车辆或船舶 — 请保存汇总",
         "drift": "已保存 → 按当前机器清单统计"
       },
       "actions": {
@@ -2816,6 +2871,10 @@
     "propertyBuildingCreated": "建筑房产创建成功",
     "propertyMachineryUpdated": "机械设备房产更新成功",
     "propertyMachineryCreated": "机械设备房产创建成功",
+    "propertyVehicleUpdated": "车辆房产更新成功",
+    "propertyVehicleCreated": "车辆房产创建成功",
+    "propertyVesselUpdated": "船舶房产更新成功",
+    "propertyVesselCreated": "船舶房产创建成功",
     "leaseAgreementBuildingUpdated": "建筑租赁协议更新成功",
     "leaseAgreementBuildingCreated": "建筑租赁协议创建成功",
     "leaseAgreementLandUpdated": "土地租赁协议更新成功",
@@ -2966,6 +3025,8 @@
     "navBuilding": "建筑",
     "navConstructionInspection": "施工明细",
     "navMachinery": "机械",
+    "navVehicle": "车辆",
+    "navVessel": "船舶",
     "navPma": "PMA 信息",
     "saveDraft": "保存草稿",
     "save": "保存"

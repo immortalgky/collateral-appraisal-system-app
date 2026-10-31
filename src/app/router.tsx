@@ -83,6 +83,8 @@ const ComparativeTemplateDetailPage = lazy(
 const DecisionSummaryPage = lazy(() => import('@/features/appraisal/pages/DecisionSummaryPage'));
 const ActivityTrackingPage = lazy(() => import('@/features/appraisal/pages/ActivityTrackingPage'));
 const CreateMachineryPage = lazy(() => import('@/features/appraisal/pages/CreateMachineryPage'));
+const CreateVehiclePage = lazy(() => import('@/features/appraisal/pages/CreateVehiclePage'));
+const CreateVesselPage = lazy(() => import('@/features/appraisal/pages/CreateVesselPage'));
 const CreateLeaseAgreementLandPage = lazy(
   () => import('@/features/appraisal/pages/CreateLeaseAgreementLandPage'),
 );
@@ -751,7 +753,9 @@ export const router = createBrowserRouter([
       // ─── Service Quality Evaluation Routes ──────────────────────────────────
       {
         path: 'standalone/service-quality-evaluation',
-        element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="REPORT_EVALUATION_VIEW" />,
+        element: (
+          <RoleProtectedRoute allowedRoles={[]} requiredPermission="REPORT_EVALUATION_VIEW" />
+        ),
         children: [
           { index: true, element: <ServiceQualityEvaluationListPage /> },
           { path: ':appraisalId', element: <ServiceQualityEvaluationDetailPage /> },
@@ -1015,6 +1019,38 @@ export const router = createBrowserRouter([
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
                 <CreateMachineryPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'vehicle/new',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateVehiclePage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'vehicle/:propertyId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateVehiclePage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'vessel/new',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateVesselPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'vessel/:propertyId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateVesselPage />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -1523,6 +1559,38 @@ export const router = createBrowserRouter([
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
                 <CreateMachineryPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'vehicle/new',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateVehiclePage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'vehicle/:propertyId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateVehiclePage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'vessel/new',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateVesselPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'vessel/:propertyId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CreateVesselPage />
               </AppraisalReadOnlyWrapper>
             ),
           },

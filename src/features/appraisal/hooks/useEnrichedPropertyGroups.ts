@@ -24,6 +24,8 @@ export function mapGroupItemToPropertyItem(item: PropertyGroupItem): PropertyIte
   const thumbnailId = photos.find(p => p.isThumbnail)?.documentId ?? photos[0]?.documentId;
 
   const isMachine = item.propertyType === 'MAC';
+  const isVehicle = item.propertyType === 'VEH';
+  const isVessel = item.propertyType === 'VES';
   const isBuilding = item.propertyType === 'B' || item.propertyType === 'LSB';
 
   return {
@@ -62,18 +64,27 @@ export function mapGroupItemToPropertyItem(item: PropertyGroupItem): PropertyIte
     roomLayoutTypeOther: (item.roomLayoutTypeOther as string | null | undefined) ?? undefined,
     yearOfManufacture: (item.yearOfManufacture as number | null | undefined) ?? undefined,
     machineAge: (item.machineAge as number | null | undefined) ?? undefined,
+    vehicleType: (item.vehicleType as string | null | undefined) ?? undefined,
+    vehicleTypeOther: (item.vehicleTypeOther as string | null | undefined) ?? undefined,
+    vesselType: (item.vesselType as string | null | undefined) ?? undefined,
+    vesselTypeOther: (item.vesselTypeOther as string | null | undefined) ?? undefined,
+    grossTonnage: (item.grossTonnage as number | null | undefined) ?? undefined,
     remainingLeaseYears: (item.remainingLeaseYears as number | null | undefined) ?? undefined,
     leaseEndDate: (item.leaseEndDate as string | null | undefined) ?? undefined,
     leaseRentFee: (item.leaseRentFee as number | null | undefined) ?? undefined,
-    ...(isMachine
+    ...(isMachine || isVehicle
       ? {
           brand: item.brand ?? undefined,
-          model: item.model ?? undefined,
           registrationNumber: item.registrationNumber ?? undefined,
+        }
+      : {}),
+    ...(isMachine || isVehicle || isVessel ? { model: item.model ?? undefined } : {}),
+    ...(isMachine || isVessel ? { conditionUse: item.conditionUse ?? undefined } : {}),
+    ...(isMachine
+      ? {
           dimension: item.dimension ?? undefined,
           registrationStatus: item.registrationStatus ?? undefined,
           isPriceCertified: item.isPriceCertified ?? undefined,
-          conditionUse: item.conditionUse ?? undefined,
         }
       : {}),
     ...(isBuilding

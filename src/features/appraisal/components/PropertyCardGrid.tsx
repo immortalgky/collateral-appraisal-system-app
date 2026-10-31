@@ -9,7 +9,13 @@ import type { PropertyGroup, PropertyItem } from '../types';
 import Icon from '@shared/components/Icon';
 import ParameterDisplay from '@shared/components/ParameterDisplay';
 import PropertyTypeDropdown from './PropertyTypeDropdown';
-import { brandModel, MACHINE_TYPES, PlaceValue, PropertyFlag } from './PropertyCardContent';
+import {
+  brandModel,
+  isVehicleOrVessel,
+  MACHINE_TYPES,
+  PlaceValue,
+  PropertyFlag,
+} from './PropertyCardContent';
 import { usePropertyBasePath } from '../hooks/usePropertyBasePath';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { getRouteSegment as getRouteSegmentFromConfig } from '../utils/propertyTypeConfig';
@@ -24,6 +30,13 @@ function metaFor(property: PropertyItem, unregistered: string): React.ReactNode 
     return [brandModel(property), property.registrationNumber || unregistered]
       .filter(Boolean)
       .join(' · ');
+  }
+  if (isVehicleOrVessel(property.type)) {
+    return (
+      [brandModel(property), property.registrationNumber].filter(Boolean).join(' · ') || (
+        <PlaceValue property={property} />
+      )
+    );
   }
   const area =
     property.areaValue == null
