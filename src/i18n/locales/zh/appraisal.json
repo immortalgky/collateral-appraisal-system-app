@@ -586,6 +586,50 @@
       "bar": {
         "open": "查看分配单"
       }
+    },
+    "email": {
+      "title": "发给公司的邮件",
+      "loadFailed": "无法加载邮件模板",
+      "to": "收件人",
+      "subject": "主题",
+      "addTo": "添加收件人",
+      "addCc": "添加抄送地址",
+      "addAddress": "+ 添加邮箱",
+      "companyLocked": "分配时选择的公司地址，此处不可更改",
+      "companyPending": "系统选择的公司邮箱",
+      "toHint": "公司来自分配页面，此处不可更改 · 可添加其他地址",
+      "ccHint": "● = 按角色的收件人，发送时解析为实际邮箱 · 无邮箱或已停用的人员将被跳过",
+      "restoreTemplate": "恢复模板",
+      "placeholderHint": "黄色虚线 = 发送时填写（公司名称、负责人）",
+      "attachments": "附件",
+      "overLimit": "附件超出限制（数量或总大小）— 发送前请移除文件",
+      "pickDocuments": "从案件文档中选择",
+      "uploadButton": "从电脑上传",
+      "upload": "从电脑上传附件",
+      "uploadFailed": "上传失败",
+      "pickTitle": "从案件文档中选择",
+      "noDocuments": "没有文档",
+      "attach": "附加",
+      "footerHint": "邮件随分配一起发送",
+      "assignWithoutSend": "分配但不发送",
+      "assignAndSend": "分配并发送",
+      "source": {
+        "request": "申请文档",
+        "appraisal": "评估文档",
+        "upload": "已上传"
+      },
+      "cc": {
+        "IntAdminAll": "所有 IntAdmin",
+        "FollowupStaff": "跟进人员",
+        "FollowupSupervisor": "跟进人员的主管",
+        "Keyer": "录入人员",
+        "KeyerSupervisor": "录入人员的主管"
+      },
+      "ccLabel": "抄送",
+      "removeItem": "移除 {{name}}",
+      "sizeUnknown": "大小未知",
+      "sizeFailed": "无法读取部分附件的大小 — 发送前请移除这些文件或重新打开此窗口",
+      "documentsFailed": "无法加载文档列表"
     }
   },
   "feePreview": {

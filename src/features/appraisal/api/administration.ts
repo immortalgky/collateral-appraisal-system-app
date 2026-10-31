@@ -12,6 +12,7 @@ import type {
 } from '../types/administration';
 import { type AssignmentDefaults, toFormDefaults } from '../utils/assignmentDefaults';
 import { invalidateFeePreviews } from './feePreview';
+import type { AssignmentEmailInput } from './assignmentEmail';
 
 /**
  * Get a user by ID
@@ -130,7 +131,13 @@ export const useCreateAssignment = () => {
       // `remark` is persisted alongside the assign action. The generated AssignAppraisalRequestType
       // is `.passthrough()`, so it forwards at runtime; widened here for local type-safety until the
       // client schema is regenerated to include it.
-      request: AssignAppraisalRequestType & { appraisalId: string; remark?: string | null },
+      // `sendEmail` / `email`: EXT / EXTO only, the email composed at Assign (sendEmail false = not sent).
+      request: AssignAppraisalRequestType & {
+        appraisalId: string;
+        remark?: string | null;
+        sendEmail?: boolean;
+        email?: AssignmentEmailInput;
+      },
     ): Promise<AssignAppraisalResponseType> => {
       const { appraisalId, ...body } = request;
       const { data } = await axios.post(`/appraisals/${appraisalId}/assignments`, body);
