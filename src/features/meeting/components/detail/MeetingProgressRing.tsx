@@ -31,6 +31,7 @@ const MeetingProgressRing = ({ stats, animate = true }: MeetingProgressRingProps
   })).filter(s => s.value > 0);
 
   const pct = Math.round(stats.progress * 100);
+  const allVoted = stats.votedCount === stats.totalDecision;
 
   return (
     <div className="flex items-center gap-5">
@@ -66,13 +67,14 @@ const MeetingProgressRing = ({ stats, animate = true }: MeetingProgressRingProps
         )}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           {/* Centre figure is tinted by progress so the ring reads at a glance:
-              nothing released yet → neutral, part-way → amber, all done → emerald. */}
+              nothing released yet → neutral, part-way (or released but not all voted) → amber,
+              all voted → emerald. */}
           <span
             className={clsx(
               'text-2xl font-bold tabular-nums leading-none',
               pct === 0 && 'text-(--palette-gray-400)',
-              pct > 0 && pct < 100 && 'text-amber-600 dark:text-amber-400',
-              pct === 100 && 'text-emerald-600 dark:text-emerald-400',
+              pct > 0 && !allVoted && 'text-amber-600 dark:text-amber-400',
+              pct === 100 && allVoted && 'text-emerald-600 dark:text-emerald-400',
             )}
           >
             {pct}%

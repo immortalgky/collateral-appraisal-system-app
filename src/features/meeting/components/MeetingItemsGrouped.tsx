@@ -15,9 +15,10 @@ import type {
   MeetingMemberDto,
 } from '../api/types';
 import { ACK_GROUP_COLORS, DECISION_GROUP_COLORS, DECISION_ROW_ACCENT } from '../constants';
+import { isVoteRoundResolved } from '../utils/meetingStats';
 import { useMeetingFormat } from '../utils/useMeetingFormat';
 import DecisionActionButton from './detail/DecisionActionButton';
-import ItemVoteBar from './detail/ItemVoteBar';
+import ItemVoteBar, { VoteOutcomeChip } from './detail/ItemVoteBar';
 import RecallItemDialog from './RecallItemDialog';
 import ReleaseItemDialog from './ReleaseItemDialog';
 import RemoveItemDialog from './RemoveItemDialog';
@@ -124,7 +125,8 @@ const ItemActions = ({
   const isPending = item.itemDecision === 'Pending';
   const showRelease = canReleaseItems && isPending;
   const showRemove = canRemoveItems && isPending;
-  const showRecall = canRecallItems && item.itemDecision === 'Released';
+  const showRecall =
+    canRecallItems && item.itemDecision === 'Released' && !isVoteRoundResolved(item.voteOutcome);
 
   // Status now lives in its own column, so with no permitted actions this cell is simply empty.
   if (!showRelease && !showRemove && !showRecall) return null;
@@ -333,7 +335,12 @@ const ItemRow = ({
           {showActions && <ItemDecisionBadge decision={item.itemDecision} />}
         </td>
         <td className="px-3 py-1.5 text-center whitespace-nowrap" aria-hidden={!showActions}>
-          {showActions && <ItemVoteBar item={item} members={members} />}
+          {showActions && (
+            <span className="inline-flex flex-col items-center gap-1">
+              <ItemVoteBar item={item} members={members} />
+              {item.voteOutcome && <VoteOutcomeChip outcome={item.voteOutcome} />}
+            </span>
+          )}
         </td>
         <td className="px-3 py-1.5 text-center whitespace-nowrap" aria-hidden={!showActions}>
           {showActions && (

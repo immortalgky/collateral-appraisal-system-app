@@ -81,6 +81,8 @@ const MeetingDetailPage = () => {
 
   const { status } = meeting;
   const mode = getMeetingMode(status);
+  // AwaitingVotes keeps polling but isn't a running session — votes can take days.
+  const isLive = mode === 'session' && status !== 'AwaitingVotes';
   const isEditable = EDIT_ELIGIBLE.has(status);
   const stats = computeMeetingStats(meeting);
 
@@ -92,7 +94,7 @@ const MeetingDetailPage = () => {
   const setupCards = (
     <>
       <FormCard title={t('sections.lifecycle')} icon="calendar" iconColor="blue">
-        <MeetingTimeline meeting={meeting} live={mode === 'session'} />
+        <MeetingTimeline meeting={meeting} live={isLive} />
       </FormCard>
 
       <FormCard title={t('sections.committeeMembers')} icon="users" iconColor="purple">
@@ -124,7 +126,8 @@ const MeetingDetailPage = () => {
         meeting={meeting}
         canAdminister={hasAdmin}
         totalItems={stats.totalItems}
-        isLive={mode === 'session'}
+        pendingVotes={stats.totalDecision - stats.votedCount}
+        isLive={isLive}
         dataUpdatedAt={dataUpdatedAt}
         onEdit={editDialog.onOpen}
         onCutOff={cutOffDialog.onOpen}
