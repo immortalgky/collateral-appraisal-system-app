@@ -430,7 +430,7 @@
         "taskHeld": "task held by {{name}}",
         "taskHeldUnknown": "task is held by another user",
         "winnerUnavailable": "winning company not available",
-        "assignmentNotReset": "assignment record not reset yet, assign on Administration",
+        "assignmentNotReset": "routed back after assignment, send it on from the Decision Summary page",
         "documentFollowupOpen": "open document follow-up must be cleared first"
       },
       "staffLoadFailed": "Could not load staff",
@@ -467,7 +467,7 @@
       "workflowEnded": "The workflow has ended, so it was not assigned.",
       "noAssignment": "The appraisal has no assignment record, so it was not assigned.",
       "notPending": "The assignment was no longer pending when the quotation was finalized, so it was not assigned.",
-      "assignmentNotReset": "The previous assignment record has not been reset yet. Assign it on the Administration page.",
+      "assignmentNotReset": "The appraisal was routed back after it was assigned. Send it on from the Decision Summary page.",
       "constructionInspection": "Construction inspection appraisals are not auto-assigned. Assign it on the Administration page.",
       "notAtAssignment": "The appraisal was not at the assignment step. Assign it on the Administration page once it gets there.",
       "taskHeld": "The assignment task is held by another user. Ask them to release it, then assign it on the Administration page.",
