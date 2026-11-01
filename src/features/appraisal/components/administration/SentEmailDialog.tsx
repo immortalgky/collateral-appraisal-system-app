@@ -1,5 +1,6 @@
 import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import Button from '@/shared/components/Button';
 import Modal from '@/shared/components/Modal';
 import Icon from '@/shared/components/Icon';
 import { formatFileSize } from '@/shared/utils/formatUtils';
@@ -23,16 +24,24 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 
 /** Links would open inside the frame and replace the email; the sandbox blocks the new tab, so a click does nothing. */
 const LINKS_OUT = '<base target="_blank">';
+/** After a leading doctype, so a full document keeps its standards mode. */
+const withLinksOut = (html: string) =>
+  html.replace(/^(\s*<!doctype[^>]*>)?/i, head => head + LINKS_OUT);
 
 const Dash = () => <span className="text-(--palette-gray-400)">—</span>;
 
 /** "View sent": the resolved To / Cc, subject, body and files of one email, as they went out. */
 export default function SentEmailDialog({ appraisalId, emailId, onClose }: SentEmailDialogProps) {
-  const { t } = useTranslation('appraisal');
+  const { t } = useTranslation(['appraisal', 'common']);
   // The last email opened stays while the dialog closes, so the close does not flash a spinner.
   const [shownId, setShownId] = useState(emailId);
   if (emailId && emailId !== shownId) setShownId(emailId);
-  const { data: email, isError } = useGetAssignmentEmailSent(appraisalId, shownId);
+  const {
+    data: email,
+    isError,
+    refetch,
+    isFetching,
+  } = useGetAssignmentEmailSent(appraisalId, shownId);
 
   return (
     <Modal
@@ -57,7 +66,7 @@ export default function SentEmailDialog({ appraisalId, emailId, onClose }: SentE
               White on purpose: it is the email as the company reads it (a paper preview, 17.13). */}
           <iframe
             title={t('administration.email.view.body')}
-            srcDoc={`${LINKS_OUT}${email.bodyHtml}`}
+            srcDoc={withLinksOut(email.bodyHtml)}
             sandbox=""
             className="h-[22rem] w-full rounded-ctl border border-(--palette-line) bg-white"
           />
@@ -82,7 +91,12 @@ export default function SentEmailDialog({ appraisalId, emailId, onClose }: SentE
       ) : (
         <div className="flex min-h-40 items-center justify-center text-sm text-(--palette-gray-500)">
           {isError ? (
-            <span role="alert">{t('administration.email.view.loadFailed')}</span>
+            <div className="flex flex-col items-center gap-3">
+              <span role="alert">{t('administration.email.view.loadFailed')}</span>
+              <Button variant="outline" onClick={() => void refetch()} isLoading={isFetching}>
+                {t('common:actions.retry')}
+              </Button>
+            </div>
           ) : (
             <Icon name="spinner" style="solid" className="animate-spin text-xl" />
           )}

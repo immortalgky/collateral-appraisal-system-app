@@ -3,7 +3,6 @@ import Badge, { type BadgeTone } from '@/shared/components/Badge';
 import Button from '@/shared/components/Button';
 import { formatLocaleDateTime } from '@/shared/utils/dateUtils';
 import {
-  useGetAssignmentEmailHistory,
   type AssignmentEmailHistoryItem,
   type AssignmentEmailStatus,
 } from '../../api/assignmentEmail';
@@ -32,7 +31,8 @@ function When({ at, label }: { at: string | null; label?: string }) {
 }
 
 interface AssignmentEmailSectionProps {
-  appraisalId: string;
+  /** The case's emails, newest first (useGetAssignmentEmailHistory; the page reads it once for both slips). */
+  items: AssignmentEmailHistoryItem[];
   /** The case is still open: the server refuses a send once it is completed or cancelled. */
   canSend: boolean;
   /** "View sent": the email to show. */
@@ -47,14 +47,12 @@ interface AssignmentEmailSectionProps {
  * email, or the history is refused (only an admin may read it).
  */
 export default function AssignmentEmailSection({
-  appraisalId,
+  items,
   canSend,
   onView,
   onResend,
 }: AssignmentEmailSectionProps) {
   const { t } = useTranslation('appraisal');
-  const { data } = useGetAssignmentEmailHistory(appraisalId);
-  const items = data ?? [];
   const [latest] = items;
   if (!latest) return null;
 

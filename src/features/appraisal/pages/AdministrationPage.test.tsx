@@ -2752,4 +2752,66 @@ describe('AdministrationPage: the company email on the read-only slip', () => {
     // No dangling "sent" label without its time on the latest line.
     expect(within(section).queryByText(/administration\.email\.sentLabel/)).toBeNull();
   });
+
+  it('shows the new email at once after a send, so it cannot be sent twice', async () => {
+    state.assignments = [madeExternal];
+    let release: () => void = () => {};
+    let reads = 0;
+    server.use(
+      http.get('*/appraisals/:id/assignment-emails', async () => {
+        reads += 1;
+        // The list read after the send hangs: the slip must not wait for it.
+        if (reads > 1) await new Promise<void>(r => (release = r));
+        return HttpResponse.json([historyItem()]);
+      }),
+      http.get('*/appraisals/:id/assignment-emails/:emailId', () => HttpResponse.json(sentEmail)),
+      http.post('*/appraisals/:id/assignment-emails/resend', () =>
+        HttpResponse.json({ emailId: 'e2' }),
+      ),
+    );
+    const user = userEvent.setup();
+    render(<AdministrationPage />);
+
+    await user.click(
+      within(await emailSection()).getByRole('button', { name: 'administration.email.resend' }),
+    );
+    const dialog = await screen.findByRole('dialog');
+    await within(dialog).findByDisplayValue(sentEmail.subject);
+    await user.click(within(dialog).getByRole('button', { name: 'administration.email.send' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    const section = await emailSection();
+    expect(within(section).getByText('administration.email.status.Queued')).toBeInTheDocument();
+    expect(
+      within(section).queryByRole('button', { name: 'administration.email.resend' }),
+    ).toBeNull();
+    release();
+  });
+
+  it('reads a sent email again after a failed read', async () => {
+    state.assignments = [madeExternal];
+    useHistory([historyItem()]);
+    let fail = true;
+    server.use(
+      http.get('*/appraisals/:id/assignment-emails/:emailId', () =>
+        fail ? HttpResponse.json({}, { status: 500 }) : HttpResponse.json(sentEmail),
+      ),
+    );
+    const user = userEvent.setup();
+    render(<AdministrationPage />);
+
+    await user.click(
+      within(await emailSection()).getByRole('button', { name: 'administration.email.viewSent' }),
+    );
+    const dialog = await screen.findByRole('dialog');
+    const retry = await within(dialog).findByRole(
+      'button',
+      { name: 'common:actions.retry' },
+      { timeout: 4000 },
+    );
+    fail = false;
+    await user.click(retry);
+
+    expect(await within(dialog).findByText(sentEmail.subject)).toBeInTheDocument();
+  });
 });

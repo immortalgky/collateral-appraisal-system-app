@@ -62,7 +62,11 @@ import SearchStaffModal from '../components/SearchStaffModal';
 import AssignmentEmailDialog from '../components/administration/AssignmentEmailDialog';
 import AssignmentEmailSection from '../components/administration/AssignmentEmailSection';
 import SentEmailDialog from '../components/administration/SentEmailDialog';
-import { type AssignmentEmailInput, useResendAssignmentEmail } from '../api/assignmentEmail';
+import {
+  type AssignmentEmailInput,
+  useGetAssignmentEmailHistory,
+  useResendAssignmentEmail,
+} from '../api/assignmentEmail';
 import SearchCompanyModal from '../components/SearchCompanyModal';
 import StaffDisplay, { StoredCode } from '../components/StaffDisplay';
 import CompanyDisplay from '../components/CompanyDisplay';
@@ -286,6 +290,13 @@ const AdministrationPage = () => {
   const needsPreselectCheck = !!previousCompany?.mouActive && canPreselect;
   // Which appraisal the form has been seeded for (see the seed below).
   const [seededAppraisalId, setSeededAppraisalId] = useState<string | undefined>(undefined);
+  // Only a made EXT / EXTO assignment has an email to the company: read once the form holds the
+  // stored type (before the seed it is the default), and here, once, for both slips.
+  const hasCompanyEmail =
+    localReadOnly &&
+    seededAppraisalId === appraisalId &&
+    (assignmentType === 'external' || assignmentType === 'external-offline');
+  const { data: emailHistory } = useGetAssignmentEmailHistory(appraisalId ?? '', hasCompanyEmail);
   // After the seed only an external type needs the list (picker, change-company dialog); what the
   // banner reads stays in the query cache, so switching type does not lose it.
   const isEligibleListWanted =
@@ -1234,11 +1245,10 @@ const AdministrationPage = () => {
     assignedAt: localReadOnly ? currentAssignment?.assignedAt : null,
     assignedBy: localReadOnly ? currentAssignment?.assignedBy : null,
     assignedByName: localReadOnly ? currentAssignment?.assignedByName : null,
-    // Only a made EXT / EXTO assignment has an email to the company.
     emailSection:
-      localReadOnly && (assignmentType === 'external' || assignmentType === 'external-offline') ? (
+      hasCompanyEmail && emailHistory ? (
         <AssignmentEmailSection
-          appraisalId={appraisalId ?? ''}
+          items={emailHistory}
           canSend={!isCaseClosed}
           onView={setViewEmailId}
           onResend={openResend}

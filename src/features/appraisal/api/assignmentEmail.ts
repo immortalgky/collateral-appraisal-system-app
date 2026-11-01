@@ -115,7 +115,7 @@ const historyKey = (appraisalId: string) => ['appraisal', appraisalId, 'assignme
  * (handed to the sender, about to end Sent or Failed), every minute while Pending (the handover can take
  * days).
  */
-export const useGetAssignmentEmailHistory = (appraisalId: string) =>
+export const useGetAssignmentEmailHistory = (appraisalId: string, enabled: boolean) =>
   useQuery({
     queryKey: historyKey(appraisalId),
     queryFn: async (): Promise<AssignmentEmailHistoryItem[]> => {
@@ -124,7 +124,7 @@ export const useGetAssignmentEmailHistory = (appraisalId: string) =>
       );
       return data;
     },
-    enabled: !!appraisalId,
+    enabled: enabled && !!appraisalId,
     retry: false,
     // Read on every visit: a re-assignment since the last one adds a row the cache would not have.
     staleTime: 0,
@@ -136,7 +136,7 @@ export const useGetAssignmentEmailHistory = (appraisalId: string) =>
     },
   });
 
-/** One email's content: it never changes once written (only its status moves, read from the history). */
+/** One email as written and sent. Fixed once Sent; before that its status and sent fields still move. */
 export const useGetAssignmentEmailSent = (appraisalId: string, emailId: string | null) =>
   useQuery({
     // Not under the history key: refreshing the list never touches the contents.
@@ -148,7 +148,7 @@ export const useGetAssignmentEmailSent = (appraisalId: string, emailId: string |
       return data;
     },
     enabled: !!emailId,
-    staleTime: Infinity,
+    staleTime: query => (query.state.data?.status === 'Sent' ? Infinity : 0),
     retry: 1,
   });
 
@@ -163,8 +163,28 @@ export const useResendAssignmentEmail = (appraisalId: string) => {
       );
       return data;
     },
-    // Not awaited: the email is sent; a slow list read must not hold the dialog.
-    onSuccess: () => {
+    // The new email heads the list at once (no second send while the list is read again), then the
+    // list is read; not awaited, so a slow read does not hold the dialog.
+    onSuccess: ({ emailId }) => {
+      queryClient.setQueryData<AssignmentEmailHistoryItem[]>(
+        historyKey(appraisalId),
+        list =>
+          list && [
+            {
+              id: emailId,
+              isResend: true,
+              status: 'Queued',
+              createdBy: null,
+              createdByName: null,
+              createdAt: null,
+              sentAt: null,
+              sentTo: [],
+              ccCount: 0,
+              attachmentCount: 0,
+            },
+            ...list,
+          ],
+      );
       void queryClient.invalidateQueries({ queryKey: historyKey(appraisalId) });
     },
   });
