@@ -93,6 +93,7 @@
     "InvitationSent": "已发邀请",
     "InProgress": "进行中",
     "RoutedBack": "已退回",
+    "AwaitingVotes": "等待委员投票",
     "Ended": "已结束",
     "Cancelled": "已取消"
   },
@@ -374,6 +375,7 @@
   "pulse": {
     "title": "会议概览",
     "released": "已放行",
+    "progressLine": "已放行 {{released}}/{{total}} · 已表决 {{voted}}/{{total}}",
     "decisionTotal": "决议事项",
     "valueDistribution": "按评估类型分布的价值",
     "kpiDecision": "决议事项",
@@ -402,9 +404,13 @@
     "approve": "批准",
     "reject": "否决",
     "route_back": "退回",
-    "notVoted": "尚未投票"
+    "cancelled": "已取消",
+    "notVoted": "尚未投票",
+    "outcome": "表决结果：{{outcome}}"
   },
   "session": {
+    "endBlockedByVotes": "仍有 {{n}} 项待表决",
+    "endBlockedByVotesPlural": "仍有 {{n}} 项待表决",
     "live": "实时",
     "updatedAgo": "更新于 {{time}}",
     "justNow": "刚刚",

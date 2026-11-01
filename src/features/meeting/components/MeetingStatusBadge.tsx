@@ -14,6 +14,7 @@ const DOT_COLOR: Record<MeetingStatus, string> = {
   InvitationSent: 'bg-primary',
   InProgress: 'bg-amber-500',
   RoutedBack: 'bg-purple-500',
+  AwaitingVotes: 'bg-amber-500',
   Ended: 'bg-emerald-500',
   Cancelled: 'bg-red-500',
 };
