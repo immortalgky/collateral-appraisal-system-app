@@ -309,3 +309,64 @@ describe('AssignmentEmailDialog', () => {
     expect(await screen.findByText('หน้างาน.jpg')).toBeInTheDocument();
   });
 });
+
+describe('AssignmentEmailDialog: ส่งอีกครั้ง from the read-only slip', () => {
+  const latest = {
+    id: 'e1',
+    status: 'Sent',
+    sentAt: '2026-10-29T14:33:00',
+    sentTo: ['appraisal@example-val.co.th', 'second@example.com'],
+    sentCc: ['admin@bank.example'],
+    extraTo: ['second@example.com'],
+    cc: ['IntAdminAll'],
+    subject: 'ขอนำส่งงานประเมิน ฉบับที่ส่งไป',
+    bodyHtml: '<p>เรียน บริษัท ตัวอย่าง</p>',
+    attachments: [
+      { documentId: 'd-app', source: 'appraisal', fileName: 'แผนที่.jpg', fileSizeBytes: MB },
+    ],
+  };
+  beforeEach(() => {
+    server.use(http.get('*/appraisals/:id/assignment-emails/e1', () => HttpResponse.json(latest)));
+  });
+
+  it('starts from the latest email, keeps the locked company, and offers only to send', async () => {
+    renderDialog({ resendFrom: 'e1' });
+
+    expect(await screen.findByDisplayValue(latest.subject)).toBeInTheDocument();
+    expect(screen.getByText('second@example.com')).toBeInTheDocument();
+    expect(screen.getByText('appraisal@example-val.co.th')).toBeInTheDocument();
+    expect(screen.getByText('แผนที่.jpg')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'administration.email.send' })).toBeEnabled();
+    expect(
+      screen.queryByRole('button', { name: 'administration.email.assignWithoutSend' }),
+    ).toBeNull();
+    expect(screen.queryByRole('button', { name: 'administration.email.assignAndSend' })).toBeNull();
+  });
+
+  it('restores the system template in place of the latest email', async () => {
+    const { user } = renderDialog({ resendFrom: 'e1' });
+    await screen.findByDisplayValue(latest.subject);
+
+    await user.click(screen.getByRole('button', { name: 'administration.email.restoreTemplate' }));
+
+    expect(await screen.findByDisplayValue('ขอนำส่งงานประเมิน 69105526')).toBeInTheDocument();
+    expect(screen.queryByText('แผนที่.jpg')).toBeNull();
+  });
+
+  it('cannot fall back to assigning when the latest email cannot be read', async () => {
+    server.use(
+      http.get('*/appraisals/:id/assignment-emails/e1', () =>
+        HttpResponse.json({}, { status: 500 }),
+      ),
+    );
+    renderDialog({ resendFrom: 'e1' });
+
+    // The read retries once (about a second) before it gives up.
+    expect(
+      await screen.findByText('administration.email.loadFailed', undefined, { timeout: 4000 }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'administration.email.assignWithoutSend' }),
+    ).toBeNull();
+  });
+});

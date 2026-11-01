@@ -60,7 +60,9 @@ import {
 
 import SearchStaffModal from '../components/SearchStaffModal';
 import AssignmentEmailDialog from '../components/administration/AssignmentEmailDialog';
-import type { AssignmentEmailInput } from '../api/assignmentEmail';
+import AssignmentEmailSection from '../components/administration/AssignmentEmailSection';
+import SentEmailDialog from '../components/administration/SentEmailDialog';
+import { type AssignmentEmailInput, useResendAssignmentEmail } from '../api/assignmentEmail';
 import SearchCompanyModal from '../components/SearchCompanyModal';
 import StaffDisplay, { StoredCode } from '../components/StaffDisplay';
 import CompanyDisplay from '../components/CompanyDisplay';
@@ -122,7 +124,12 @@ const AdministrationPage = () => {
   const assignmentSchema = useAssignmentFormSchema();
   const appraisalId = useAppraisalId();
   const requestId = useAppraisalRequestId();
-  const reportNo = useAppraisalContextSafe()?.appraisal?.appraisalReportNo;
+  const appraisalInfo = useAppraisalContextSafe()?.appraisal;
+  const reportNo = appraisalInfo?.appraisalReportNo;
+  // The server sends no more company email once the case is closed.
+  const isCaseClosed = ['completed', 'cancelled'].includes(
+    appraisalInfo?.status?.toLowerCase() ?? '',
+  );
   const currentUser = useAuthStore(state => state.user);
   const localizeCompanyName = useLocalizedCompanyName();
   const labelsId = useId();
@@ -198,6 +205,15 @@ const AdministrationPage = () => {
   const [emailFor, setEmailFor] = useState<Parameters<typeof createAssignment>[0] | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [preparingEmail, setPreparingEmail] = useState(false);
+  // The read-only slip's email: the one ดูฉบับที่ส่ง shows, and what ส่งอีกครั้ง pre-fills from
+  // (undefined = closed, null = the template).
+  const [viewEmailId, setViewEmailId] = useState<string | null>(null);
+  const [resendFrom, setResendFrom] = useState<string | null | undefined>(undefined);
+  const resend = useResendAssignmentEmail(appraisalId ?? '');
+  const openResend = (from: string | null) => {
+    resend.reset();
+    setResendFrom(from);
+  };
 
   const navigate = useNavigate();
   const workflowInstanceId = useWorkflowInstanceId();
@@ -1218,6 +1234,16 @@ const AdministrationPage = () => {
     assignedAt: localReadOnly ? currentAssignment?.assignedAt : null,
     assignedBy: localReadOnly ? currentAssignment?.assignedBy : null,
     assignedByName: localReadOnly ? currentAssignment?.assignedByName : null,
+    // Only a made EXT / EXTO assignment has an email to the company.
+    emailSection:
+      localReadOnly && (assignmentType === 'external' || assignmentType === 'external-offline') ? (
+        <AssignmentEmailSection
+          appraisalId={appraisalId ?? ''}
+          canSend={!isCaseClosed}
+          onView={setViewEmailId}
+          onResend={openResend}
+        />
+      ) : null,
   };
 
   return (
@@ -1668,6 +1694,31 @@ const AdministrationPage = () => {
           />
         </>
       )}
+
+      {/* The read-only slip's email actions. */}
+      <SentEmailDialog
+        appraisalId={appraisalId ?? ''}
+        emailId={viewEmailId}
+        onClose={() => setViewEmailId(null)}
+      />
+      <AssignmentEmailDialog
+        isOpen={resendFrom !== undefined}
+        appraisalId={appraisalId ?? ''}
+        requestId={requestId}
+        resendFrom={resendFrom}
+        isPending={resend.isPending}
+        error={resend.error ? errorText(resend.error, t('administration.email.sendFailed')) : null}
+        onClose={() => setResendFrom(undefined)}
+        onAssign={email =>
+          email &&
+          resend.mutate(email, {
+            onSuccess: () => {
+              setResendFrom(undefined);
+              toast.success(t('administration.email.sent'));
+            },
+          })
+        }
+      />
     </div>
   );
 };

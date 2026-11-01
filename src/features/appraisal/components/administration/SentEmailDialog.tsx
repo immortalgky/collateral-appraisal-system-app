@@ -1,0 +1,87 @@
+import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+import Modal from '@/shared/components/Modal';
+import Icon from '@/shared/components/Icon';
+import { formatFileSize } from '@/shared/utils/formatUtils';
+import { useGetAssignmentEmailSent } from '../../api/assignmentEmail';
+
+interface SentEmailDialogProps {
+  appraisalId: string;
+  /** The email to show; null = closed. */
+  emailId: string | null;
+  onClose: () => void;
+}
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="grid grid-cols-[5rem_minmax(0,1fr)] items-baseline gap-2 text-sm">
+      <dt className="text-xs leading-normal text-(--palette-gray-500)">{label}</dt>
+      <dd className="break-words text-(--palette-ink)">{children}</dd>
+    </div>
+  );
+}
+
+const Dash = () => <span className="text-(--palette-gray-400)">—</span>;
+
+/** ดูฉบับที่ส่ง: the resolved To / Cc, subject, body and files of one email, as they went out. */
+export default function SentEmailDialog({ appraisalId, emailId, onClose }: SentEmailDialogProps) {
+  const { t } = useTranslation('appraisal');
+  const { data, isError } = useGetAssignmentEmailSent(appraisalId, emailId);
+  const email = data?.id === emailId ? data : undefined;
+
+  return (
+    <Modal
+      isOpen={!!emailId}
+      onClose={onClose}
+      title={t('administration.email.view.title')}
+      size="xl"
+    >
+      {email ? (
+        <div className="flex flex-col gap-3">
+          <dl className="flex flex-col gap-1.5">
+            <Field label={t('administration.email.to')}>
+              {email.sentTo.join(', ') || <Dash />}
+            </Field>
+            <Field label={t('administration.email.ccLabel')}>
+              {email.sentCc.join(', ') || <Dash />}
+            </Field>
+            <Field label={t('administration.email.subject')}>{email.subject}</Field>
+          </dl>
+          {/* The stored HTML, exactly as sent; an empty sandbox runs no script and reaches nothing.
+              White on purpose: it is the email as the company reads it (a paper preview, 17.13). */}
+          <iframe
+            title={t('administration.email.view.body')}
+            srcDoc={email.bodyHtml}
+            sandbox=""
+            className="h-[22rem] w-full rounded-ctl border border-(--palette-line) bg-white"
+          />
+          {email.attachments.length > 0 && (
+            <ul aria-label={t('administration.email.attachments')} className="flex flex-col gap-1">
+              {email.attachments.map(a => (
+                <li key={a.documentId} className="flex items-center gap-2 text-sm">
+                  <Icon name="paperclip" style="solid" className="text-(--palette-gray-500)" />
+                  <span className="min-w-0 truncate" title={a.fileName ?? a.documentId}>
+                    {a.fileName ?? a.documentId}
+                  </span>
+                  {!!a.fileSizeBytes && (
+                    <span className="text-xs text-(--palette-gray-500) tabular-nums">
+                      {formatFileSize(a.fileSizeBytes)}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : (
+        <div className="flex min-h-40 items-center justify-center text-sm text-(--palette-gray-500)">
+          {isError ? (
+            <span role="alert">{t('administration.email.view.loadFailed')}</span>
+          ) : (
+            <Icon name="spinner" style="solid" className="animate-spin text-xl" />
+          )}
+        </div>
+      )}
+    </Modal>
+  );
+}

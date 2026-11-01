@@ -29,6 +29,7 @@ import {
   CC_ROLES,
   documentSizeQuery,
   useGetAssignmentEmailPreview,
+  useGetAssignmentEmailSent,
   type AssignmentEmailAttachment,
   type AssignmentEmailInput,
   type AssignmentEmailPreview,
@@ -55,6 +56,11 @@ interface AssignmentEmailDialogProps {
   onClose: () => void;
   /** `null` = assign without sending the email. */
   onAssign: (email: AssignmentEmailInput | null) => void;
+  /**
+   * Set = ส่งอีกครั้ง / ส่งอีเมล from the read-only slip: the email goes now, with nothing to assign.
+   * An id pre-fills from that email; null starts from the template (nothing was sent yet).
+   */
+  resendFrom?: string | null;
 }
 
 /**
@@ -77,10 +83,28 @@ const AssignmentEmailDialog = (props: AssignmentEmailDialogProps) => {
 
 const Composer = (props: AssignmentEmailDialogProps) => {
   const { t } = useTranslation(['appraisal', 'common', 'request']);
-  const { data, isError, refetch, isFetching } = useGetAssignmentEmailPreview(props.appraisalId);
+  const isResend = props.resendFrom !== undefined;
+  const preview = useGetAssignmentEmailPreview(props.appraisalId);
+  const last = useGetAssignmentEmailSent(props.appraisalId, props.resendFrom ?? null);
   // A new key re-seeds the form from the template; files uploaded for this email are kept.
   const [version, setVersion] = useState(0);
   const [keptUploads, setKeptUploads] = useState<AssignmentEmailAttachment[]>([]);
+  const { refetch, isFetching } = preview;
+  // ส่งอีกครั้ง starts from the latest email (as composed) until "restore template"; the company
+  // address and the limits are always the case's own.
+  const fromLast = !!props.resendFrom && version === 0;
+  const data: AssignmentEmailPreview | undefined =
+    preview.data && fromLast
+      ? last.data && {
+          ...preview.data,
+          extraTo: last.data.extraTo,
+          cc: last.data.cc,
+          subject: last.data.subject,
+          bodyHtml: last.data.bodyHtml,
+          attachments: last.data.attachments,
+        }
+      : preview.data;
+  const isError = preview.isError || (fromLast && last.isError);
 
   const restore = async (uploads: AssignmentEmailAttachment[]) => {
     const result = await refetch();
@@ -104,13 +128,15 @@ const Composer = (props: AssignmentEmailDialogProps) => {
                 {props.error}
               </span>
             )}
-            <Button
-              variant="outline"
-              onClick={() => props.onAssign(null)}
-              isLoading={props.isPending}
-            >
-              {t('administration.email.assignWithoutSend')}
-            </Button>
+            {!isResend && (
+              <Button
+                variant="outline"
+                onClick={() => props.onAssign(null)}
+                isLoading={props.isPending}
+              >
+                {t('administration.email.assignWithoutSend')}
+              </Button>
+            )}
           </div>
         ) : (
           <Icon name="spinner" style="solid" className="animate-spin text-xl" />
@@ -148,7 +174,9 @@ const EmailForm = ({
   error,
   onClose,
   onAssign,
+  resendFrom,
 }: EmailFormProps) => {
+  const isResend = resendFrom !== undefined;
   const { t } = useTranslation(['appraisal', 'common', 'request']);
   const [extraTo, setExtraTo] = useState(() => unique(preview.extraTo));
   const [cc, setCc] = useState(() => unique(preview.cc));
@@ -504,14 +532,16 @@ const EmailForm = ({
 
       <div className="-mx-6 -mb-4 mt-1 flex flex-wrap items-center justify-end gap-2 border-t border-(--palette-line-soft) bg-(--palette-surface-2) px-6 py-3">
         <span className="mr-auto text-xs text-(--palette-ink-2)">
-          {t('administration.email.footerHint')}
+          {t(isResend ? 'administration.email.resendHint' : 'administration.email.footerHint')}
         </span>
         <Button variant="ghost" onClick={onClose} disabled={isPending}>
           {t('common:actions.close')}
         </Button>
-        <Button variant="outline" onClick={() => onAssign(null)} disabled={isPending}>
-          {t('administration.email.assignWithoutSend')}
-        </Button>
+        {!isResend && (
+          <Button variant="outline" onClick={() => onAssign(null)} disabled={isPending}>
+            {t('administration.email.assignWithoutSend')}
+          </Button>
+        )}
         <Button
           variant="primary"
           onClick={send}
@@ -519,7 +549,7 @@ const EmailForm = ({
           isLoading={isPending}
           leftIcon={<Icon name="paper-plane" style="solid" />}
         >
-          {t('administration.email.assignAndSend')}
+          {t(isResend ? 'administration.email.send' : 'administration.email.assignAndSend')}
         </Button>
       </div>
     </div>
