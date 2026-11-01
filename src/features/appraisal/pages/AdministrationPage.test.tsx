@@ -2626,7 +2626,8 @@ describe('AdministrationPage: the company email on the read-only slip', () => {
     const body = within(dialog).getByTitle('administration.email.view.body');
     // As stored, after a base that keeps a clicked link from replacing it.
     expect(body.getAttribute('srcdoc')).toBe(`<base target="_blank">${sentEmail.bodyHtml}`);
-    expect(body.getAttribute('sandbox')).toBe('');
+    // No script; a link may only open a new tab.
+    expect(body.getAttribute('sandbox')).toBe('allow-popups allow-popups-to-escape-sandbox');
   });
 
   it('sends again from the latest email, and the slip shows the new send', async () => {

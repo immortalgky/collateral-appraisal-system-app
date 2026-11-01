@@ -22,7 +22,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-/** Links would open inside the frame and replace the email; the sandbox blocks the new tab, so a click does nothing. */
+/** A link opens in a new tab (the sandbox lets that one escape it) rather than replace the email in the frame. */
 const LINKS_OUT = '<base target="_blank">';
 /** After a leading doctype, so a full document keeps its standards mode. */
 const withLinksOut = (html: string) =>
@@ -64,13 +64,13 @@ export default function SentEmailDialog({ appraisalId, emailId, onClose }: SentE
             </Field>
             <Field label={t('administration.email.subject')}>{email.subject}</Field>
           </dl>
-          {/* The stored HTML, exactly as sent; an empty sandbox runs no script, form or
-              navigation (remote images in the body still load, as in the company's mail client).
+          {/* The stored HTML, exactly as sent; the sandbox runs no script or form and
+              allows only a link to open a new tab (remote images in the body still load, as in the company's mail client).
               White on purpose: it is the email as the company reads it (a paper preview, 17.13). */}
           <iframe
             title={t('administration.email.view.body')}
             srcDoc={withLinksOut(email.bodyHtml)}
-            sandbox=""
+            sandbox="allow-popups allow-popups-to-escape-sandbox"
             className="h-[22rem] w-full rounded-ctl border border-(--palette-line) bg-white"
           />
           {email.attachments.length > 0 && (

@@ -97,11 +97,11 @@ const Composer = (props: AssignmentEmailDialogProps) => {
     preview.data && fromLast
       ? last.data && {
           ...preview.data,
-          extraTo: last.data.extraTo,
-          cc: last.data.cc,
+          extraTo: last.data.extraTo ?? [],
+          cc: last.data.cc ?? [],
           subject: last.data.subject,
           bodyHtml: last.data.bodyHtml,
-          attachments: last.data.attachments,
+          attachments: last.data.attachments ?? [],
         }
       : preview.data;
   const isError = preview.isError || (fromLast && last.isError);

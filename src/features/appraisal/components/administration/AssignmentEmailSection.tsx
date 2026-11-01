@@ -92,7 +92,7 @@ export default function AssignmentEmailSection({
                 <HistoryRow email={e} />
               </span>
               <span className="shrink-0 text-(--palette-gray-500) tabular-nums">
-                <When at={e.sentAt ?? e.createdAt} />
+                <When at={e.sentAt || e.createdAt} />
               </span>
             </li>
           ))}
