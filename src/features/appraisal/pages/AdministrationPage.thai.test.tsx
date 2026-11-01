@@ -77,6 +77,7 @@ vi.mock('../api/administration', () => ({
   useGetEligibleCompanies: () => ({ data: data.none }),
   useGetEligibleStaff: () => ({ data: data.staff }),
   useGetUserById: () => ({ data: undefined }),
+  useGetUserByUsername: () => ({ data: undefined }),
 }));
 vi.mock('../components/SearchCompanyModal', () => ({ default: () => null }));
 vi.mock('../components/SearchStaffModal', () => ({ default: () => null }));

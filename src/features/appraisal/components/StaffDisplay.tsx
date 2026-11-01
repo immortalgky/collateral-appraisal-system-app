@@ -1,3 +1,4 @@
+import { Children, Fragment, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import Avatar from '@/shared/components/Avatar';
@@ -13,6 +14,31 @@ interface StaffDisplayProps {
   /** Shows a "Change" button that reopens the picker; the selection stays until another is chosen. */
   onChange?: () => void;
 }
+
+/** The selected person or company: a plain surface card with the standard light border. */
+export const selectedCardClass =
+  'flex justify-between gap-3 rounded-lg border border-(--palette-line) bg-(--palette-surface) px-3 py-2.5';
+
+/** Line 2 of a selected card: the items that exist, a light "·" between neighbours only. */
+export const MetaLine = ({ children }: { children: ReactNode }) => {
+  // toArray drops the empty ones (false, null, '') and gives each item its key.
+  const present = Children.toArray(children).filter(Boolean);
+  if (present.length === 0) return null;
+  return (
+    <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-(--palette-gray-500)">
+      {present.map((item, i) => (
+        <Fragment key={i}>
+          {i > 0 && (
+            <span aria-hidden="true" className="text-(--palette-gray-300)">
+              ·
+            </span>
+          )}
+          {item}
+        </Fragment>
+      ))}
+    </div>
+  );
+};
 
 export const ClearButton = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation('appraisal');
@@ -31,10 +57,11 @@ export const ClearButton = ({ onClick }: { onClick: () => void }) => {
 
 const StaffDisplay = ({ staff, onClear, onChange }: StaffDisplayProps) => {
   const { t } = useTranslation('appraisal');
+  // Position, department, phone, email: only what the record has; no line when none.
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-primary-200 dark:border-primary-500/30 bg-(--palette-accent-wash) px-3 py-2.5">
+    <div className={`${selectedCardClass} items-center border-l-4 border-l-primary`}>
       <div className="flex min-w-0 items-center gap-3">
-        <Avatar src={staff.avatar} name={staff.name} size="lg" />
+        <Avatar src={staff.avatar} name={staff.name} size="lg" neutral />
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-x-2">
             <span className="text-sm font-semibold text-(--palette-ink)">{staff.name}</span>
@@ -43,19 +70,33 @@ const StaffDisplay = ({ staff, onClear, onChange }: StaffDisplayProps) => {
               ({staff.employeeId || staff.id})
             </span>
           </div>
-          <div className="text-xs text-(--palette-gray-500)">{staff.department}</div>
+          <MetaLine>
+            {staff.position && <span>{staff.position}</span>}
+            {staff.department && <span>{staff.department}</span>}
+            {staff.phone && <span>{staff.phone}</span>}
+            {staff.email && <span>{staff.email}</span>}
+          </MetaLine>
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
-        <Badge tone={workloadTone(staff.currentWorkload)} dot={false} className="whitespace-nowrap">
-          {t('administration.workload', { count: staff.currentWorkload })}
-        </Badge>
-        {onChange && (
-          <Button type="button" variant="outline" size="xs" onClick={onChange}>
-            {t('administration.changeStaff')}
-          </Button>
-        )}
+      <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex flex-col items-end gap-1.5">
+          {/* Only a real count: an unknown workload shows no pill rather than 0. */}
+          {staff.currentWorkload != null && (
+            <Badge
+              tone={workloadTone(staff.currentWorkload)}
+              dot={false}
+              className="whitespace-nowrap"
+            >
+              {t('administration.workload', { count: staff.currentWorkload })}
+            </Badge>
+          )}
+          {onChange && (
+            <Button type="button" variant="outline" size="xs" onClick={onChange}>
+              {t('administration.changeStaff')}
+            </Button>
+          )}
+        </div>
         {onClear && <ClearButton onClick={onClear} />}
       </div>
     </div>
@@ -86,7 +127,7 @@ export const StoredCode = ({
   const { t } = useTranslation('appraisal');
   const label = personLabel(name, code);
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-primary-200 dark:border-primary-500/30 bg-(--palette-accent-wash) px-3 py-2.5">
+    <div className={`${selectedCardClass} items-center`}>
       <span className="min-w-0 truncate text-sm font-semibold text-(--palette-ink)" title={label}>
         {label}
       </span>

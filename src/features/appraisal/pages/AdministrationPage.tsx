@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { taskListUrl } from '@features/task/utils/taskReturn';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   useAppraisalContextSafe,
@@ -13,6 +13,7 @@ import { useGetRequestById } from '@/features/request/api';
 import { Controller, type FieldErrors, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
+import { errorText } from '@/shared/utils/errorUtils';
 
 import Icon from '@/shared/components/Icon';
 import Textarea from '@/shared/components/inputs/Textarea';
@@ -48,6 +49,8 @@ import {
 import type { ExternalCompany, InternalStaff } from '../types/administration';
 import type { FeePreviewParams } from '../types/feePreview';
 import { personLabel } from '../utils/personLabel';
+import { formatCurrency } from '@/shared/utils/formatUtils';
+import { cancelQueriesFor, useLiftoffStore, type LiftoffPayload } from '../store/liftoffStore';
 import {
   correctSavedSelection,
   isAwaitingSeed,
@@ -58,8 +61,17 @@ import {
 } from '../utils/assignmentDefaults';
 
 import SearchStaffModal from '../components/SearchStaffModal';
+import AssignmentEmailDialog from '../components/administration/AssignmentEmailDialog';
+import AssignmentEmailSection from '../components/administration/AssignmentEmailSection';
+import SentEmailDialog from '../components/administration/SentEmailDialog';
+import {
+  type AssignmentEmailInput,
+  useGetAssignmentEmailHistory,
+  useResendAssignmentEmail,
+} from '../api/assignmentEmail';
 import SearchCompanyModal from '../components/SearchCompanyModal';
-import StaffDisplay, { StoredCode } from '../components/StaffDisplay';
+import { StoredCode } from '../components/StaffDisplay';
+import SelectedStaffDisplay from '../components/SelectedStaffDisplay';
 import CompanyDisplay from '../components/CompanyDisplay';
 import PreviousCompanyBanner from '../components/PreviousCompanyBanner';
 import ChangeCompanyDialog from '../components/ChangeCompanyDialog';
@@ -76,7 +88,6 @@ import AssignmentSlipBar from '../components/administration/AssignmentSlipBar';
 import {
   FieldError,
   FieldLabel,
-  InfoNote,
   InlineNotice,
   PickerButton,
 } from '../components/administration/AdministrationFields';
@@ -113,14 +124,19 @@ const FIX_FOCUS_TARGET =
 /** Track width of the Manual / Round-robin choice (the off-system keyer's and the follow-up staff's). */
 const TWO_WAY_CHOICE_WIDTH = 'max-w-[18.5rem]';
 
-type FixTarget = 'type' | 'assignee' | 'followup' | 'fee' | 'remarks' | 'quotation';
+type FixTarget = 'type' | 'company' | 'assignee' | 'followup' | 'fee' | 'remarks' | 'quotation';
 
-const AdministrationPage = () => {
+const AdministrationPageBody = () => {
   const { t } = useTranslation('appraisal');
   const assignmentSchema = useAssignmentFormSchema();
   const appraisalId = useAppraisalId();
   const requestId = useAppraisalRequestId();
-  const reportNo = useAppraisalContextSafe()?.appraisal?.appraisalReportNo;
+  const appraisalInfo = useAppraisalContextSafe()?.appraisal;
+  const reportNo = appraisalInfo?.appraisalReportNo;
+  // The server sends no more company email once the case is closed: its IsClosed is exactly these two.
+  const isCaseClosed = ['completed', 'cancelled'].includes(
+    appraisalInfo?.status?.toLowerCase() ?? '',
+  );
   const currentUser = useAuthStore(state => state.user);
   const localizeCompanyName = useLocalizedCompanyName();
   const labelsId = useId();
@@ -187,10 +203,32 @@ const AdministrationPage = () => {
   const localReadOnly = !!currentAssignment && !isPendingRow;
   const isReadOnly = pageReadOnly || localReadOnly;
   const { mutate: createAssignment, isPending: isCreating } = useCreateAssignment();
-  const { mutate: saveAssignmentDraft, isPending: isSavingDraft } = useSaveAssignmentDraft();
+  const {
+    mutate: saveAssignmentDraft,
+    mutateAsync: saveAssignmentDraftAsync,
+    isPending: isSavingDraft,
+  } = useSaveAssignmentDraft();
+  // EXT / EXTO: the assign body waiting for the email dialog, and why the last assign was refused.
+  const [emailFor, setEmailFor] = useState<Parameters<typeof createAssignment>[0] | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [preparingEmail, setPreparingEmail] = useState(false);
+  // The read-only slip's email: the one "View sent" shows, and what "Send again" pre-fills from
+  // (undefined = closed, null = the template).
+  const [viewEmailId, setViewEmailId] = useState<string | null>(null);
+  const [resendFrom, setResendFrom] = useState<string | null | undefined>(undefined);
+  const resend = useResendAssignmentEmail(appraisalId ?? '');
+  const openResend = (from: string | null) => {
+    resend.reset();
+    setResendFrom(from);
+  };
 
   const navigate = useNavigate();
+  const { taskId } = useParams<{ taskId: string }>();
   const workflowInstanceId = useWorkflowInstanceId();
+  // The success overlay (the one task submit plays) replaces the toast + redirect after an assign.
+  const showLiftoff = useLiftoffStore(s => s.show);
+  // The pressed button's icon, read at click time: the drawer is gone by the time the request ends.
+  const assignOrigin = useRef<LiftoffPayload['origin']>(null);
   const isTaskOwner = useIsTaskOwner();
 
   // Phase-1 go-live kill switch. While this is false, CompanySelectionActivity refuses to assign
@@ -260,6 +298,13 @@ const AdministrationPage = () => {
   const needsPreselectCheck = !!previousCompany?.mouActive && canPreselect;
   // Which appraisal the form has been seeded for (see the seed below).
   const [seededAppraisalId, setSeededAppraisalId] = useState<string | undefined>(undefined);
+  // Only a made EXT / EXTO assignment has an email to the company: read once the form holds the
+  // stored type (before the seed it is the default), and here, once, for both slips.
+  const hasCompanyEmail =
+    localReadOnly &&
+    seededAppraisalId === appraisalId &&
+    (assignmentType === 'external' || assignmentType === 'external-offline');
+  const { data: emailHistory } = useGetAssignmentEmailHistory(appraisalId ?? '', hasCompanyEmail);
   // After the seed only an external type needs the list (picker, change-company dialog); what the
   // banner reads stays in the query cache, so switching type does not lose it.
   const isEligibleListWanted =
@@ -325,11 +370,15 @@ const AdministrationPage = () => {
     ],
   );
   // A saved draft can still carry 'external' from before the switch was thrown. Move it to the
-  // offline equivalent for the same reason — a disabled option must never remain selected.
+  // offline equivalent for the same reason — a disabled option must never remain selected. Its
+  // in-system company goes too (as correctSavedSelection does): the off-system one is picked anew.
   useEffect(() => {
     if (!isReadOnly && !canAssignCompanyInSystem && assignmentType === 'external') {
       setValue('assignmentType', 'external-offline');
       setValue('assignmentMethod', 'manual');
+      setValue('selectedCompany', null);
+      setValue('companyId', null);
+      setPreviousPreselected(false);
     }
   }, [isReadOnly, canAssignCompanyInSystem, assignmentType, setValue]);
 
@@ -396,6 +445,15 @@ const AdministrationPage = () => {
     onClose: closeCompanyModal,
   } = useDisclosure();
 
+  // The off-system picker offers every company with an MOU, not only the request's segment: the bank
+  // already engaged it outside the system (the key-in picker did the same), and the server checks
+  // only its MOU window. Fetched once the picker opens.
+  const { data: offlineCompanies } = useGetEligibleCompanies(
+    undefined,
+    assignmentType === 'external-offline' && isCompanyModalOpen,
+    false,
+  );
+
   const {
     isOpen: isQuotationEntryModalOpen,
     onOpen: openQuotationEntryModal,
@@ -450,17 +508,26 @@ const AdministrationPage = () => {
     }
     // Any other company than the previous one is asked about, whatever is selected now (also after
     // a clear, or a switch of type and back); picking the previous company itself is applied.
-    if (previousCompany && isPreviousCompanyEligible && company.id !== previousCompany.companyId) {
+    // Only for an in-system pick: the off-system company is the one the bank already engaged.
+    if (
+      getValues('assignmentType') === 'external' &&
+      previousCompany &&
+      isPreviousCompanyEligible &&
+      company.id !== previousCompany.companyId
+    ) {
       setPendingCompany(company);
       return;
     }
     applyCompany(company);
   };
+  // The off-system company has a check of its own; the in-system one is the assignee.
+  const companyCheckId: SlipCheckId =
+    assignmentType === 'external-offline' ? 'company' : 'assignee';
   const clearCompany = () => {
     setValue('selectedCompany', null, { shouldDirty: true });
     setValue('companyId', null, { shouldDirty: true });
     setPreviousPreselected(false);
-    touch('assignee');
+    touch(companyCheckId);
   };
   // "Keep the previous company": drops the pick and selects the previous company (the same two
   // fields a normal select writes). If it is already the selected one nothing is written, so the
@@ -524,7 +591,7 @@ const AdministrationPage = () => {
     }
     setPreviousPreselected(false);
     // The picks were just cleared: their fields start fresh, not red.
-    untouch('assignee', 'followup');
+    untouch('company', 'assignee', 'followup');
   };
 
   // Update form when data is fetched. A fresh row is seeded once per appraisal when every input is
@@ -586,21 +653,20 @@ const AdministrationPage = () => {
     // The correction effects below only see later changes; a reset in the same commit would
     // overwrite them, so a saved draft is corrected here too (a fresh row's defaults already are).
     // A read-only page (an assignment that was made, or the history view) shows the values as stored.
-    reset(
-      hasSavedSelection
-        ? correctSavedSelection(values, {
-            canAssignCompanyInSystem,
-            isInternalDisabled,
-            isReadOnly,
-          })
-        : values,
-    );
+    const seeded = hasSavedSelection
+      ? correctSavedSelection(values, {
+          canAssignCompanyInSystem,
+          isInternalDisabled,
+          isReadOnly,
+        })
+      : values;
+    reset(seeded);
     // What the seed did about the previous company: chose it on a fresh row (the banner may say
     // so until anything changes). Saving a draft turns the row into a saved one and seeds again:
     // the state is kept then for as long as the selected company is still that same one.
     setPreviousPreselected(wasPreselected =>
       hasSavedSelection
-        ? wasPreselected && !!values.companyId && values.companyId === previousCompany?.companyId
+        ? wasPreselected && !!seeded.companyId && seeded.companyId === previousCompany?.companyId
         : !!resolvedFormDefaults.selectedCompany &&
           resolvedFormDefaults.selectedCompany.id === previousCompany?.companyId,
     );
@@ -676,7 +742,7 @@ const AdministrationPage = () => {
       : feeStatusOf(feePreview, !!quotationWinner);
 
   // Handle form submission
-  const onSubmit = (data: AssignmentFormType) => {
+  const onSubmit = async (data: AssignmentFormType) => {
     if (!appraisalId) return;
 
     if (!workflowInstanceId) {
@@ -716,9 +782,9 @@ const AdministrationPage = () => {
     // AssignmentType value object only accepts those two codes. The "quotation" choice
     // lives on assignmentMethod, not on assignmentType.
     //
-    // Off-system external counts as External for the backend value object, but nothing is
-    // selected here: the keyer records the company and the book date at int-offline-book-keyin,
-    // so company / followup-staff fields are all sent null.
+    // Off-system external counts as External for the backend value object. Its company is the
+    // admin's manual pick (the keyer records only the book date at int-offline-book-keyin); it has
+    // no follow-up staff.
     const isOfflineExternal = data.assignmentType === 'external-offline';
     const isExternal = data.assignmentType === 'external' || isOfflineExternal;
     const isQuotationMethod = data.assignmentMethod === 'quotation';
@@ -728,8 +794,9 @@ const AdministrationPage = () => {
 
     // For quotation method on an external assignment, send the finalized winner's company id
     // (not whatever was previously selected manually).
-    const resolvedAssigneeCompanyId =
-      isExternal && !isOfflineExternal
+    const resolvedAssigneeCompanyId = isOfflineExternal
+      ? data.companyId
+      : isExternal
         ? isQuotationMethod && quotationWinner
           ? quotationWinner.companyId
           : isManualMethod
@@ -744,8 +811,9 @@ const AdministrationPage = () => {
       : isExternal
         ? ('EXT' as const)
         : ('INT' as const);
-    const resolvedAssigneeCompanyName =
-      isExternal && !isOfflineExternal
+    const resolvedAssigneeCompanyName = isOfflineExternal
+      ? (data.selectedCompany?.companyName ?? null)
+      : isExternal
         ? isQuotationMethod && quotationWinner
           ? quotationWinner.companyName
           : isManualMethod
@@ -753,40 +821,124 @@ const AdministrationPage = () => {
             : null
         : null;
 
+    const body = {
+      appraisalId: appraisalId ?? '',
+      assignmentType: isExternal ? 'External' : 'Internal',
+      // The offline path is External for the backend value object, but the person chosen here is
+      // the INTERNAL appraiser who will key the book in — so the staff id travels exactly as it
+      // does for Internal, and the handler pins them onto int-offline-book-keyin.
+      assigneeUserId:
+        isExternal && !isOfflineExternal ? null : isManualMethod ? data.staffId : null,
+      assigneeCompanyId: resolvedAssigneeCompanyId,
+      assigneeCompanyName: resolvedAssigneeCompanyName,
+      assignmentMethod: data.assignmentMethod,
+      internalAppraiserId: isExternal && !isOfflineExternal ? data.followupStaffId : null,
+      internalFollowupAssignmentMethod:
+        isExternal && !isOfflineExternal ? data.followupStaffMethod : null,
+      assignedBy: currentUser?.username ?? null,
+      workflowInstanceId,
+      decisionTaken,
+      remark: data.remarks,
+    };
+
+    if (decisionTaken === 'INT') {
+      assign(body);
+      return;
+    }
+    // The email is filled from the assignment row as saved (company, EXTO, follow-up, remark), so
+    // the decision on screen is saved as the draft first. The BE preview trusts that saved row to name
+    // the keyer, the follow-up officer and the company: the draft must be saved before the compose
+    // drawer opens (which is what reads the preview). Keep this order (a test pins it).
+    setPreparingEmail(true);
+    try {
+      // With the company this assign will set: the email's To is read from the saved row, so a
+      // quotation winner must be on it too (the Save Draft button keeps a manual pick only).
+      await saveAssignmentDraftAsync({
+        appraisalId,
+        ...draftBodyOf(data),
+        assigneeCompanyId: body.assigneeCompanyId,
+      });
+    } catch (error) {
+      toast.error(errorText(error, t('administration.toasts.draftSaveFailed')));
+      return;
+    } finally {
+      setPreparingEmail(false);
+    }
+    // The form stays dirty on purpose: a clean form would be re-seeded from the row just saved
+    // (with the quotation winner as a manual company) and would treat edits made meanwhile as saved.
+    setEmailError(null);
+    setEmailFor(body);
+  };
+
+  // The name of the company an assign carries, or null: only a company this page holds the record
+  // of, matched by the id the body carries (a leftover pick in the form is not one, and a raw id is
+  // never shown as a name).
+  const companyNameFor = (id: string | null | undefined) => {
+    if (!id) return null;
+    if (quotationWinner?.companyId === id)
+      return localizeCompanyName(quotationWinner.companyName, quotationWinner.companyNameLocal);
+    if (selectedCompany?.id === id)
+      return localizeCompanyName(selectedCompany.companyName, selectedCompany.companyNameLocal);
+    return null;
+  };
+
+  /** `email` undefined = INT (the field is not sent); null = EXT / EXTO assigned without the email. */
+  const assign = (
+    body: Parameters<typeof createAssignment>[0],
+    email?: AssignmentEmailInput | null,
+    origin?: LiftoffPayload['origin'],
+  ) => {
+    // The drawer's button, when it was pressed; else the slip's (kept from its click).
+    if (origin) assignOrigin.current = origin;
     createAssignment(
-      {
-        appraisalId: appraisalId ?? '',
-        assignmentType: isExternal ? 'External' : 'Internal',
-        // The offline path is External for the backend value object, but the person chosen here is
-        // the INTERNAL appraiser who will key the book in — so the staff id travels exactly as it
-        // does for Internal, and the handler pins them onto int-offline-book-keyin.
-        assigneeUserId:
-          isExternal && !isOfflineExternal ? null : isManualMethod ? data.staffId : null,
-        assigneeCompanyId: resolvedAssigneeCompanyId,
-        assigneeCompanyName: resolvedAssigneeCompanyName,
-        assignmentMethod: data.assignmentMethod,
-        internalAppraiserId: isExternal && !isOfflineExternal ? data.followupStaffId : null,
-        internalFollowupAssignmentMethod:
-          isExternal && !isOfflineExternal ? data.followupStaffMethod : null,
-        assignedBy: currentUser?.username ?? null,
-        workflowInstanceId,
-        decisionTaken,
-        remark: data.remarks,
-      },
+      email === undefined ? body : { ...body, sendEmail: !!email, ...(email && { email }) },
       {
         onSuccess: () => {
-          toast.success(t('administration.toasts.assignmentCreated'));
-          // The form is still dirty after assigning; skip the unsaved-changes guard for this redirect.
+          setEmailFor(null);
+          // The task is handed on: this page stays under the success card until it closes and the
+          // app goes to the task list, so stop it asking for the closed task meanwhile.
+          const closedIds = [taskId, workflowInstanceId, appraisalId];
+          void cancelQueriesFor(queryClient, closedIds);
+          // Who the work went to. Only a company this assign carries: an automatic pick (round-robin)
+          // is the system's, named later by the next step.
+          // EXTO hands the next task to the keyer, not to the company: name the keyer (none when the
+          // keyer is automatic), never the company. INT names its staff; EXT its company.
+          const isOffline = body.decisionTaken === 'EXTO';
+          const company = isOffline ? null : companyNameFor(body.assigneeCompanyId);
+          // A person is named by their name, else by their code (an empty name falls through); the code
+          // goes beside the name, never alone, so it is dropped when the name already is the code.
+          const staffCode =
+            (body.assignmentType === 'Internal' || isOffline) && body.assigneeUserId
+              ? body.assigneeUserId
+              : null;
+          const staffName = staffCode
+            ? selectedStaff?.name?.trim() || storedAssigneeName?.trim() || staffCode
+            : null;
+          showLiftoff({
+            origin: assignOrigin.current,
+            scene: 'forward',
+            voteOutcome: null,
+            nextActivityName: null,
+            nextAssigneeName: company ?? staffName,
+            nextAssigneeCode:
+              staffCode && staffName?.toLowerCase() !== staffCode.toLowerCase() ? staffCode : null,
+            referenceNumber: reportNo ?? null,
+            to: taskListUrl(),
+            // The form is still dirty after assigning: let the redirect through the guard.
+            beforeLeave: skipWarning,
+            closedIds,
+          });
           skipWarning();
-          navigate(taskListUrl());
         },
         onError: (error: any) => {
           // The server's detail is English: this code has its own translated message.
-          toast.error(
+          const message =
             error.apiError?.errorCode === 'FeeBaseMissing'
               ? t('administration.slip.reason.feeMissing')
-              : error.apiError?.detail || t('administration.toasts.assignmentFailed'),
-          );
+              : error.apiError?.detail || t('administration.toasts.assignmentFailed');
+          // Nothing was assigned: the email dialog (EXT / EXTO) stays open and says why itself.
+          if (email === undefined) toast.error(message);
+          setEmailError(message);
         },
       },
     );
@@ -798,11 +950,8 @@ const AdministrationPage = () => {
     navigate(-1);
   };
 
-  // Save the in-progress decision (selections + remark) as a draft without assigning.
-  // Deliberately skips the Assign validation guards so incomplete work can be saved.
-  const handleSaveDraft = () => {
-    if (!appraisalId) return;
-    const data = getValues();
+  // The draft payload: what is on screen, as the Pending assignment row stores it.
+  const draftBodyOf = (data: AssignmentFormType) => {
     // 'external-offline' is External too. Collapsing it to Internal here silently discarded the
     // admin's choice: the draft round-tripped as Internal, the radio re-seeded to "Internal Staff"
     // on reopen, and an unnoticing admin then relayed decisionTaken 'INT' — sending an internal
@@ -812,25 +961,31 @@ const AdministrationPage = () => {
     // Only a manual method has a chosen person or company; a pick left in the form after switching
     // to another method is not saved (the form keeps it, so switching back shows it again).
     const isManualMethod = data.assignmentMethod === 'manual';
+    return {
+      assignmentType: isExternal ? 'External' : 'Internal',
+      // Off-system external DOES carry a staff id — the internal appraiser who will key the book
+      // in. Only a true external assignment has no internal assignee. Dropping it here (as the
+      // plain `isExternal ? null` test did) silently discarded the admin's chosen keyer, so the
+      // draft came back with the picker empty.
+      assigneeUserId:
+        isExternal && !isDraftOfflineExternal ? null : isManualMethod ? data.staffId : null,
+      // Off-system external always keeps its company (a manual pick, whatever the keyer method).
+      assigneeCompanyId:
+        isDraftOfflineExternal || (isExternal && isManualMethod) ? data.companyId : null,
+      assignmentMethod: isDraftOfflineExternal ? OFFLINE_DRAFT_METHOD : data.assignmentMethod,
+      internalAppraiserId: isExternal && !isDraftOfflineExternal ? data.followupStaffId : null,
+      internalFollowupAssignmentMethod:
+        isExternal && !isDraftOfflineExternal ? data.followupStaffMethod : null,
+      remark: data.remarks,
+    };
+  };
+
+  // Save the in-progress decision (selections + remark) as a draft without assigning.
+  // Deliberately skips the Assign validation guards so incomplete work can be saved.
+  const handleSaveDraft = () => {
+    if (!appraisalId) return;
     saveAssignmentDraft(
-      {
-        appraisalId,
-        assignmentType: isExternal ? 'External' : 'Internal',
-        // Off-system external DOES carry a staff id — the internal appraiser who will key the book
-        // in. Only a true external assignment has no internal assignee. Dropping it here (as the
-        // plain `isExternal ? null` test did) silently discarded the admin's chosen keyer, so the
-        // draft came back with the picker empty.
-        assigneeUserId:
-          isExternal && !isDraftOfflineExternal ? null : isManualMethod ? data.staffId : null,
-        // Off-system external picks no company here — the keyer records it later.
-        assigneeCompanyId:
-          isExternal && !isDraftOfflineExternal && isManualMethod ? data.companyId : null,
-        assignmentMethod: isDraftOfflineExternal ? OFFLINE_DRAFT_METHOD : data.assignmentMethod,
-        internalAppraiserId: isExternal && !isDraftOfflineExternal ? data.followupStaffId : null,
-        internalFollowupAssignmentMethod:
-          isExternal && !isDraftOfflineExternal ? data.followupStaffMethod : null,
-        remark: data.remarks,
-      },
+      { appraisalId, ...draftBodyOf(getValues()) },
       {
         onSuccess: () => {
           toast.success(t('administration.toasts.draftSaved'));
@@ -873,9 +1028,8 @@ const AdministrationPage = () => {
 
   const isStaffAssignee = assignmentType === 'internal' || assignmentType === 'external-offline';
   const isExternalType = assignmentType === 'external';
-  // The pickers: not while read-only, nor while a quotation owns the appraisal (the off-system
-  // keyer picker is the one that ignores the quotation lock, as before).
-  const canEditPicker = !isReadOnly && !isLockedByQuotation;
+  // Every choice and picker: not while read-only, nor while a quotation owns the appraisal.
+  const canEditAssignment = !isReadOnly && !isLockedByQuotation;
 
   const slipResult = computeSlipChecks({
     assignmentType: assignmentType ?? '',
@@ -908,6 +1062,7 @@ const AdministrationPage = () => {
       ? message
       : undefined;
   const typeError = fieldError('type', t('validation.assignmentTypeRequired'));
+  const offlineCompanyError = fieldError('company', t('validation.selectCompany'));
   const assigneeError = fieldError(
     'assignee',
     isExternalType ? t('validation.selectCompany') : t('validation.selectAssignee'),
@@ -937,17 +1092,20 @@ const AdministrationPage = () => {
       value: 'internal',
       label: t('administration.assignmentType.internal'),
       description: t('administration.assignmentType.internalDesc'),
-      disabled: isInternalDisabled || isLockedByQuotation,
+      // A quotation lock disables the whole group, not this option.
+      disabled: isInternalDisabled,
+      disabledReason: t('administration.assignmentType.internalDisabledReason'),
     },
     {
       value: 'external',
       label: t('administration.assignmentType.external'),
       description: t('administration.assignmentType.externalDesc'),
-      // Shown but disabled while the go-live switch is off, with the hint below explaining why —
-      // mirroring how isInternalDisabled is handled. Submitting it would reach company-selection,
+      // Shown but disabled while the go-live switch is off: the card gives the short reason and the
+      // hint below says what to use instead. Submitting it would reach company-selection,
       // which escalates the case straight back here; leaving it visible tells the admin the path
       // exists and is paused, rather than silently removing an option they expect to see.
       disabled: !canAssignCompanyInSystem,
+      disabledReason: t('administration.assignmentType.externalDisabledReason'),
     },
     {
       value: 'external-offline',
@@ -966,8 +1124,15 @@ const AdministrationPage = () => {
       label: t('administration.assignmentDetails.manual'),
       description: t('administration.assignmentDetails.manualDesc'),
     },
-    // No description: the info note under the control says what it does.
-    { value: 'roundrobin', label: t('administration.assignmentDetails.roundrobin') },
+    {
+      value: 'roundrobin',
+      label: t('administration.assignmentDetails.roundrobin'),
+      description: t(
+        isExternalType
+          ? 'administration.roundrobinInfo.externalDesc'
+          : 'administration.roundrobinInfo.internalDesc',
+      ),
+    },
     // Quotation is external-only.
     ...(isExternalType
       ? [
@@ -980,11 +1145,20 @@ const AdministrationPage = () => {
       : []),
   ];
 
-  // The off-system keyer and the follow-up staff choose between the same two things.
-  const staffMethodOptions: SegmentedOption<'manual' | 'roundrobin'>[] = [
+  // The off-system keyer and the follow-up staff choose between the same two things; only the
+  // round-robin hint differs (manual opens a picker, which needs no hint).
+  const staffMethodOptions = (
+    roundrobinHint: string,
+  ): SegmentedOption<'manual' | 'roundrobin'>[] => [
     { value: 'manual', label: t('administration.assignmentDetails.manual') },
-    { value: 'roundrobin', label: t('administration.assignmentDetails.roundrobin') },
+    {
+      value: 'roundrobin',
+      label: t('administration.assignmentDetails.roundrobin'),
+      description: roundrobinHint,
+    },
   ];
+  const keyerOptions = staffMethodOptions(t('administration.offlineExternal.keyerRoundrobinDesc'));
+  const followupOptions = staffMethodOptions(t('administration.followupStaff.roundrobinInfo'));
 
   // The names the saved assignment carries, valid only while the form still holds that same pick.
   const storedAssigneeName =
@@ -1008,6 +1182,15 @@ const AdministrationPage = () => {
         ? personLabel(name, id)
         : null;
 
+  // The workload shown is the pool's own count for this person (the user record has none); it stays
+  // unknown, and the card shows no pill, when the pool does not list them.
+  const withPoolWorkload = (staff: InternalStaff): InternalStaff => ({
+    ...staff,
+    currentWorkload:
+      eligibleStaff?.find(p => p.id === staff.id || p.id === staff.employeeId)?.currentWorkload ??
+      staff.currentWorkload,
+  });
+
   const renderStaffPicker = (o: {
     staff: InternalStaff | null;
     placeholder: string;
@@ -1023,8 +1206,8 @@ const AdministrationPage = () => {
   }) => (
     <>
       {o.staff ? (
-        <StaffDisplay
-          staff={o.staff}
+        <SelectedStaffDisplay
+          staff={withPoolWorkload(o.staff)}
           onChange={o.canEdit ? o.onOpen : undefined}
           onClear={o.canEdit ? o.onClear : undefined}
         />
@@ -1043,14 +1226,54 @@ const AdministrationPage = () => {
           labelledBy={o.labelId}
         />
       ) : (
-        // Read-only and nothing stored: say so, rather than leave an empty slot.
-        isReadOnly && (
-          <p className="text-sm text-(--palette-gray-500)">{t('administration.noData')}</p>
-        )
+        // Nothing stored and nothing to pick (read-only, or held by a quotation lock): say so,
+        // rather than leave an empty slot.
+        <p className="text-sm text-(--palette-gray-500)">{t('administration.noData')}</p>
       )}
       <FieldError>{o.error}</FieldError>
     </>
   );
+
+  // The form's company (in-system manual pick or the off-system company), as a picker.
+  const renderCompanyPicker = (o: { labelId: string; canEdit: boolean; error?: string }) => (
+    <>
+      {selectedCompany ? (
+        <CompanyDisplay
+          company={selectedCompany}
+          badge={
+            previousCompany?.companyId === selectedCompany.id ? previousCompanyBadge : undefined
+          }
+          onChange={o.canEdit ? openCompanyModal : undefined}
+          onClear={o.canEdit ? clearCompany : undefined}
+        />
+      ) : companyId ? (
+        // The saved id whose company record could not be looked up: shown as it is
+        // stored (the assignment carries no company name), never as "not selected".
+        <StoredCode
+          code={companyId}
+          changeLabel={t('administration.changeCompanyButton')}
+          onChange={o.canEdit ? openCompanyModal : undefined}
+          onClear={o.canEdit ? clearCompany : undefined}
+        />
+      ) : o.canEdit ? (
+        <PickerButton
+          placeholder={t('administration.manualCompany.placeholder')}
+          onClick={openCompanyModal}
+          invalid={!!o.error}
+          labelledBy={o.labelId}
+        />
+      ) : (
+        // Nothing stored and nothing to pick (read-only, or held by a quotation lock): say so.
+        <p className="text-sm text-(--palette-gray-500)">{t('administration.noData')}</p>
+      )}
+      <FieldError>{o.error}</FieldError>
+    </>
+  );
+
+  // The form's company as the slip names it: the looked-up record, else the stored id.
+  const companyLabel = selectedCompany
+    ? localizeCompanyName(selectedCompany.companyName, selectedCompany.companyNameLocal)
+    : companyId;
 
   const slipProps: AssignmentSlipProps = {
     subtitle: reportNo,
@@ -1062,11 +1285,10 @@ const AdministrationPage = () => {
     // not resolve to a person is still the record's own value.
     assigneeName: isStaffAssignee
       ? staffPersonLabel(selectedStaff, staffId, storedAssigneeName)
-      : selectedCompany
-        ? localizeCompanyName(selectedCompany.companyName, selectedCompany.companyNameLocal)
-        : companyId,
+      : companyLabel,
     isPreviousCompany:
       isExternalType && !!selectedCompany && selectedCompany.id === previousCompany?.companyId,
+    offlineCompanyName: assignmentType === 'external-offline' ? companyLabel : null,
     followupMethod: followupStaffMethod,
     followupName: staffPersonLabel(selectedFollowupStaff, followupStaffId, storedFollowupName),
     quotationWinnerName: quotationWinner
@@ -1077,9 +1299,10 @@ const AdministrationPage = () => {
     result: slipResult,
     onFix: handleFix,
     isDirty,
-    isAssigning: isCreating,
+    isAssigning: isCreating || preparingEmail,
     isSavingDraft,
-    onAssign: () => {
+    onAssign: origin => {
+      assignOrigin.current = origin ?? null;
       void submit();
     },
     onSaveDraft: handleSaveDraft,
@@ -1087,7 +1310,57 @@ const AdministrationPage = () => {
     assignedAt: localReadOnly ? currentAssignment?.assignedAt : null,
     assignedBy: localReadOnly ? currentAssignment?.assignedBy : null,
     assignedByName: localReadOnly ? currentAssignment?.assignedByName : null,
+    emailSection:
+      hasCompanyEmail && emailHistory ? (
+        <AssignmentEmailSection
+          items={emailHistory}
+          canSend={!isCaseClosed}
+          onView={setViewEmailId}
+          onResend={openResend}
+        />
+      ) : null,
   };
+
+  // The assignment in one line for the email drawer's header: only what is known (an automatic
+  // follow-up has no name yet, the fee may still be loading).
+  const emailCompanyId =
+    assignmentType === 'external-offline'
+      ? companyId
+      : assignmentType === 'external'
+        ? assignmentMethod === 'quotation'
+          ? quotationWinner?.companyId
+          : assignmentMethod === 'manual'
+            ? companyId
+            : null
+        : null;
+  // The resend drawer reads the saved assignment, not the form (the page is read-only and the form
+  // is only a view of it): its company, its responsible person and the fee on the page.
+  const savedEmailSummary = [
+    assignedCompany
+      ? localizeCompanyName(assignedCompany.companyName, assignedCompany.companyNameLocal)
+      : null,
+    currentAssignment?.assigneeUserId
+      ? `${t('administration.slip.segment.keyer')} ${personLabel(currentAssignment.assigneeUserName, currentAssignment.assigneeUserId)}`
+      : currentAssignment?.internalAppraiserId
+        ? `${t('administration.slip.segment.followup')} ${personLabel(currentAssignment.internalAppraiserName, currentAssignment.internalAppraiserId)}`
+        : null,
+    slipProps.fee
+      ? t('administration.email.summaryFee', { amount: formatCurrency(slipProps.fee.total) })
+      : null,
+  ].filter((part): part is string => !!part);
+  const emailSummary = [
+    companyNameFor(emailCompanyId),
+    assignmentType === 'external' && slipProps.followupName
+      ? `${t('administration.slip.segment.followup')} ${slipProps.followupName}`
+      : assignmentType === 'external-offline' &&
+          assignmentMethod === 'manual' &&
+          slipProps.assigneeName
+        ? `${t('administration.slip.segment.keyer')} ${slipProps.assigneeName}`
+        : null,
+    slipProps.fee
+      ? t('administration.email.summaryFee', { amount: formatCurrency(slipProps.fee.total) })
+      : null,
+  ].filter((part): part is string => !!part);
 
   return (
     // The page content is a size container: the slip sits in a right rail once it is at least
@@ -1154,6 +1427,7 @@ const AdministrationPage = () => {
 
               {/* Assignment Type Card */}
               <FormCard
+                divider={false}
                 title={t('administration.assignmentType.title')}
                 subtitle={t('administration.assignmentType.subtitle')}
               >
@@ -1170,19 +1444,19 @@ const AdministrationPage = () => {
                           handleAssignmentTypeChange(value, field.onChange);
                           touch('type');
                         }}
-                        tone={assignmentType === 'internal' ? 'teal' : 'purple'}
-                        descriptionVariant="callout"
-                        disabled={isReadOnly || isLockedByQuotation}
+                        disabled={!canEditAssignment}
                       />
                     )}
                   />
                   <FieldError>{typeError}</FieldError>
-                  {isInternalDisabled && (
+                  {/* Why internal is off; nothing to pick while the type choice is locked. */}
+                  {isInternalDisabled && canEditAssignment && (
                     <p className="mt-2 text-xs text-(--palette-warn)">
-                      {t('administration.assignmentType.internalDisabledHint')}
+                      {t('administration.assignmentType.internalDisabledReason')}
                     </p>
                   )}
-                  {!canAssignCompanyInSystem && (
+                  {/* What to pick instead; nothing to pick while the type choice is locked. */}
+                  {!canAssignCompanyInSystem && canEditAssignment && (
                     <p className="mt-2 text-xs text-(--palette-warn)">
                       {t('administration.assignmentType.externalDisabledHint')}
                     </p>
@@ -1190,42 +1464,48 @@ const AdministrationPage = () => {
                 </div>
               </FormCard>
 
-              {/* Off-system external: nothing to select here. The company and the book's appraisal
-                  date are recorded by the keyer at int-offline-book-keyin, who has the paper book. */}
+              {/* Off-system external: the company the bank engaged (always picked by hand) and who
+                  keys its book in. The keyer records only the book's appraisal date at key-in. */}
               {assignmentType === 'external-offline' && (
                 <FormCard
+                  divider={false}
                   title={t('administration.offlineExternal.title')}
                   subtitle={t('administration.offlineExternal.subtitle')}
                 >
+                  <div ref={sectionRef('company')}>
+                    <FieldLabel
+                      id={`${labelsId}-offline-company`}
+                      required={canEditAssignment}
+                      first
+                    >
+                      {t('administration.offlineExternal.companyLabel')}
+                    </FieldLabel>
+                    {renderCompanyPicker({
+                      labelId: `${labelsId}-offline-company`,
+                      canEdit: canEditAssignment,
+                      error: offlineCompanyError,
+                    })}
+                  </div>
+
                   {/* Who keys the book in. The person is an internal appraiser, but the decision
                       belongs to this engagement and reads as part of it. */}
-                  <FieldLabel id={`${labelsId}-keyer`} required={!isReadOnly} first>
+                  <FieldLabel id={`${labelsId}-keyer`} required={canEditAssignment}>
                     {t('administration.offlineExternal.keyerMethodLabel')}
                   </FieldLabel>
-                  {isReadOnly ? (
-                    // Read-only: the chosen method as text, not a greyed-out toggle.
-                    <p className="mb-2 text-sm text-(--palette-ink)">
-                      {t(
-                        assignmentMethod === 'roundrobin'
-                          ? 'administration.assignmentDetails.roundrobin'
-                          : 'administration.assignmentDetails.manual',
-                      )}
-                    </p>
-                  ) : (
-                    <Controller
-                      name="assignmentMethod"
-                      control={control}
-                      render={({ field }) => (
-                        <SegmentedChoice
-                          ariaLabelledBy={`${labelsId}-keyer`}
-                          options={staffMethodOptions}
-                          value={field.value === 'quotation' ? '' : field.value}
-                          onChange={field.onChange}
-                          className={TWO_WAY_CHOICE_WIDTH}
-                        />
-                      )}
-                    />
-                  )}
+                  <Controller
+                    name="assignmentMethod"
+                    control={control}
+                    render={({ field }) => (
+                      <SegmentedChoice
+                        ariaLabel={t('administration.offlineExternal.keyerMethodLabel')}
+                        options={keyerOptions}
+                        value={field.value === 'quotation' ? '' : field.value}
+                        onChange={field.onChange}
+                        disabled={!canEditAssignment}
+                        className={TWO_WAY_CHOICE_WIDTH}
+                      />
+                    )}
+                  />
 
                   {assignmentMethod === 'manual' && (
                     <div className="mt-2" ref={sectionRef('assignee')}>
@@ -1237,16 +1517,10 @@ const AdministrationPage = () => {
                         labelId: `${labelsId}-keyer`,
                         onOpen: openStaffModal,
                         onClear: clearStaff,
-                        canEdit: !isReadOnly,
+                        canEdit: canEditAssignment,
                         error: assigneeError,
                       })}
                     </div>
-                  )}
-
-                  {assignmentMethod === 'roundrobin' && (
-                    <InfoNote title={t('administration.roundrobinInfo.title')}>
-                      {t('administration.offlineExternal.keyerRoundrobinDesc')}
-                    </InfoNote>
                   )}
                 </FormCard>
               )}
@@ -1258,6 +1532,7 @@ const AdministrationPage = () => {
                   a disabled path look submittable. */}
               {(assignmentType === 'internal' || assignmentType === 'external') && (
                 <FormCard
+                  divider={false}
                   title={
                     assignmentType === 'internal'
                       ? t('administration.assignmentDetails.titleInternal')
@@ -1266,19 +1541,17 @@ const AdministrationPage = () => {
                   subtitle={t('administration.assignmentDetails.subtitle')}
                 >
                   {/* Assignment Method */}
-                  <FieldLabel id={`${labelsId}-method`} first>
-                    {t('administration.assignmentDetails.methodLabel')}
-                  </FieldLabel>
+                  <FieldLabel first>{t('administration.assignmentDetails.methodLabel')}</FieldLabel>
                   <Controller
                     name="assignmentMethod"
                     control={control}
                     render={({ field }) => (
                       <SegmentedChoice
-                        ariaLabelledBy={`${labelsId}-method`}
+                        ariaLabel={t('administration.assignmentDetails.methodLabel')}
                         options={methodOptions}
                         value={field.value}
                         onChange={field.onChange}
-                        disabled={isReadOnly || isLockedByQuotation}
+                        disabled={!canEditAssignment}
                       />
                     )}
                   />
@@ -1286,7 +1559,7 @@ const AdministrationPage = () => {
                   {/* Manual Selection - Internal Staff */}
                   {assignmentMethod === 'manual' && assignmentType === 'internal' && (
                     <div ref={sectionRef('assignee')}>
-                      <FieldLabel id={`${labelsId}-staff`} required={!isReadOnly}>
+                      <FieldLabel id={`${labelsId}-staff`} required={canEditAssignment}>
                         {t('administration.manualStaff.label')}
                       </FieldLabel>
                       {renderStaffPicker({
@@ -1297,7 +1570,7 @@ const AdministrationPage = () => {
                         labelId: `${labelsId}-staff`,
                         onOpen: openStaffModal,
                         onClear: clearStaff,
-                        canEdit: canEditPicker,
+                        canEdit: canEditAssignment,
                         error: assigneeError,
                       })}
                     </div>
@@ -1306,54 +1579,15 @@ const AdministrationPage = () => {
                   {/* Manual Selection - External Company */}
                   {assignmentMethod === 'manual' && assignmentType === 'external' && (
                     <div ref={sectionRef('assignee')}>
-                      <FieldLabel id={`${labelsId}-company`} required={!isReadOnly}>
+                      <FieldLabel id={`${labelsId}-company`} required={canEditAssignment}>
                         {t('administration.manualCompany.label')}
                       </FieldLabel>
-                      {selectedCompany ? (
-                        <CompanyDisplay
-                          company={selectedCompany}
-                          badge={
-                            previousCompany?.companyId === selectedCompany.id
-                              ? previousCompanyBadge
-                              : undefined
-                          }
-                          onChange={canEditPicker ? openCompanyModal : undefined}
-                          onClear={canEditPicker ? clearCompany : undefined}
-                        />
-                      ) : companyId ? (
-                        // The saved id whose company record could not be looked up: shown as it is
-                        // stored (the assignment carries no company name), never as "not selected".
-                        <StoredCode
-                          code={companyId}
-                          changeLabel={t('administration.changeCompanyButton')}
-                          onChange={canEditPicker ? openCompanyModal : undefined}
-                          onClear={canEditPicker ? clearCompany : undefined}
-                        />
-                      ) : canEditPicker ? (
-                        <PickerButton
-                          placeholder={t('administration.manualCompany.placeholder')}
-                          onClick={openCompanyModal}
-                          invalid={!!assigneeError}
-                          labelledBy={`${labelsId}-company`}
-                        />
-                      ) : (
-                        isReadOnly && (
-                          <p className="text-sm text-(--palette-gray-500)">
-                            {t('administration.noData')}
-                          </p>
-                        )
-                      )}
-                      <FieldError>{assigneeError}</FieldError>
+                      {renderCompanyPicker({
+                        labelId: `${labelsId}-company`,
+                        canEdit: canEditAssignment,
+                        error: assigneeError,
+                      })}
                     </div>
-                  )}
-
-                  {/* Round-robin Info */}
-                  {assignmentMethod === 'roundrobin' && (
-                    <InfoNote title={t('administration.roundrobinInfo.title')}>
-                      {assignmentType === 'internal'
-                        ? t('administration.roundrobinInfo.internalDesc')
-                        : t('administration.roundrobinInfo.externalDesc')}
-                    </InfoNote>
                   )}
 
                   {/* Internal Followup Staff - Only for external assignments */}
@@ -1372,22 +1606,15 @@ const AdministrationPage = () => {
                         control={control}
                         render={({ field }) => (
                           <SegmentedChoice
-                            ariaLabelledBy={`${labelsId}-followup`}
-                            options={staffMethodOptions}
+                            ariaLabel={t('administration.followupStaff.label')}
+                            options={followupOptions}
                             value={field.value}
                             onChange={handleFollowupMethodChange}
-                            disabled={isReadOnly || isLockedByQuotation}
+                            disabled={!canEditAssignment}
                             className={TWO_WAY_CHOICE_WIDTH}
                           />
                         )}
                       />
-
-                      {/* Round-robin info box */}
-                      {followupStaffMethod === 'roundrobin' && (
-                        <InfoNote title={t('administration.roundrobinInfo.title')}>
-                          {t('administration.followupStaff.roundrobinInfo')}
-                        </InfoNote>
-                      )}
 
                       {/* Manual staff selection */}
                       {followupStaffMethod === 'manual' && (
@@ -1400,7 +1627,7 @@ const AdministrationPage = () => {
                             labelId: `${labelsId}-followup`,
                             onOpen: openFollowupStaffModal,
                             onClear: clearFollowupStaff,
-                            canEdit: canEditPicker,
+                            canEdit: canEditAssignment,
                             error: followupError,
                           })}
                         </div>
@@ -1440,6 +1667,7 @@ const AdministrationPage = () => {
               {/* Remark Card — kept at the bottom of the form */}
               <div ref={sectionRef('remarks')}>
                 <FormCard
+                  divider={false}
                   title={t('administration.remark.title')}
                   subtitle={t('administration.remark.subtitle')}
                 >
@@ -1528,10 +1756,12 @@ const AdministrationPage = () => {
             isOpen={isCompanyModalOpen}
             onClose={() => {
               closeCompanyModal();
-              touch('assignee');
+              touch(companyCheckId);
             }}
             onSelect={handleCompanySelect}
-            eligibleCompanies={eligibleCompanies}
+            eligibleCompanies={
+              assignmentType === 'external-offline' ? offlineCompanies : eligibleCompanies
+            }
             previousCompany={
               previousCompany
                 ? { id: previousCompany.companyId, badge: previousCompanyBadge }
@@ -1578,10 +1808,53 @@ const AdministrationPage = () => {
             }
             internalFollowupAssignmentMethod={followupStaffMethod ?? null}
           />
+          <AssignmentEmailDialog
+            isOpen={!!emailFor}
+            summary={emailSummary}
+            appraisalId={appraisalId ?? ''}
+            requestId={requestId}
+            isPending={isCreating}
+            error={emailError}
+            onClose={() => setEmailFor(null)}
+            onAssign={(email, origin) => emailFor && assign(emailFor, email, origin)}
+          />
         </>
       )}
+
+      {/* The read-only slip's email actions. */}
+      <SentEmailDialog
+        appraisalId={appraisalId ?? ''}
+        emailId={viewEmailId}
+        onClose={() => setViewEmailId(null)}
+      />
+      <AssignmentEmailDialog
+        isOpen={resendFrom !== undefined}
+        summary={savedEmailSummary}
+        appraisalId={appraisalId ?? ''}
+        requestId={requestId}
+        resendFrom={resendFrom}
+        isPending={resend.isPending}
+        error={resend.error ? errorText(resend.error, t('administration.email.sendFailed')) : null}
+        onClose={() => setResendFrom(undefined)}
+        onAssign={email =>
+          email &&
+          resend.mutate(email, {
+            onSuccess: () => {
+              setResendFrom(undefined);
+              toast.success(t('administration.email.sent'));
+            },
+          })
+        }
+      />
     </div>
   );
 };
+
+/**
+ * Keyed by the appraisal: the router keeps this page mounted when only the appraisal id in the URL
+ * changes, and everything the page holds (the open email drawers, a draft save still running whose
+ * continuation opens the composer, the form) belongs to the case it was opened on.
+ */
+const AdministrationPage = () => <AdministrationPageBody key={useAppraisalId()} />;
 
 export default AdministrationPage;

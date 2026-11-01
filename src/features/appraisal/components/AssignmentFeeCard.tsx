@@ -432,6 +432,7 @@ export default function AssignmentFeeCard({
 
   return (
     <FormCard
+      divider={false}
       title={t('feePreview.title')}
       subtitle={editable ? t('feePreview.subtitleEditable') : t('feePreview.subtitle')}
     >

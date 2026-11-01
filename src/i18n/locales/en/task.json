@@ -170,6 +170,11 @@
       "waiting": "Added to pool {{ago}}",
       "lockedAgo": "Locked {{ago}}"
     },
+    "banner": {
+      "other": "<strong>{{name}}</strong> is editing this task. You can only view it.",
+      "owner": "You are editing this task. It is locked for you.",
+      "release": "Release lock"
+    },
     "toasts": {
       "lockedBy": "Task is currently being edited by {{name}}",
       "lockFailed": "Could not lock the task. Try again.",

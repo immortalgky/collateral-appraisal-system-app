@@ -170,6 +170,11 @@
       "waiting": "进入任务池 {{ago}}",
       "lockedAgo": "锁定 {{ago}}"
     },
+    "banner": {
+      "other": "<strong>{{name}}</strong> 正在编辑此任务，您只能查看。",
+      "owner": "您正在编辑此任务，任务已为您锁定。",
+      "release": "解除锁定"
+    },
     "toasts": {
       "lockedBy": "{{name}} 正在编辑此任务",
       "lockFailed": "无法锁定任务，请重试。",

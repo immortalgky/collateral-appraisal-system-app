@@ -1,5 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, type ReactNode } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
+import { Extension } from '@tiptap/core';
+import { Plugin } from '@tiptap/pm/state';
+import { Decoration, DecorationSet } from '@tiptap/pm/view';
+import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import StarterKit from '@tiptap/starter-kit';
 import {
   Table as BaseTable,
@@ -35,12 +39,50 @@ const TableCell = BaseTableCell.extend({
   },
 });
 
+/** Marks every match of `pattern` in the text with `className`, without changing the HTML. */
+const patternHighlight = (pattern: RegExp, className: string) => {
+  const global = new RegExp(pattern.source, pattern.flags.replace('g', '') + 'g');
+  const find = (doc: ProseMirrorNode) => {
+    const marks: Decoration[] = [];
+    doc.descendants((node, pos) => {
+      if (!node.isText || !node.text) return;
+      for (const m of node.text.matchAll(global)) {
+        const from = pos + (m.index ?? 0);
+        marks.push(Decoration.inline(from, from + m[0].length, { class: className }));
+      }
+    });
+    return DecorationSet.create(doc, marks);
+  };
+  return Extension.create({
+    name: 'patternHighlight',
+    addProseMirrorPlugins() {
+      // Rescanned only when the text changes, not on every caret move.
+      const plugin: Plugin<DecorationSet> = new Plugin({
+        state: {
+          init: (_, state) => find(state.doc),
+          apply: (tr, old) => (tr.docChanged ? find(tr.doc) : old),
+        },
+        props: { decorations: state => plugin.getState(state) },
+      });
+      return [plugin];
+    },
+  });
+};
+
 interface RichTextEditorProps {
   value: string;
   onChange: (html: string) => void;
   onBlur?: () => void;
   className?: string;
   minHeightClass?: string;
+  /** Tailwind cap on the editing area before it scrolls (default `max-h-96`); `max-h-none` lets it grow. */
+  maxHeightClass?: string;
+  /** Fill the height the container leaves (use with `className="flex flex-1 flex-col"` on a flex parent). */
+  grow?: boolean;
+  /** Text to mark (e.g. `{{company}}` placeholders); read once, when the editor is made. */
+  highlight?: RegExp;
+  /** Extra controls at the right end of the toolbar. */
+  toolbarEnd?: ReactNode;
 }
 
 interface ToolbarButtonProps {
@@ -75,15 +117,32 @@ const RichTextEditor = ({
   onBlur,
   className,
   minHeightClass = 'min-h-[12rem]',
+  maxHeightClass = 'max-h-96',
+  grow = false,
+  highlight,
+  toolbarEnd,
 }: RichTextEditorProps) => {
-  const editor = useEditor({
-    extensions: [
+  // The extensions are read once by useEditor; the pattern is fixed for the editor's life.
+  const extensions = useMemo(
+    () => [
       StarterKit,
       Table.configure({ resizable: false }),
       TableRow,
       TableHeader,
       TableCell,
+      ...(highlight
+        ? [
+            patternHighlight(
+              highlight,
+              'rounded border border-dashed border-amber-500 bg-amber-50 px-1 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300',
+            ),
+          ]
+        : []),
     ],
+    [], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const editor = useEditor({
+    extensions,
     content: value,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
     onBlur: () => onBlur?.(),
@@ -141,15 +200,18 @@ const RichTextEditor = ({
             editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
           }
         />
+        {toolbarEnd && <div className="ml-auto flex items-center gap-1">{toolbarEnd}</div>}
       </div>
       <EditorContent
         editor={editor}
         className={clsx(
-          'flex max-h-96 flex-col overflow-y-auto px-3.5 py-2.5 text-sm leading-relaxed text-(--palette-ink) [&_.ProseMirror]:flex-1',
+          'flex flex-col overflow-y-auto px-3.5 py-2.5 text-sm leading-relaxed text-(--palette-ink) [&_.ProseMirror]:flex-1',
           '[&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5',
           '[&_table]:my-2 [&_table]:w-full [&_table]:table-fixed [&_table]:border-collapse',
           '[&_td]:border [&_td]:border-(--palette-line-strong) [&_td]:p-1.5 [&_td]:break-words [&_th]:border [&_th]:border-(--palette-line-strong) [&_th]:bg-(--palette-surface-3) [&_th]:p-1.5 [&_th]:text-left [&_th]:font-semibold [&_th]:break-words',
+          grow && 'flex-1',
           minHeightClass,
+          maxHeightClass,
         )}
       />
     </div>

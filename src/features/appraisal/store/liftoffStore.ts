@@ -38,6 +38,10 @@ export const originOf = (el: Element | null | undefined): LiftoffPayload['origin
     : null;
 };
 
+/** `origin` for a pressed button: its paper-plane icon when it has one, else the button itself. */
+export const buttonOrigin = (button: HTMLElement): LiftoffPayload['origin'] =>
+  originOf(button.querySelector('svg') ?? button);
+
 /** Cancels the in-flight queries that belong to the item that was just submitted (any query whose
  *  key holds one of `ids`: its task, workflow instance, appraisal or request id). The page stays on
  *  screen behind the success card while the item is already closed server-side, so a request still

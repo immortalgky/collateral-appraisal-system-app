@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AxiosError } from 'axios';
 import axios from '@shared/api/axiosInstance';
 import { extractApiError } from '@shared/utils/errorUtils';
@@ -181,8 +181,13 @@ export const useRevokePasskeys = () => {
 };
 
 /** Admin: list all users */
-export const useGetUsers = (params: GetUsersParams = {}) => {
+export const useGetUsers = (
+  params: GetUsersParams = {},
+  options?: { enabled?: boolean; keepPrevious?: boolean },
+) => {
   return useQuery({
+    enabled: options?.enabled ?? true,
+    placeholderData: options?.keepPrevious ? keepPreviousData : undefined,
     queryKey: [USERS_KEY, params],
     queryFn: async (): Promise<AdminUserListResult> => {
       const { data } = await axios.get<AdminUserListResult>('/auth/users', {

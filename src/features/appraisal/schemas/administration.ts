@@ -11,8 +11,10 @@ export const internalStaffSchema = z.object({
   name: z.string(),
   email: z.string(),
   department: z.string(),
+  position: z.string().optional(),
+  phone: z.string().optional(),
   avatar: z.string().nullable(),
-  currentWorkload: z.number(),
+  currentWorkload: z.number().optional(),
 });
 
 /**
@@ -45,9 +47,8 @@ export const makeAssignmentFormSchema = (t: TFunction<'appraisal'>) =>
   z
     .object({
       // 'external-offline' = the bank engaged a company OUTSIDE the system; an internal
-      // appraiser keys that company's book in afterwards. The admin picks nothing here —
-      // the company and the book's appraisal date are recorded later by the keyer, who has
-      // the paper book in hand.
+      // appraiser keys that company's book in afterwards. The admin names the company here
+      // (always a manual pick); the keyer records only the book's appraisal date.
       assignmentType: z.enum(ASSIGNMENT_TYPES, {
         required_error: t('validation.assignmentTypeRequired'),
       }),
@@ -70,9 +71,24 @@ export const makeAssignmentFormSchema = (t: TFunction<'appraisal'>) =>
     })
     .refine(
       data => {
-        // Manual internal needs staffId. Off-system external picks no COMPANY here (the keyer
-        // records it later from the book), but it does pick the internal appraiser who keys it
-        // in — so it requires staffId, exactly like the internal path.
+        // Manual external needs companyId, and so does off-system external whatever its keyer
+        // method (its company is always picked by hand). It has its own path so the error lands
+        // under the company picker. Checked before the staff, so a failed Assign names the
+        // company first, in the slip's order.
+        const needsCompany =
+          (data.assignmentMethod === 'manual' && data.assignmentType === 'external') ||
+          data.assignmentType === 'external-offline';
+        return !needsCompany || (data.companyId !== null && data.companyId.length > 0);
+      },
+      {
+        message: t('validation.selectCompany'),
+        path: ['companyId'],
+      },
+    )
+    .refine(
+      data => {
+        // Manual internal needs staffId. Off-system external also picks the internal appraiser
+        // who keys the book in, so a manual keyer requires staffId exactly like the internal path.
         const needsStaff =
           data.assignmentMethod === 'manual' &&
           (data.assignmentType === 'internal' || data.assignmentType === 'external-offline');
@@ -81,19 +97,6 @@ export const makeAssignmentFormSchema = (t: TFunction<'appraisal'>) =>
       {
         message: t('validation.selectAssignee'),
         path: ['staffId'],
-      },
-    )
-    .refine(
-      data => {
-        // Manual external needs companyId. It has its own path so the error lands under the
-        // company picker (it used to share staffId's, which that picker never shows).
-        const needsCompany =
-          data.assignmentMethod === 'manual' && data.assignmentType === 'external';
-        return !needsCompany || (data.companyId !== null && data.companyId.length > 0);
-      },
-      {
-        message: t('validation.selectCompany'),
-        path: ['companyId'],
       },
     )
     .refine(
