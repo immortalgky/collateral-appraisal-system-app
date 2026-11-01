@@ -137,14 +137,18 @@ const Composer = (props: AssignmentEmailDialogProps) => {
               </span>
             )}
             {/* The latest email is unreadable but the template is not: start from that. */}
-            {isResend && lastFailed && (
+            {lastFailed && (
               <Button variant="outline" onClick={() => setVersion(v => v + 1)}>
                 {t('administration.email.restoreTemplate')}
               </Button>
             )}
-            {/* The template cannot be read: nothing to send yet, but it can be read again. */}
-            {isResend && preview.isError && (
-              <Button variant="outline" onClick={() => void refetch()} isLoading={isFetching}>
+            {/* Read again whichever failed (the latest email keeps the last send's To and Cc). */}
+            {isResend && (
+              <Button
+                variant="outline"
+                onClick={() => void (preview.isError ? refetch() : last.refetch())}
+                isLoading={isFetching || last.isFetching}
+              >
                 {t('common:actions.retry')}
               </Button>
             )}

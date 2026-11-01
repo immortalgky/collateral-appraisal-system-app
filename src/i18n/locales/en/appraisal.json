@@ -651,7 +651,7 @@
       "viewSent": "View sent",
       "notSentHint": "\"Assign without sending\" was chosen",
       "toLabel": "to",
-      "counts": "Cc {{cc}} · {{files}} attachment(s)",
+      "counts": "Cc: {{cc}} · Attachments: {{files}}",
       "send": "Send email",
       "resendHint": "Sends now to the assigned company, as a new email",
       "sendFailed": "The email could not be sent",

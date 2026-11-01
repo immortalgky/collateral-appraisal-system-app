@@ -2734,4 +2734,21 @@ describe('AdministrationPage: the company email on the read-only slip', () => {
     expect(within(rows[1]).getByText(/administration\.email\.status\.Failed/)).toBeInTheDocument();
     expect(within(rows[0]).queryByText(/administration\.email\.status/)).toBeNull();
   });
+
+  it('names the resender by code when the name comes back empty, and drops a Sent with no time', async () => {
+    state.assignments = [madeExternal];
+    useHistory([
+      historyItem({ id: 'e2', isResend: true, createdByName: '', sentAt: null }),
+      historyItem(),
+    ]);
+    render(<AdministrationPage />);
+
+    const section = await emailSection();
+    const rows = within(
+      within(section).getByRole('list', { name: 'administration.email.history.title' }),
+    ).getAllByRole('listitem');
+    expect(within(rows[0]).getByText(/IA0012/)).toBeInTheDocument();
+    // No dangling "sent" label without its time on the latest line.
+    expect(within(section).queryByText(/administration\.email\.sentLabel/)).toBeNull();
+  });
 });

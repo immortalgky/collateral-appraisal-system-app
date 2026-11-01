@@ -111,7 +111,7 @@ export default function AssignmentEmailSection({
 }
 
 function LatestLine({ email }: { email: AssignmentEmailHistoryItem }) {
-  const { t } = useTranslation('appraisal');
+  const { t, i18n } = useTranslation('appraisal');
   const to = email.sentTo.join(', ');
   return (
     <div className="mt-1 text-xs leading-normal text-(--palette-gray-600)">
@@ -123,7 +123,7 @@ function LatestLine({ email }: { email: AssignmentEmailHistoryItem }) {
           {email.status === 'Sent' && !email.isResend && !email.createdBy && (
             <>{t('administration.email.history.system')} · </>
           )}
-          {email.status === 'Sent' && (
+          {email.status === 'Sent' && formatLocaleDateTime(email.sentAt, i18n.language) !== '—' && (
             <>
               {t('administration.email.sentLabel')}{' '}
               <span className="font-medium text-(--palette-ink)">
@@ -161,7 +161,7 @@ function HistoryLabel({ email: e }: { email: AssignmentEmailHistoryItem }) {
       ? t('administration.email.history.first')
       : t('administration.email.history.system');
   }
-  const by = e.createdByName ?? e.createdBy;
+  const by = e.createdByName?.trim() || e.createdBy?.trim();
   const label = t('administration.email.history.resend');
   return by ? `${label} · ${by}` : label;
 }

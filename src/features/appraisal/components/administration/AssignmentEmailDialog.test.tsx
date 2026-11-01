@@ -419,4 +419,24 @@ describe('AssignmentEmailDialog: ส่งอีกครั้ง from the read
 
     expect(await screen.findByDisplayValue(latest.subject)).toBeInTheDocument();
   });
+
+  it('reads the latest email again after a failed read', async () => {
+    let fail = true;
+    server.use(
+      http.get('*/appraisals/:id/assignment-emails/e1', () =>
+        fail ? HttpResponse.json({}, { status: 500 }) : HttpResponse.json(latest),
+      ),
+    );
+    const { user } = renderDialog({ resendFrom: 'e1' });
+
+    const retry = await screen.findByRole(
+      'button',
+      { name: 'common:actions.retry' },
+      { timeout: 4000 },
+    );
+    fail = false;
+    await user.click(retry);
+
+    expect(await screen.findByDisplayValue(latest.subject)).toBeInTheDocument();
+  });
 });

@@ -110,9 +110,10 @@ export interface AssignmentEmailSent {
 const historyKey = (appraisalId: string) => ['appraisal', appraisalId, 'assignment-emails'];
 
 /**
- * Admin only: a 403 (or any failure) leaves the slip without the email row, so no retry. Read again
- * every 15 s while the latest email is Queued (handed to the sender, about to end Sent or Failed), so
- * the slip shows how it ended. A Pending one waits for the handover, which can take days: focus reads it.
+ * Admin only: a 403 (or any failure) leaves the slip without the email row, so no retry. While the latest
+ * email waits to go out the slip reads it again (no focus refetch in this app): every 15 s once Queued
+ * (handed to the sender, about to end Sent or Failed), every minute while Pending (the handover can take
+ * days).
  */
 export const useGetAssignmentEmailHistory = (appraisalId: string) =>
   useQuery({
@@ -125,13 +126,17 @@ export const useGetAssignmentEmailHistory = (appraisalId: string) =>
     },
     enabled: !!appraisalId,
     retry: false,
-    refetchInterval: query => (query.state.data?.[0]?.status === 'Queued' ? 15_000 : false),
+    refetchInterval: query => {
+      const status = query.state.data?.[0]?.status;
+      return status === 'Queued' ? 15_000 : status === 'Pending' ? 60_000 : false;
+    },
   });
 
 /** One email's content: it never changes once written (only its status moves, read from the history). */
 export const useGetAssignmentEmailSent = (appraisalId: string, emailId: string | null) =>
   useQuery({
-    queryKey: [...historyKey(appraisalId), emailId],
+    // Not under the history key: refreshing the list never touches the contents.
+    queryKey: ['appraisal', appraisalId, 'assignment-email', emailId],
     queryFn: async (): Promise<AssignmentEmailSent> => {
       const { data } = await axios.get<AssignmentEmailSent>(
         `/appraisals/${appraisalId}/assignment-emails/${emailId}`,
@@ -154,8 +159,6 @@ export const useResendAssignmentEmail = (appraisalId: string) => {
       );
       return data;
     },
-    // The list only: the emails' contents do not change.
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: historyKey(appraisalId), exact: true }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: historyKey(appraisalId) }),
   });
 };
