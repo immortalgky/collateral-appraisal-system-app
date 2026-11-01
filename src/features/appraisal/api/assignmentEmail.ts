@@ -109,7 +109,10 @@ export interface AssignmentEmailSent {
 
 const historyKey = (appraisalId: string) => ['appraisal', appraisalId, 'assignment-emails'];
 
-/** Admin only: a 403 (or any failure) leaves the slip without the email row, so no retry. */
+/**
+ * Admin only: a 403 (or any failure) leaves the slip without the email row, so no retry. Read again
+ * every 15 s while the latest email waits to go out, so the slip shows how it ended.
+ */
 export const useGetAssignmentEmailHistory = (appraisalId: string) =>
   useQuery({
     queryKey: historyKey(appraisalId),
@@ -121,9 +124,11 @@ export const useGetAssignmentEmailHistory = (appraisalId: string) =>
     },
     enabled: !!appraisalId,
     retry: false,
+    refetchInterval: query =>
+      ['Pending', 'Queued'].includes(query.state.data?.[0]?.status ?? '') ? 15_000 : false,
   });
 
-/** One sent email; it never changes once sent. */
+/** One email's content: it never changes once written (only its status moves, read from the history). */
 export const useGetAssignmentEmailSent = (appraisalId: string, emailId: string | null) =>
   useQuery({
     queryKey: [...historyKey(appraisalId), emailId],
@@ -134,6 +139,7 @@ export const useGetAssignmentEmailSent = (appraisalId: string, emailId: string |
       return data;
     },
     enabled: !!emailId,
+    staleTime: Infinity,
     retry: 1,
   });
 
@@ -148,6 +154,8 @@ export const useResendAssignmentEmail = (appraisalId: string) => {
       );
       return data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: historyKey(appraisalId) }),
+    // The list only: the emails' contents do not change.
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: historyKey(appraisalId), exact: true }),
   });
 };

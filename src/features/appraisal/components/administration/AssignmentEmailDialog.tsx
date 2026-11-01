@@ -128,6 +128,12 @@ const Composer = (props: AssignmentEmailDialogProps) => {
                 {props.error}
               </span>
             )}
+            {/* The latest email is unreadable but the template is not: start from that. */}
+            {isResend && preview.data && (
+              <Button variant="outline" onClick={() => setVersion(v => v + 1)}>
+                {t('administration.email.restoreTemplate')}
+              </Button>
+            )}
             {!isResend && (
               <Button
                 variant="outline"
@@ -149,6 +155,7 @@ const Composer = (props: AssignmentEmailDialogProps) => {
       key={version}
       {...props}
       preview={data}
+      templateCc={preview.data?.cc ?? []}
       keptUploads={keptUploads}
       onRestore={restore}
       isRestoring={isFetching}
@@ -159,6 +166,8 @@ const Composer = (props: AssignmentEmailDialogProps) => {
 interface EmailFormProps extends AssignmentEmailDialogProps {
   preview: AssignmentEmailPreview;
   keptUploads: AssignmentEmailAttachment[];
+  /** The template's Cc: a role it copies that the email left out can be put back. */
+  templateCc: string[];
   onRestore: (uploads: AssignmentEmailAttachment[]) => void;
   isRestoring: boolean;
 }
@@ -168,6 +177,7 @@ const EmailForm = ({
   requestId,
   preview,
   keptUploads,
+  templateCc,
   onRestore,
   isRestoring,
   isPending = false,
@@ -342,9 +352,9 @@ const EmailForm = ({
           isRoleChip={isRole}
         />
         {/* A role taken out can be put back without restoring the whole template. */}
-        {CC_ROLES.some(role => preview.cc.includes(role) && !cc.includes(role)) && (
+        {CC_ROLES.some(role => templateCc.includes(role) && !cc.includes(role)) && (
           <div className="mt-1 flex flex-wrap gap-1.5">
-            {CC_ROLES.filter(role => preview.cc.includes(role) && !cc.includes(role)).map(role => (
+            {CC_ROLES.filter(role => templateCc.includes(role) && !cc.includes(role)).map(role => (
               <Button
                 key={role}
                 variant="ghost"

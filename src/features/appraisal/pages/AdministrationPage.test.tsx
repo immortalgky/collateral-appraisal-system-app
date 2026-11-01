@@ -2716,4 +2716,20 @@ describe('AdministrationPage: the company email on the read-only slip', () => {
 
     expect(await within(dialog).findByText('The case is closed.')).toBeInTheDocument();
   });
+
+  it('names a history row that did not go out by its status', async () => {
+    state.assignments = [madeExternal];
+    useHistory([
+      historyItem({ id: 'e2', isResend: true, createdAt: '2026-10-30T09:10:00' }),
+      historyItem({ status: 'Failed', sentAt: null }),
+    ]);
+    render(<AdministrationPage />);
+
+    const history = within(await emailSection()).getByRole('list', {
+      name: 'administration.email.history.title',
+    });
+    const rows = within(history).getAllByRole('listitem');
+    expect(within(rows[1]).getByText(/administration\.email\.status\.Failed/)).toBeInTheDocument();
+    expect(within(rows[0]).queryByText(/administration\.email\.status/)).toBeNull();
+  });
 });

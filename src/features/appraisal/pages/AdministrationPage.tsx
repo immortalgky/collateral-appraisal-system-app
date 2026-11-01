@@ -126,7 +126,7 @@ const AdministrationPage = () => {
   const requestId = useAppraisalRequestId();
   const appraisalInfo = useAppraisalContextSafe()?.appraisal;
   const reportNo = appraisalInfo?.appraisalReportNo;
-  // The server sends no more company email once the case is closed.
+  // The server sends no more company email once the case is closed: its IsClosed is exactly these two.
   const isCaseClosed = ['completed', 'cancelled'].includes(
     appraisalInfo?.status?.toLowerCase() ?? '',
   );

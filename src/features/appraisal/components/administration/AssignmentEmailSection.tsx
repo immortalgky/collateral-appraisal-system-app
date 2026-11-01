@@ -77,7 +77,7 @@ export default function AssignmentEmailSection({
           {items.map(e => (
             <li key={e.id} className="flex justify-between gap-2 py-0.5 text-xs">
               <span className="min-w-0 text-(--palette-gray-600)">
-                <HistoryLabel email={e} />
+                <HistoryRow email={e} />
               </span>
               <span className="shrink-0 text-(--palette-gray-500) tabular-nums">
                 <When at={e.sentAt ?? e.createdAt} />
@@ -161,4 +161,17 @@ function HistoryLabel({ email: e }: { email: AssignmentEmailHistoryItem }) {
   const by = e.createdByName ?? e.createdBy;
   const label = t('administration.email.history.resend');
   return by ? `${label} · ${by}` : label;
+}
+
+/** A history row: what it was, and its status when it did not go out (yet). */
+function HistoryRow({ email }: { email: AssignmentEmailHistoryItem }) {
+  const { t } = useTranslation('appraisal');
+  return (
+    <>
+      <HistoryLabel email={email} />
+      {email.status !== 'Sent' &&
+        email.status !== 'NotSent' &&
+        ` · ${t(`administration.email.status.${email.status}`)}`}
+    </>
+  );
 }

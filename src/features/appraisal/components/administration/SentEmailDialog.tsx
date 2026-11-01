@@ -27,7 +27,7 @@ const Dash = () => <span className="text-(--palette-gray-400)">—</span>;
 export default function SentEmailDialog({ appraisalId, emailId, onClose }: SentEmailDialogProps) {
   const { t } = useTranslation('appraisal');
   const { data, isError } = useGetAssignmentEmailSent(appraisalId, emailId);
-  const email = data?.id === emailId ? data : undefined;
+  const email = emailId ? data : undefined;
 
   return (
     <Modal
@@ -47,7 +47,8 @@ export default function SentEmailDialog({ appraisalId, emailId, onClose }: SentE
             </Field>
             <Field label={t('administration.email.subject')}>{email.subject}</Field>
           </dl>
-          {/* The stored HTML, exactly as sent; an empty sandbox runs no script and reaches nothing.
+          {/* The stored HTML, exactly as sent; an empty sandbox runs no script, form or
+              navigation (remote images in the body still load, as in the company's mail client).
               White on purpose: it is the email as the company reads it (a paper preview, 17.13). */}
           <iframe
             title={t('administration.email.view.body')}

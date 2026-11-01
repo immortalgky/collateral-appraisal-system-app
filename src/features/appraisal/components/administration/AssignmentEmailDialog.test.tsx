@@ -369,4 +369,33 @@ describe('AssignmentEmailDialog: ส่งอีกครั้ง from the read
       screen.queryByRole('button', { name: 'administration.email.assignWithoutSend' }),
     ).toBeNull();
   });
+
+  it('can start from the template when the latest email cannot be read', async () => {
+    server.use(
+      http.get('*/appraisals/:id/assignment-emails/e1', () =>
+        HttpResponse.json({}, { status: 500 }),
+      ),
+    );
+    const { user } = renderDialog({ resendFrom: 'e1' });
+
+    await user.click(
+      await screen.findByRole(
+        'button',
+        { name: 'administration.email.restoreTemplate' },
+        { timeout: 4000 },
+      ),
+    );
+
+    expect(await screen.findByDisplayValue('ขอนำส่งงานประเมิน 69105526')).toBeInTheDocument();
+  });
+
+  it('offers back a template Cc role the latest email left out', async () => {
+    renderDialog({ resendFrom: 'e1' });
+    await screen.findByDisplayValue(latest.subject);
+
+    // The template copies three roles; the latest email kept only IntAdminAll.
+    expect(
+      screen.getByRole('button', { name: '+ administration.email.cc.FollowupStaff' }),
+    ).toBeInTheDocument();
+  });
 });
