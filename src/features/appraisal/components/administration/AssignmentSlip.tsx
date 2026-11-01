@@ -69,6 +69,8 @@ export interface AssignmentSlipProps {
   assignedAt?: string | null;
   assignedBy?: string | null;
   assignedByName?: string | null;
+  /** Read-only only: the "Email to the company" section (EXT / EXTO), under the details. */
+  emailSection?: ReactNode;
 }
 
 const MARKER: Record<SlipCheckStatus, { box: string; icon?: string }> = {
@@ -246,6 +248,7 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
     assignedAt,
     assignedBy,
     assignedByName,
+    emailSection,
   } = props;
 
   const recipient = useRecipient(props);
@@ -277,7 +280,13 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
   );
 
   const assignedAtText = assignedAt ? formatLocaleDateTime(assignedAt, i18n.language) : null;
-  const assignedByText = personLabel(assignedByName, assignedBy) || null;
+  // The system stamps "System", or nothing, on an assignment it made itself (as the API reads it);
+  // a name without a code is still a person.
+  const bySystem =
+    isAssigned &&
+    !assignedByName?.trim() &&
+    (!assignedBy?.trim() || assignedBy.trim().toLowerCase() === 'system');
+  const assignedByText = bySystem ? null : personLabel(assignedByName, assignedBy) || null;
 
   return (
     <FormCard
@@ -331,8 +340,10 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
         </Row>
       </dl>
 
+      {readOnly && emailSection}
+
       {readOnly ? (
-        (assignedAtText || assignedByText) && (
+        (assignedAtText || assignedByText || bySystem) && (
           <div className="flex flex-col gap-0.5 px-5 py-3 text-xs text-(--palette-gray-500)">
             {assignedAtText && (
               <span>{t('administration.slip.readOnly.assignedAt', { at: assignedAtText })}</span>
@@ -340,6 +351,7 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
             {assignedByText && (
               <span>{t('administration.slip.readOnly.assignedBy', { by: assignedByText })}</span>
             )}
+            {bySystem && <span>{t('administration.slip.readOnly.bySystem')}</span>}
           </div>
         )
       ) : (

@@ -581,7 +581,8 @@
       },
       "readOnly": {
         "assignedAt": "Assigned on {{at}}",
-        "assignedBy": "by {{by}}"
+        "assignedBy": "by {{by}}",
+        "bySystem": "Assigned by the system (automatic)"
       },
       "bar": {
         "open": "View assignment slip"
@@ -629,7 +630,41 @@
       "removeItem": "Remove {{name}}",
       "sizeUnknown": "Size unknown",
       "sizeFailed": "Some attachments' sizes could not be read — remove them or reopen this dialog before sending",
-      "documentsFailed": "Could not load the documents"
+      "documentsFailed": "Could not load the documents",
+      "status": {
+        "Pending": "Waiting to send",
+        "Queued": "Waiting to send",
+        "Sent": "Sent",
+        "Failed": "Failed",
+        "NotSent": "Not sent"
+      },
+      "history": {
+        "title": "Send history",
+        "first": "Sent with the assignment",
+        "system": "Sent from the system template",
+        "resend": "Sent again",
+        "notSent": "Assigned without the email",
+        "firstEmail": "Email with the assignment"
+      },
+      "resend": "Send again",
+      "sendNow": "Send email",
+      "viewSent": "View sent",
+      "notSentHint": "\"Assign without sending\" was chosen",
+      "toLabel": "to",
+      "counts": "Cc: {{cc}} · Attachments: {{files}}",
+      "send": "Send email",
+      "resendHint": "Sends now to the assigned company, as a new email",
+      "sendFailed": "The email could not be sent",
+      "sent": "The email to the company is on its way; the slip shows how it went",
+      "view": {
+        "title": "Email sent to the company",
+        "body": "Sent email content",
+        "loadFailed": "The sent email could not be loaded"
+      },
+      "pendingHint": "Goes out once the case is handed to the company",
+      "sentLabel": "Sent",
+      "loadLastFailed": "The latest email could not be loaded",
+      "queuedHint": "On its way; the result shows here once it is sent"
     }
   },
   "feePreview": {

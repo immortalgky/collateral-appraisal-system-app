@@ -581,7 +581,8 @@
       },
       "readOnly": {
         "assignedAt": "分配时间 {{at}}",
-        "assignedBy": "分配人 {{by}}"
+        "assignedBy": "分配人 {{by}}",
+        "bySystem": "由系统分配（自动）"
       },
       "bar": {
         "open": "查看分配单"
@@ -629,7 +630,41 @@
       "removeItem": "移除 {{name}}",
       "sizeUnknown": "大小未知",
       "sizeFailed": "无法读取部分附件的大小 — 发送前请移除这些文件或重新打开此窗口",
-      "documentsFailed": "无法加载文档列表"
+      "documentsFailed": "无法加载文档列表",
+      "status": {
+        "Pending": "待发送",
+        "Queued": "待发送",
+        "Sent": "已发送",
+        "Failed": "发送失败",
+        "NotSent": "未发送"
+      },
+      "history": {
+        "title": "发送记录",
+        "first": "随分配发送",
+        "system": "按系统模板发送",
+        "resend": "再次发送",
+        "notSent": "分配时未发送邮件",
+        "firstEmail": "分配时的邮件"
+      },
+      "resend": "再次发送",
+      "sendNow": "发送邮件",
+      "viewSent": "查看已发送",
+      "notSentHint": "已选择\"分配但不发送邮件\"",
+      "toLabel": "至",
+      "counts": "抄送 {{cc}} 人 · 附件 {{files}} 个",
+      "send": "发送邮件",
+      "resendHint": "立即作为新邮件发送给已分配的公司",
+      "sendFailed": "邮件发送失败",
+      "sent": "已提交发送给公司的邮件，发送结果见工作单",
+      "view": {
+        "title": "已发送给公司的邮件",
+        "body": "已发送邮件内容",
+        "loadFailed": "无法加载已发送的邮件"
+      },
+      "pendingHint": "案件移交公司后发送",
+      "sentLabel": "发送于",
+      "loadLastFailed": "无法加载最新的邮件",
+      "queuedHint": "发送中，完成后在此显示结果"
     }
   },
   "feePreview": {

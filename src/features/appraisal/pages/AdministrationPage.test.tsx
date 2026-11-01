@@ -55,6 +55,8 @@ const state = vi.hoisted(() => {
     calls: [] as string[],
     // What the page reads from its context, and what the company picker hands back next.
     appraisalId: 'A1',
+    // The appraisal's status in its context; null = no context (most tests).
+    appraisalStatus: null as string | null,
     taskOwner: true,
     workflowInstanceId: 'W1' as string | null,
     nextPick: undefined as unknown,
@@ -80,7 +82,8 @@ vi.mock('@/features/appraisal/context/AppraisalContext', () => ({
   useAppraisalRequestId: () => 'R1',
   useIsTaskOwner: () => state.taskOwner,
   useWorkflowInstanceId: () => state.workflowInstanceId,
-  useAppraisalContextSafe: () => null,
+  useAppraisalContextSafe: () =>
+    state.appraisalStatus ? { appraisal: { status: state.appraisalStatus } } : null,
 }));
 vi.mock('@/features/request/api', () => ({
   useGetRequestById: () => ({
@@ -264,6 +267,7 @@ beforeEach(() => {
   state.drafted = [];
   state.calls = [];
   state.appraisalId = 'A1';
+  state.appraisalStatus = null;
   state.taskOwner = true;
   state.workflowInstanceId = 'W1';
   state.nextPick = undefined;
@@ -2387,5 +2391,470 @@ describe('AdministrationPage: the off-system (EXTO) company', () => {
     expect(
       screen.queryByRole('button', { name: 'administration.clearSelection' }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe('AdministrationPage: the company email on the read-only slip', () => {
+  const madeExternal = {
+    ...draftAssignment,
+    assignmentType: 'External',
+    assignmentMethod: 'Manual',
+    assignmentStatus: 'Assigned',
+    assigneeCompanyId: 'c-old',
+    draftSavedAt: null,
+    assignedAt: '2026-10-29T14:32:00',
+    assignedBy: 'IA0012',
+    assignedByName: 'Somsri Jaingam',
+  };
+  const historyItem = (over = {}) => ({
+    id: 'e1',
+    isResend: false,
+    status: 'Sent',
+    createdBy: 'IA0012',
+    createdByName: 'Somsri Jaingam',
+    createdAt: '2026-10-29T14:32:00',
+    sentAt: '2026-10-29T14:33:00',
+    sentTo: ['co@example.com'],
+    ccCount: 9,
+    attachmentCount: 3,
+    ...over,
+  });
+  const useHistory = (items: unknown[] | 'forbidden') =>
+    server.use(
+      http.get('*/appraisals/:id/assignment-emails', () =>
+        items === 'forbidden'
+          ? HttpResponse.json({ title: 'Forbidden' }, { status: 403 })
+          : HttpResponse.json(items),
+      ),
+    );
+  // Read-only keeps no bar: the slip is in the rail and at the form's end; the rail one is first.
+  const emailSection = async () =>
+    (await screen.findAllByRole('region', { name: 'administration.email.title' }))[0];
+
+  it('shows the latest email sent, with when, to whom, the counts and the history', async () => {
+    state.assignments = [madeExternal];
+    useHistory([
+      historyItem({
+        id: 'e2',
+        isResend: true,
+        createdAt: '2026-10-30T09:10:00',
+        sentAt: '2026-10-30T09:10:30',
+      }),
+      historyItem(),
+    ]);
+    render(<AdministrationPage />);
+
+    const section = await emailSection();
+    expect(within(section).getByText('administration.email.status.Sent')).toBeInTheDocument();
+    expect(within(section).getByText('co@example.com')).toBeInTheDocument();
+    // The latest one's send time, machine-readable on its <time>.
+    expect(section.querySelector('time[datetime="2026-10-30T09:10:30"]')).not.toBeNull();
+    const history = within(section).getByRole('list', {
+      name: 'administration.email.history.title',
+    });
+    const rows = within(history).getAllByRole('listitem');
+    expect(rows).toHaveLength(2);
+    expect(within(rows[0]).getByText(/administration\.email\.history\.resend/)).toBeInTheDocument();
+    expect(within(rows[0]).getByText(/Somsri Jaingam/)).toBeInTheDocument();
+    expect(within(rows[1]).getByText('administration.email.history.first')).toBeInTheDocument();
+    expect(
+      within(section).getByRole('button', { name: 'administration.email.resend' }),
+    ).toBeInTheDocument();
+    expect(
+      within(section).getByRole('button', { name: 'administration.email.viewSent' }),
+    ).toBeInTheDocument();
+  });
+
+  it('reads "waiting to send" while the email waits for the handover, with no resend', async () => {
+    state.assignments = [madeExternal];
+    useHistory([historyItem({ status: 'Pending', sentAt: null, sentTo: [] })]);
+    render(<AdministrationPage />);
+
+    const section = await emailSection();
+    expect(within(section).getByText('administration.email.status.Pending')).toBeInTheDocument();
+    expect(within(section).getByText('administration.email.pendingHint')).toBeInTheDocument();
+    expect(within(section).queryByRole('button')).toBeNull();
+  });
+
+  it('reads "waiting to send" once handed over, with no second send while it is on its way', async () => {
+    state.assignments = [madeExternal];
+    useHistory([historyItem({ status: 'Queued', sentAt: null })]);
+    render(<AdministrationPage />);
+
+    const section = await emailSection();
+    expect(within(section).getByText('administration.email.status.Queued')).toBeInTheDocument();
+    expect(within(section).getByText('co@example.com')).toBeInTheDocument();
+    expect(within(section).queryByRole('button')).toBeNull();
+  });
+
+  it('offers no send once the case is closed', async () => {
+    state.assignments = [madeExternal];
+    state.appraisalStatus = 'Completed';
+    useHistory([historyItem()]);
+    render(<AdministrationPage />);
+
+    const section = await emailSection();
+    expect(
+      within(section).queryByRole('button', { name: 'administration.email.resend' }),
+    ).toBeNull();
+    expect(
+      within(section).getByRole('button', { name: 'administration.email.viewSent' }),
+    ).toBeInTheDocument();
+  });
+
+  it('offers "send email" from the template when the admin assigned without sending', async () => {
+    state.assignments = [madeExternal];
+    useHistory([historyItem({ status: 'NotSent', sentAt: null, sentTo: [] })]);
+    render(<AdministrationPage />);
+
+    const section = await emailSection();
+    expect(within(section).getByText('administration.email.status.NotSent')).toBeInTheDocument();
+    expect(within(section).getByText('administration.email.notSentHint')).toBeInTheDocument();
+    expect(
+      within(section).getByRole('button', { name: 'administration.email.sendNow' }),
+    ).toBeInTheDocument();
+    expect(
+      within(section).queryByRole('button', { name: 'administration.email.viewSent' }),
+    ).toBeNull();
+  });
+
+  it('reads plain "sent" when the send time does not parse', async () => {
+    state.assignments = [madeExternal];
+    useHistory([historyItem({ sentAt: 'not-a-date' })]);
+    render(<AdministrationPage />);
+
+    const section = await emailSection();
+    expect(within(section).getByText('administration.email.status.Sent')).toBeInTheDocument();
+    expect(section.querySelector('time')).toBeNull();
+    expect(within(section).queryByText(/Invalid|—/)).toBeNull();
+  });
+
+  it.each([
+    ['no email', [] as unknown[]],
+    ['a non-admin (403)', 'forbidden' as const],
+  ])('has no email row for %s', async (_, items) => {
+    state.assignments = [madeExternal];
+    let asked = false;
+    server.use(
+      http.get('*/appraisals/:id/assignment-emails', () => {
+        asked = true;
+        return items === 'forbidden'
+          ? HttpResponse.json({ title: 'Forbidden' }, { status: 403 })
+          : HttpResponse.json(items);
+      }),
+    );
+    render(<AdministrationPage />);
+
+    expect(await screen.findAllByText('administration.slip.status.assigned')).toHaveLength(2);
+    await waitFor(() => expect(asked).toBe(true));
+    expect(screen.queryByRole('region', { name: 'administration.email.title' })).toBeNull();
+  });
+
+  it('does not ask for the email of an internal assignment', async () => {
+    state.assignments = [{ ...madeExternal, assignmentType: 'Internal', assigneeCompanyId: null }];
+    let asked = false;
+    server.use(
+      http.get('*/appraisals/:id/assignment-emails', () => {
+        asked = true;
+        return HttpResponse.json([historyItem()]);
+      }),
+    );
+    render(<AdministrationPage />);
+
+    expect(await screen.findAllByText('administration.slip.status.assigned')).toHaveLength(2);
+    expect(asked).toBe(false);
+  });
+
+  it.each([null, 'System', 'system'])(
+    'says the system assigned it when assignedBy is %s',
+    async assignedBy => {
+      state.assignments = [{ ...madeExternal, assignedBy, assignedByName: null }];
+      useHistory([historyItem({ createdBy: null, createdByName: null })]);
+      render(<AdministrationPage />);
+
+      expect(await screen.findAllByText('administration.slip.readOnly.bySystem')).toHaveLength(2);
+      expect(screen.queryByText('administration.slip.readOnly.assignedBy')).toBeNull();
+      // Its one email came from the system template.
+      expect(
+        within(await emailSection()).getByText(/administration\.email\.history\.system/),
+      ).toBeInTheDocument();
+    },
+  );
+
+  const sentEmail = {
+    id: 'e1',
+    isResend: false,
+    status: 'Sent',
+    createdBy: 'IA0012',
+    createdAt: '2026-10-29T14:32:00',
+    sentAt: '2026-10-29T14:33:00',
+    sentTo: ['co@example.com', 'second@example.com'],
+    sentCc: ['admin1@bank.example', 'followup@bank.example'],
+    extraTo: ['second@example.com'],
+    cc: ['IntAdminAll', 'FollowupStaff'],
+    subject: 'ขอนำส่งงานประเมิน ลูกค้าราย Taeko 69105526',
+    bodyHtml: '<p>เรียน บริษัท ตัวอย่าง</p>',
+    attachments: [
+      { documentId: 'd1', source: 'request', fileName: 'deed.pdf', fileSizeBytes: 2048 },
+    ],
+  };
+
+  it('shows exactly what was sent: resolved To and Cc, subject, body and files', async () => {
+    state.assignments = [madeExternal];
+    useHistory([historyItem()]);
+    server.use(
+      http.get('*/appraisals/:id/assignment-emails/:emailId', ({ params }) =>
+        params.emailId === 'e1'
+          ? HttpResponse.json(sentEmail)
+          : HttpResponse.json({}, { status: 404 }),
+      ),
+    );
+    const user = userEvent.setup();
+    render(<AdministrationPage />);
+
+    await user.click(
+      within(await emailSection()).getByRole('button', { name: 'administration.email.viewSent' }),
+    );
+    const dialog = await screen.findByRole('dialog');
+    expect(await within(dialog).findByText(sentEmail.subject)).toBeInTheDocument();
+    expect(within(dialog).getByText('co@example.com, second@example.com')).toBeInTheDocument();
+    expect(
+      within(dialog).getByText('admin1@bank.example, followup@bank.example'),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText('deed.pdf')).toBeInTheDocument();
+    // The stored HTML as it went out, in a sandbox that runs no script.
+    const body = within(dialog).getByTitle('administration.email.view.body');
+    // As stored, after a base that keeps a clicked link from replacing it.
+    expect(body.getAttribute('srcdoc')).toBe(`<base target="_blank">${sentEmail.bodyHtml}`);
+    // No script; a link may only open a new tab.
+    expect(body.getAttribute('sandbox')).toBe('allow-popups allow-popups-to-escape-sandbox');
+  });
+
+  it('sends again from the latest email, and the slip shows the new send', async () => {
+    state.assignments = [madeExternal];
+    const history = [historyItem()];
+    const resent: unknown[] = [];
+    server.use(
+      http.get('*/appraisals/:id/assignment-emails', () => HttpResponse.json(history)),
+      http.get('*/appraisals/:id/assignment-emails/:emailId', () => HttpResponse.json(sentEmail)),
+      http.post('*/appraisals/:id/assignment-emails/resend', async ({ request }) => {
+        resent.push(await request.json());
+        history.unshift(historyItem({ id: 'e2', isResend: true, status: 'Queued', sentAt: null }));
+        return HttpResponse.json({ emailId: 'e2' });
+      }),
+    );
+    const user = userEvent.setup();
+    render(<AdministrationPage />);
+
+    await user.click(
+      within(await emailSection()).getByRole('button', { name: 'administration.email.resend' }),
+    );
+    const dialog = await screen.findByRole('dialog');
+    // Pre-filled from the latest email, not the template.
+    expect(await within(dialog).findByDisplayValue(sentEmail.subject)).toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole('button', { name: 'administration.email.assignWithoutSend' }),
+    ).toBeNull();
+    await user.click(within(dialog).getByRole('button', { name: 'administration.email.send' }));
+
+    await waitFor(() => expect(resent).toHaveLength(1));
+    expect(resent[0]).toEqual({
+      extraTo: ['second@example.com'],
+      cc: ['IntAdminAll', 'FollowupStaff'],
+      subject: sentEmail.subject,
+      bodyHtml: sentEmail.bodyHtml,
+      attachments: [{ documentId: 'd1', source: 'request' }],
+    });
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(
+      await within(await emailSection()).findByText('administration.email.status.Queued'),
+    ).toBeInTheDocument();
+  });
+
+  it('sends the template when the admin assigned without sending', async () => {
+    state.assignments = [madeExternal];
+    useHistory([historyItem({ status: 'NotSent', sentAt: null, sentTo: [] })]);
+    const resent: unknown[] = [];
+    server.use(
+      http.post('*/appraisals/:id/assignment-emails/resend', async ({ request }) => {
+        resent.push(await request.json());
+        return HttpResponse.json({ emailId: 'e2' });
+      }),
+    );
+    const user = userEvent.setup();
+    render(<AdministrationPage />);
+
+    await user.click(
+      within(await emailSection()).getByRole('button', { name: 'administration.email.sendNow' }),
+    );
+    const dialog = await screen.findByRole('dialog');
+    expect(await within(dialog).findByDisplayValue(emailPreview.subject)).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'administration.email.send' }));
+
+    await waitFor(() => expect(resent).toHaveLength(1));
+    expect(resent[0]).toMatchObject({ subject: emailPreview.subject, cc: ['IntAdminAll'] });
+  });
+
+  it('keeps the composer open with the reason when the send is refused', async () => {
+    state.assignments = [madeExternal];
+    useHistory([historyItem()]);
+    server.use(
+      http.get('*/appraisals/:id/assignment-emails/:emailId', () => HttpResponse.json(sentEmail)),
+      http.post('*/appraisals/:id/assignment-emails/resend', () =>
+        HttpResponse.json({ title: 'Bad Request', detail: 'The case is closed.' }, { status: 400 }),
+      ),
+    );
+    const user = userEvent.setup();
+    render(<AdministrationPage />);
+
+    await user.click(
+      within(await emailSection()).getByRole('button', { name: 'administration.email.resend' }),
+    );
+    const dialog = await screen.findByRole('dialog');
+    await within(dialog).findByDisplayValue(sentEmail.subject);
+    await user.click(within(dialog).getByRole('button', { name: 'administration.email.send' }));
+
+    expect(await within(dialog).findByText('The case is closed.')).toBeInTheDocument();
+  });
+
+  it('names a history row that did not go out by its status', async () => {
+    state.assignments = [madeExternal];
+    useHistory([
+      historyItem({ id: 'e2', isResend: true, createdAt: '2026-10-30T09:10:00' }),
+      historyItem({ status: 'Failed', sentAt: null }),
+    ]);
+    render(<AdministrationPage />);
+
+    const history = within(await emailSection()).getByRole('list', {
+      name: 'administration.email.history.title',
+    });
+    const rows = within(history).getAllByRole('listitem');
+    // Not "sent with the assignment": the email of the assignment, and that it failed.
+    expect(
+      within(rows[1]).getByText(/administration\.email\.history\.firstEmail/),
+    ).toBeInTheDocument();
+    expect(within(rows[1]).getByText(/administration\.email\.status\.Failed/)).toBeInTheDocument();
+    expect(within(rows[0]).queryByText(/administration\.email\.status/)).toBeNull();
+  });
+
+  it('names the resender by code when the name comes back empty, and drops a Sent with no time', async () => {
+    state.assignments = [madeExternal];
+    useHistory([
+      historyItem({ id: 'e2', isResend: true, createdByName: '', sentAt: null }),
+      historyItem(),
+    ]);
+    render(<AdministrationPage />);
+
+    const section = await emailSection();
+    const rows = within(
+      within(section).getByRole('list', { name: 'administration.email.history.title' }),
+    ).getAllByRole('listitem');
+    expect(within(rows[0]).getByText(/IA0012/)).toBeInTheDocument();
+    // No dangling "sent" label without its time on the latest line.
+    expect(within(section).queryByText(/administration\.email\.sentLabel/)).toBeNull();
+  });
+
+  it('shows the new email at once after a send, so it cannot be sent twice', async () => {
+    state.assignments = [madeExternal];
+    let release: () => void = () => {};
+    let reads = 0;
+    server.use(
+      http.get('*/appraisals/:id/assignment-emails', async () => {
+        reads += 1;
+        // The list read after the send hangs: the slip must not wait for it.
+        if (reads > 1) await new Promise<void>(r => (release = r));
+        return HttpResponse.json([historyItem()]);
+      }),
+      http.get('*/appraisals/:id/assignment-emails/:emailId', () => HttpResponse.json(sentEmail)),
+      http.post('*/appraisals/:id/assignment-emails/resend', () =>
+        HttpResponse.json({ emailId: 'e2' }),
+      ),
+    );
+    const user = userEvent.setup();
+    render(<AdministrationPage />);
+
+    await user.click(
+      within(await emailSection()).getByRole('button', { name: 'administration.email.resend' }),
+    );
+    const dialog = await screen.findByRole('dialog');
+    await within(dialog).findByDisplayValue(sentEmail.subject);
+    await user.click(within(dialog).getByRole('button', { name: 'administration.email.send' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    const section = await emailSection();
+    expect(within(section).getByText('administration.email.status.Queued')).toBeInTheDocument();
+    expect(
+      within(section).queryByRole('button', { name: 'administration.email.resend' }),
+    ).toBeNull();
+    release();
+  });
+
+  it('reads a sent email again after a failed read', async () => {
+    state.assignments = [madeExternal];
+    useHistory([historyItem()]);
+    let fail = true;
+    server.use(
+      http.get('*/appraisals/:id/assignment-emails/:emailId', () =>
+        fail ? HttpResponse.json({}, { status: 500 }) : HttpResponse.json(sentEmail),
+      ),
+    );
+    const user = userEvent.setup();
+    render(<AdministrationPage />);
+
+    await user.click(
+      within(await emailSection()).getByRole('button', { name: 'administration.email.viewSent' }),
+    );
+    const dialog = await screen.findByRole('dialog');
+    const retry = await within(dialog).findByRole(
+      'button',
+      { name: 'common:actions.retry' },
+      { timeout: 4000 },
+    );
+    fail = false;
+    await user.click(retry);
+
+    expect(await within(dialog).findByText(sentEmail.subject)).toBeInTheDocument();
+  });
+
+  it('still opens what the company last received after a later send failed', async () => {
+    state.assignments = [madeExternal];
+    useHistory([
+      historyItem({ id: 'e2', isResend: true, status: 'Failed', sentAt: null }),
+      historyItem(),
+    ]);
+    let opened = '';
+    server.use(
+      http.get('*/appraisals/:id/assignment-emails/:emailId', ({ params }) => {
+        opened = String(params.emailId);
+        return HttpResponse.json(sentEmail);
+      }),
+    );
+    const user = userEvent.setup();
+    render(<AdministrationPage />);
+
+    await user.click(
+      within(await emailSection()).getByRole('button', { name: 'administration.email.viewSent' }),
+    );
+
+    expect(
+      await within(await screen.findByRole('dialog')).findByText(sentEmail.subject),
+    ).toBeInTheDocument();
+    expect(opened).toBe('e1');
+  });
+
+  it("does not offer a previous assignment's sent email as this one's", async () => {
+    state.assignments = [madeExternal];
+    // Re-assigned without sending; the Sent one below went to the company assigned before.
+    useHistory([
+      historyItem({ id: 'e2', status: 'NotSent', sentAt: null, sentTo: [] }),
+      historyItem(),
+    ]);
+    render(<AdministrationPage />);
+
+    const section = await emailSection();
+    expect(within(section).getByText('administration.email.status.NotSent')).toBeInTheDocument();
+    expect(
+      within(section).queryByRole('button', { name: 'administration.email.viewSent' }),
+    ).toBeNull();
   });
 });

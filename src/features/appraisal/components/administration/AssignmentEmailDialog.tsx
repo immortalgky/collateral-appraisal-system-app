@@ -29,6 +29,7 @@ import {
   CC_ROLES,
   documentSizeQuery,
   useGetAssignmentEmailPreview,
+  useGetAssignmentEmailSent,
   type AssignmentEmailAttachment,
   type AssignmentEmailInput,
   type AssignmentEmailPreview,
@@ -55,6 +56,11 @@ interface AssignmentEmailDialogProps {
   onClose: () => void;
   /** `null` = assign without sending the email. */
   onAssign: (email: AssignmentEmailInput | null) => void;
+  /**
+   * Set = "Send again" / "Send email" from the read-only slip: the email goes now, with nothing to assign.
+   * An id pre-fills from that email; null starts from the template (nothing was sent yet).
+   */
+  resendFrom?: string | null;
 }
 
 /**
@@ -77,10 +83,30 @@ const AssignmentEmailDialog = (props: AssignmentEmailDialogProps) => {
 
 const Composer = (props: AssignmentEmailDialogProps) => {
   const { t } = useTranslation(['appraisal', 'common', 'request']);
-  const { data, isError, refetch, isFetching } = useGetAssignmentEmailPreview(props.appraisalId);
+  const isResend = props.resendFrom !== undefined;
+  const preview = useGetAssignmentEmailPreview(props.appraisalId);
+  const last = useGetAssignmentEmailSent(props.appraisalId, props.resendFrom ?? null);
   // A new key re-seeds the form from the template; files uploaded for this email are kept.
   const [version, setVersion] = useState(0);
   const [keptUploads, setKeptUploads] = useState<AssignmentEmailAttachment[]>([]);
+  const { refetch, isFetching } = preview;
+  // "Send again" starts from the latest email (as composed) until "restore template"; the company
+  // address and the limits are always the case's own.
+  const fromLast = !!props.resendFrom && version === 0;
+  const data: AssignmentEmailPreview | undefined =
+    preview.data && fromLast
+      ? last.data && {
+          ...preview.data,
+          extraTo: last.data.extraTo ?? [],
+          cc: last.data.cc ?? [],
+          subject: last.data.subject,
+          bodyHtml: last.data.bodyHtml,
+          attachments: last.data.attachments ?? [],
+        }
+      : preview.data;
+  const isError = preview.isError || (fromLast && last.isError);
+  // Which read failed: the template, or (resend) the latest email.
+  const lastFailed = !preview.isError && fromLast && last.isError;
 
   const restore = async (uploads: AssignmentEmailAttachment[]) => {
     const result = await refetch();
@@ -98,19 +124,46 @@ const Composer = (props: AssignmentEmailDialogProps) => {
         {isError ? (
           // The email cannot be written, but the assignment still can.
           <div className="flex flex-col items-center gap-3">
-            <span role="alert">{t('administration.email.loadFailed')}</span>
+            <span role="alert">
+              {t(
+                lastFailed
+                  ? 'administration.email.loadLastFailed'
+                  : 'administration.email.loadFailed',
+              )}
+            </span>
             {props.error && (
               <span role="alert" className="text-xs text-danger-600 dark:text-(--palette-danger)">
                 {props.error}
               </span>
             )}
-            <Button
-              variant="outline"
-              onClick={() => props.onAssign(null)}
-              isLoading={props.isPending}
-            >
-              {t('administration.email.assignWithoutSend')}
-            </Button>
+            {/* The latest email is unreadable but the template is not: start from that. */}
+            {lastFailed && (
+              <Button variant="outline" onClick={() => setVersion(v => v + 1)}>
+                {t('administration.email.restoreTemplate')}
+              </Button>
+            )}
+            {/* Read again whichever failed (the latest email keeps the last send's To and Cc). */}
+            {isResend && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (preview.isError) void refetch();
+                  if (last.isError) void last.refetch();
+                }}
+                isLoading={isFetching || last.isFetching}
+              >
+                {t('common:actions.retry')}
+              </Button>
+            )}
+            {!isResend && (
+              <Button
+                variant="outline"
+                onClick={() => props.onAssign(null)}
+                isLoading={props.isPending}
+              >
+                {t('administration.email.assignWithoutSend')}
+              </Button>
+            )}
           </div>
         ) : (
           <Icon name="spinner" style="solid" className="animate-spin text-xl" />
@@ -123,6 +176,7 @@ const Composer = (props: AssignmentEmailDialogProps) => {
       key={version}
       {...props}
       preview={data}
+      templateCc={preview.data?.cc ?? []}
       keptUploads={keptUploads}
       onRestore={restore}
       isRestoring={isFetching}
@@ -133,6 +187,8 @@ const Composer = (props: AssignmentEmailDialogProps) => {
 interface EmailFormProps extends AssignmentEmailDialogProps {
   preview: AssignmentEmailPreview;
   keptUploads: AssignmentEmailAttachment[];
+  /** The template's Cc: a role it copies that the email left out can be put back. */
+  templateCc: string[];
   onRestore: (uploads: AssignmentEmailAttachment[]) => void;
   isRestoring: boolean;
 }
@@ -142,13 +198,16 @@ const EmailForm = ({
   requestId,
   preview,
   keptUploads,
+  templateCc,
   onRestore,
   isRestoring,
   isPending = false,
   error,
   onClose,
   onAssign,
+  resendFrom,
 }: EmailFormProps) => {
+  const isResend = resendFrom !== undefined;
   const { t } = useTranslation(['appraisal', 'common', 'request']);
   const [extraTo, setExtraTo] = useState(() => unique(preview.extraTo));
   const [cc, setCc] = useState(() => unique(preview.cc));
@@ -314,9 +373,9 @@ const EmailForm = ({
           isRoleChip={isRole}
         />
         {/* A role taken out can be put back without restoring the whole template. */}
-        {CC_ROLES.some(role => preview.cc.includes(role) && !cc.includes(role)) && (
+        {CC_ROLES.some(role => templateCc.includes(role) && !cc.includes(role)) && (
           <div className="mt-1 flex flex-wrap gap-1.5">
-            {CC_ROLES.filter(role => preview.cc.includes(role) && !cc.includes(role)).map(role => (
+            {CC_ROLES.filter(role => templateCc.includes(role) && !cc.includes(role)).map(role => (
               <Button
                 key={role}
                 variant="ghost"
@@ -350,7 +409,16 @@ const EmailForm = ({
             <Button
               variant="ghost"
               size="xs"
-              onClick={() => onRestore(attachments.filter(a => a.source === 'upload'))}
+              // Only files uploaded in this dialog: an upload the latest email carried is not kept.
+              onClick={() =>
+                onRestore(
+                  attachments.filter(
+                    a =>
+                      a.source === 'upload' &&
+                      !preview.attachments.some(p => p.documentId === a.documentId),
+                  ),
+                )
+              }
               disabled={isPending || uploading}
               isLoading={isRestoring}
             >
@@ -504,14 +572,16 @@ const EmailForm = ({
 
       <div className="-mx-6 -mb-4 mt-1 flex flex-wrap items-center justify-end gap-2 border-t border-(--palette-line-soft) bg-(--palette-surface-2) px-6 py-3">
         <span className="mr-auto text-xs text-(--palette-ink-2)">
-          {t('administration.email.footerHint')}
+          {t(isResend ? 'administration.email.resendHint' : 'administration.email.footerHint')}
         </span>
         <Button variant="ghost" onClick={onClose} disabled={isPending}>
           {t('common:actions.close')}
         </Button>
-        <Button variant="outline" onClick={() => onAssign(null)} disabled={isPending}>
-          {t('administration.email.assignWithoutSend')}
-        </Button>
+        {!isResend && (
+          <Button variant="outline" onClick={() => onAssign(null)} disabled={isPending}>
+            {t('administration.email.assignWithoutSend')}
+          </Button>
+        )}
         <Button
           variant="primary"
           onClick={send}
@@ -519,7 +589,7 @@ const EmailForm = ({
           isLoading={isPending}
           leftIcon={<Icon name="paper-plane" style="solid" />}
         >
-          {t('administration.email.assignAndSend')}
+          {t(isResend ? 'administration.email.send' : 'administration.email.assignAndSend')}
         </Button>
       </div>
     </div>
