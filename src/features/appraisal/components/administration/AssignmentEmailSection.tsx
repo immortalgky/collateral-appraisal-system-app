@@ -55,7 +55,11 @@ export default function AssignmentEmailSection({
   const [latest] = items;
   if (!latest) return null;
   // What the company last received: a later send that failed or is on its way does not hide it.
-  const lastSent = items.find(e => e.status === 'Sent');
+  // Only from the current assignment (down to its own email, the newest non-resend): an older one
+  // may have gone to another company.
+  const ownIndex = items.findIndex(e => !e.isResend);
+  const current = ownIndex < 0 ? items : items.slice(0, ownIndex + 1);
+  const lastSent = current.find(e => e.status === 'Sent');
 
   // From the latest email; a NotSent one holds only the choice, so the template. Never an older
   // one: it may be the previous assignment's, to another company.

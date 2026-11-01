@@ -343,7 +343,7 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
       {readOnly && emailSection}
 
       {readOnly ? (
-        (assignedAtText || assignedByText) && (
+        (assignedAtText || assignedByText || bySystem) && (
           <div className="flex flex-col gap-0.5 px-5 py-3 text-xs text-(--palette-gray-500)">
             {assignedAtText && (
               <span>{t('administration.slip.readOnly.assignedAt', { at: assignedAtText })}</span>

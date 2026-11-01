@@ -147,7 +147,7 @@ export const useGetAssignmentEmailSent = (appraisalId: string, emailId: string |
       );
       return data;
     },
-    enabled: !!emailId,
+    enabled: !!appraisalId && !!emailId,
     staleTime: query => (query.state.data?.status === 'Sent' ? Infinity : 0),
   });
 

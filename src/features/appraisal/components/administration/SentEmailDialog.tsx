@@ -34,8 +34,11 @@ const Dash = () => <span className="text-(--palette-gray-400)">—</span>;
 export default function SentEmailDialog({ appraisalId, emailId, onClose }: SentEmailDialogProps) {
   const { t } = useTranslation(['appraisal', 'common']);
   // The last email opened stays while the dialog closes, so the close does not flash a spinner.
-  const [shownId, setShownId] = useState(emailId);
-  if (emailId && emailId !== shownId) setShownId(emailId);
+  // Another appraisal (the page can stay mounted) starts over.
+  const [shown, setShown] = useState({ appraisalId, emailId });
+  if (shown.appraisalId !== appraisalId || (emailId && emailId !== shown.emailId))
+    setShown({ appraisalId, emailId });
+  const shownId = shown.appraisalId === appraisalId ? shown.emailId : emailId;
   const {
     data: email,
     isError,

@@ -2840,4 +2840,20 @@ describe('AdministrationPage: the company email on the read-only slip', () => {
     ).toBeInTheDocument();
     expect(opened).toBe('e1');
   });
+
+  it("does not offer a previous assignment's sent email as this one's", async () => {
+    state.assignments = [madeExternal];
+    // Re-assigned without sending; the Sent one below went to the company assigned before.
+    useHistory([
+      historyItem({ id: 'e2', status: 'NotSent', sentAt: null, sentTo: [] }),
+      historyItem(),
+    ]);
+    render(<AdministrationPage />);
+
+    const section = await emailSection();
+    expect(within(section).getByText('administration.email.status.NotSent')).toBeInTheDocument();
+    expect(
+      within(section).queryByRole('button', { name: 'administration.email.viewSent' }),
+    ).toBeNull();
+  });
 });
