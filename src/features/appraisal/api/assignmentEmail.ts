@@ -90,6 +90,9 @@ export interface AssignmentEmailHistoryItem {
   sentTo: string[];
   ccCount: number;
   attachmentCount: number;
+  /** Failed only: when the send gave up, and why (short, from the server). */
+  failedAt?: string | null;
+  failureReason?: string | null;
 }
 
 /** GET /appraisals/{id}/assignment-emails/{emailId}: what went out, and what the admin composed. */
@@ -107,7 +110,11 @@ export interface AssignmentEmailSent {
   attachments: AssignmentEmailAttachment[];
 }
 
-const historyKey = (appraisalId: string) => ['appraisal', appraisalId, 'assignment-emails'];
+export const assignmentEmailHistoryKey = (appraisalId: string) => [
+  'appraisal',
+  appraisalId,
+  'assignment-emails',
+];
 
 /**
  * Admin only: a 403 (or any failure) leaves the slip without the email row, so no retry. While the latest
@@ -117,7 +124,7 @@ const historyKey = (appraisalId: string) => ['appraisal', appraisalId, 'assignme
  */
 export const useGetAssignmentEmailHistory = (appraisalId: string, enabled: boolean) =>
   useQuery({
-    queryKey: historyKey(appraisalId),
+    queryKey: assignmentEmailHistoryKey(appraisalId),
     queryFn: async (): Promise<AssignmentEmailHistoryItem[]> => {
       const { data } = await axios.get<AssignmentEmailHistoryItem[]>(
         `/appraisals/${appraisalId}/assignment-emails`,
@@ -165,26 +172,28 @@ export const useResendAssignmentEmail = (appraisalId: string) => {
     // The new email heads the list at once (no second send while the list is read again), then the
     // list is read; not awaited, so a slow read does not hold the dialog.
     onSuccess: ({ emailId }) => {
-      queryClient.setQueryData<AssignmentEmailHistoryItem[]>(historyKey(appraisalId), list =>
-        !list || list.some(e => e.id === emailId)
-          ? list
-          : [
-              {
-                id: emailId,
-                isResend: true,
-                status: 'Queued',
-                createdBy: null,
-                createdByName: null,
-                createdAt: null,
-                sentAt: null,
-                sentTo: [],
-                ccCount: 0,
-                attachmentCount: 0,
-              },
-              ...list,
-            ],
+      queryClient.setQueryData<AssignmentEmailHistoryItem[]>(
+        assignmentEmailHistoryKey(appraisalId),
+        list =>
+          !list || list.some(e => e.id === emailId)
+            ? list
+            : [
+                {
+                  id: emailId,
+                  isResend: true,
+                  status: 'Queued',
+                  createdBy: null,
+                  createdByName: null,
+                  createdAt: null,
+                  sentAt: null,
+                  sentTo: [],
+                  ccCount: 0,
+                  attachmentCount: 0,
+                },
+                ...list,
+              ],
       );
-      void queryClient.invalidateQueries({ queryKey: historyKey(appraisalId) });
+      void queryClient.invalidateQueries({ queryKey: assignmentEmailHistoryKey(appraisalId) });
     },
   });
 };

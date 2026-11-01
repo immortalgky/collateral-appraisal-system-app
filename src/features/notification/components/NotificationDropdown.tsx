@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Icon from '@shared/components/Icon';
 import { useNotificationStore } from '../store';
-import { notificationTypeConfig } from '../types';
+import { getNotificationConfig } from '../types';
 import { timeAgo } from '../utils/timeAgo';
 import { useAuthStore } from '@features/auth/store';
 import { downloadReportJobPdf } from '@features/reportGeneration/api/reports';
@@ -99,7 +99,7 @@ export default function NotificationDropdown() {
             {/* Items */}
             <div className="max-h-80 overflow-y-auto divide-y divide-gray-50 dark:divide-base-300">
               {recent.map(notification => {
-                const config = notificationTypeConfig[notification.type];
+                const config = getNotificationConfig(notification.type);
                 return (
                   <div
                     key={notification.id}
