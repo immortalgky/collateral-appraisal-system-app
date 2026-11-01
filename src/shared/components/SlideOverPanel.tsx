@@ -11,12 +11,14 @@ interface SlideOverPanelProps {
   onClose: () => void;
   title: ReactNode;
   subtitle?: ReactNode;
-  width?: 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  width?: 'md' | 'lg' | 'xl' | '2xl' | 'drawer' | 'full';
   children: ReactNode;
   /** Pinned under the scrolling content — for actions that must stay reachable on long forms. */
   footer?: ReactNode;
   /** Controls shown on the title row, left of the close button (e.g. filter chips). */
   headerActions?: ReactNode;
+  /** A light dim with no blur, so the page behind stays readable (it is still inert while open). */
+  lightOverlay?: boolean;
   /** Runs once the panel has finished closing (its leave transition is done). */
   afterLeave?: () => void;
 }
@@ -26,6 +28,8 @@ const widthClasses = {
   lg: 'max-w-lg',
   xl: 'max-w-2xl',
   '2xl': 'max-w-[70vw]',
+  // 720px at the 14px root: a form drawer; the viewport caps it on a small screen.
+  drawer: 'max-w-[51.4286rem]',
   // Edge to edge, for a panel that has become a screen in its own right.
   full: 'max-w-full',
 };
@@ -39,6 +43,7 @@ const SlideOverPanel = ({
   children,
   footer,
   headerActions,
+  lightOverlay = false,
   afterLeave,
 }: SlideOverPanelProps) => {
   const { t } = useTranslation('common');
@@ -56,7 +61,10 @@ const SlideOverPanel = ({
     >
       <DialogBackdrop
         transition
-        className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ease-linear data-closed:opacity-0"
+        className={clsx(
+          'fixed inset-0 transition-opacity duration-300 ease-linear data-closed:opacity-0',
+          lightOverlay ? 'bg-black/20' : 'bg-black/30 backdrop-blur-sm',
+        )}
       />
 
       <div className="fixed inset-0 overflow-hidden">

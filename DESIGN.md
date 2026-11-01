@@ -207,6 +207,9 @@ border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-gray-700`. Count in
   `FormCard size="sm"` / `SectionHeader variant="card" size="sm"` gives `px-4 py-2.5` instead of
   `px-5 py-4`, about 46px with a 30px button in it (default `md` is about 62px). The default is
   unchanged; use `sm` only where vertical space is the point (the Block unit-price tab).
+- **Header without the line**: `FormCard divider={false}` (also `SectionHeader variant="card"`) drops the
+  `border-b` under the header; the header keeps `px-5 pt-5` and the body `px-5 pt-3 pb-5`, so the title and
+  subtitle sit directly over the first field. Used by the Administration page's cards (user decision 2026-11-01).
 - **A card that fills a height**: `FormCard bodyClassName="flex min-h-0 flex-1 flex-col"` (with a
   `max-h-*` and `flex flex-col` on the card itself) makes the body a flex column, so a scrolling table
   inside it (`min-h-0 flex-1 overflow-auto`) takes the height left under the header. Do not style the
@@ -264,20 +267,27 @@ specified in 17.5. The old rule (`md` option exactly the input height 35.5px, `b
 **Assignment choices** (`appraisal/components/administration/SegmentedChoice.tsx`, Administration page only;
 approved on the canvas boards 16 and 18, ticket #534). Outside the form system, so 17.5 does not apply:
 
-- `variant="cards"` for the main decision (assignment type): one radio card per option, a row of equal columns
-  once the card is 40rem wide (stacked below). Card `rounded-section border border-(--palette-line)
-bg-(--palette-surface) px-3 py-2.5`, a `size-4` (14px) radio dot, label `font-semibold`, a one-line description
-  `text-xs text-(--palette-gray-500)`. Selected: `border-primary bg-(--palette-accent-wash)` plus a 1px inset
-  primary ring, label `text-(--palette-accent-ink)`. A disabled option is a `bg-(--palette-surface-2)` card
-  whose description is replaced by a short reason; no opacity fade.
-- `variant="segmented"` (default) for sub-choices (method, follow-up, keyer): track `h-ctl rounded-ctl border
-border-(--palette-line) bg-(--palette-surface-3)`, options `h-8 rounded-ctl-c text-sm font-medium`; the selected
-  option is a white pill (`bg-(--palette-surface) shadow-xs ring-1 ring-black/5`; dark `--palette-line-soft`, no shadow) with
+- `SegmentedChoice` is one control, the soft segmented track, used for every choice on the Administration page:
+  assignment type, method, follow-up and keyer (user decision 2026-11-01: the type is the same toggle, not radio
+  cards; the radio-card variant was removed). Track `h-ctl rounded-ctl border border-(--palette-line)
+bg-(--palette-surface-3)`, options `h-8 rounded-ctl-c text-sm font-medium`; the selected option is a white pill
+  (`bg-(--palette-surface) shadow-xs ring-1 ring-black/5`; dark `--palette-line-soft`, no shadow) with
   `text-(--palette-accent-ink)` semibold. The selected option's explanation is one grey hint line under the
-  track (`mt-1.5 text-xs text-(--palette-gray-500)`), never a callout box.
+  track (`mt-1.5 text-xs text-(--palette-gray-500)`), never a callout box. A paused option (facility limit,
+  in-system kill switch) is dimmed and keeps its reason as `title` (hover and accessible description); the page
+  also prints the reason under the toggle in `text-(--palette-warn)`.
+- **Selected company and staff cards** (`CompanyDisplay`, `StaffDisplay`, Administration page; user decision
+  2026-11-01): `rounded-lg border border-(--palette-line) bg-(--palette-surface) px-3 py-2.5` with a `border-l-4`
+  accent (company `border-l-purple-500`, staff `border-l-primary`). Line 1 the name (`text-sm font-semibold`)
+  and the code or a purple badge. Line 2 is `MetaLine` (`StaffDisplay.tsx`): `text-xs text-(--palette-gray-500)`
+  plain items, no icons, only the ones that exist, a light-grey `·` (`--palette-gray-300`, `aria-hidden`) between
+  neighbours and never leading, trailing or doubled, `gap-x-1.5`; the line is not rendered when every item is
+  empty. Company: stars or "no rating yet" (always), contact, phone, email, never the registration number. Staff:
+  position, department, phone, email. Right: the green count pill over an outline change button, the × beside
+  them. The staff pill shows only a real open-task count from the eligible-assignees list, never 0.
 - A locked group (read-only, quotation lock) keeps its selection visible in grey, not teal, shows no hint line
-  (the hints read as what will happen), and its cards show their description, not the disabled reason (a
-  saved pick must not read as paused). User decision 2026-10-30.
+  (the hints read as what will happen) and does not show a paused option's reason as its description. User
+  decision 2026-10-30.
 
 **Badge** (`Badge.tsx`): `inline-flex items-center gap-1.5 font-medium rounded-full`, dot on by default, `badgeStyle="soft"`.
 Sizes: `sm` (default) `px-2 py-0.5 text-xs`; `md` `text-sm`; `lg` `text-base`; `xs` `text-[11px]`.

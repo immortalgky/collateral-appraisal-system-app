@@ -7,6 +7,7 @@ import { render, screen, waitFor, within } from '@/test/test-utils';
 import { server } from '@/test/mocks/server';
 import { PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
 import { useLocaleStore } from '@/shared/store';
+import { useLiftoffStore } from '../store/liftoffStore';
 import AdministrationPage from './AdministrationPage';
 
 /**
@@ -74,6 +75,8 @@ const state = vi.hoisted(() => {
     eligibleEnabled: [] as boolean[],
     // Every enabled useGetEligibleCompanies call as [segment, requireSegment].
     eligibleCalls: [] as unknown[][],
+    // What GET preview?from=<email> returns (a resend); the template preview when null.
+    fromPreview: null as unknown,
   };
 });
 
@@ -83,7 +86,9 @@ vi.mock('@/features/appraisal/context/AppraisalContext', () => ({
   useIsTaskOwner: () => state.taskOwner,
   useWorkflowInstanceId: () => state.workflowInstanceId,
   useAppraisalContextSafe: () =>
-    state.appraisalStatus ? { appraisal: { status: state.appraisalStatus } } : null,
+    state.appraisalStatus
+      ? { appraisal: { status: state.appraisalStatus, appraisalReportNo: 'APP-2026-001' } }
+      : null,
 }));
 vi.mock('@/features/request/api', () => ({
   useGetRequestById: () => ({
@@ -136,6 +141,7 @@ vi.mock('../api/administration', async importOriginal => ({
   },
   useGetEligibleStaff: () => ({ data: state.staff }),
   useGetUserById: () => ({ data: undefined }),
+  useGetUserByUsername: () => ({ data: undefined }),
 }));
 
 // The company picker is stubbed to a button that picks "New Co"; the rest are not under test.
@@ -179,6 +185,9 @@ vi.mock('@/features/request/api/documents', () => ({
   createUploadSession: vi.fn(),
   useUploadDocument: () => ({ mutateAsync: vi.fn() }),
   useGetRequestDocuments: () => ({ data: undefined, isLoading: false }),
+  // The sent-email dialog's file actions.
+  useViewDocument: () => vi.fn(),
+  useDownloadDocument: () => ({ mutateAsync: vi.fn() }),
 }));
 // Registers a router blocker, which needs a data router.
 vi.mock('@/shared/components/UnsavedChangesDialog', () => ({ default: () => null }));
@@ -268,6 +277,8 @@ beforeEach(() => {
   state.calls = [];
   state.appraisalId = 'A1';
   state.appraisalStatus = null;
+  state.fromPreview = null;
+  useLiftoffStore.getState().clear();
   state.taskOwner = true;
   state.workflowInstanceId = 'W1';
   state.nextPick = undefined;
@@ -296,9 +307,16 @@ beforeEach(() => {
       state.drafted.push(await request.json());
       return new HttpResponse(null, { status: 204 });
     }),
-    http.get('*/appraisals/:id/assignment-email/preview', () => {
+    // The read-only slip of an EXT / EXTO case lists the emails sent; a test with a history overrides it.
+    // Unanswered it would reach the live dev server (warn only) and be aborted at teardown.
+    http.get('*/appraisals/:id/assignment-emails', () => HttpResponse.json([])),
+    http.get('*/appraisals/:id/assignment-email/preview', ({ request }) => {
       state.calls.push('preview');
-      return HttpResponse.json(emailPreview);
+      return HttpResponse.json(
+        new URL(request.url).searchParams.has('from')
+          ? (state.fromPreview ?? emailPreview)
+          : emailPreview,
+      );
     }),
   );
 });
@@ -351,6 +369,25 @@ describe('AdministrationPage: previous inspection company', () => {
     expect(await screen.findByText('administration.previousCompany.title')).toBeInTheDocument();
     expect(screen.queryByText(/previousCompany\.hint/)).not.toBeInTheDocument();
     expect(screen.queryByText('Old Co')).not.toBeInTheDocument();
+  });
+
+  it("offers the assignment type as a segmented toggle with the selected option's description as the hint", async () => {
+    externalManual();
+    const { user } = render(<AdministrationPage />);
+
+    const group = await screen.findByRole('radiogroup', {
+      name: 'administration.assignmentType.title',
+    });
+    expect(within(group).getAllByRole('radio')).toHaveLength(3);
+    expect(screen.getByText('administration.assignmentType.externalDesc')).toBeInTheDocument();
+    expect(screen.queryByText('administration.assignmentType.internalDesc')).toBeNull();
+
+    await user.click(
+      within(group).getByRole('radio', { name: 'administration.assignmentType.internal' }),
+    );
+
+    expect(screen.getByText('administration.assignmentType.internalDesc')).toBeInTheDocument();
+    expect(screen.queryByText('administration.assignmentType.externalDesc')).toBeNull();
   });
 
   it('shows the internal card disabled with its reason when the facility limit is over 50 million', async () => {
@@ -1007,6 +1044,102 @@ describe('AdministrationPage: the slip actions', () => {
     });
   });
 
+  it('plays the success overlay with the company, the reference and the task list, instead of a toast', async () => {
+    const success = vi.spyOn(toast, 'success').mockImplementation(() => '');
+    state.appraisalStatus = 'Assigned';
+    externalManual();
+    const { user } = render(<AdministrationPage />);
+    await user.click(await screen.findByText('pick-other-company'));
+    await screen.findByText('New Co', { selector: 'span' });
+    await waitFor(() => expect(slipAssign()).toBeEnabled());
+
+    await user.click(slipAssign());
+    await assignWithoutEmail(user);
+
+    await waitFor(() => expect(useLiftoffStore.getState().liftoff).not.toBeNull());
+    expect(useLiftoffStore.getState().liftoff).toMatchObject({
+      scene: 'forward',
+      nextAssigneeName: 'New Co',
+      referenceNumber: 'APP-2026-001',
+      to: '/tasks',
+    });
+    expect(useLiftoffStore.getState().liftoff?.closedIds).toEqual(
+      expect.arrayContaining(['W1', state.appraisalId]),
+    );
+    expect(success).not.toHaveBeenCalled();
+  });
+
+  it('names nobody on the overlay when the system picks the company', async () => {
+    externalAuto();
+    const { user } = render(<AdministrationPage />);
+    await screen.findByText('administration.assignmentType.title');
+
+    await user.click(slipAssign());
+    await assignWithoutEmail(user);
+
+    await waitFor(() => expect(useLiftoffStore.getState().liftoff).not.toBeNull());
+    expect(useLiftoffStore.getState().liftoff?.nextAssigneeName).toBeNull();
+  });
+
+  it('does not name the company on the overlay for an off-system assignment with an automatic keyer', async () => {
+    setDefaults(null, {
+      assignmentType: 'external-offline',
+      assignmentMethod: 'roundrobin',
+      followupStaffMethod: 'roundrobin',
+    });
+    const { user } = render(<AdministrationPage />);
+    await user.click(await screen.findByText('pick-other-company'));
+    await screen.findByText('New Co', { selector: 'span' });
+    await waitFor(() => expect(slipAssign()).toBeEnabled());
+
+    await user.click(slipAssign());
+    await assignWithoutEmail(user);
+
+    await waitFor(() => expect(state.posted).toHaveLength(1));
+    expect(state.posted[0]).toMatchObject({ decisionTaken: 'EXTO', assigneeUserId: null });
+    await waitFor(() => expect(useLiftoffStore.getState().liftoff).not.toBeNull());
+    // The next task is the keyer's: nobody is named, and the company is not.
+    expect(useLiftoffStore.getState().liftoff?.nextAssigneeName).toBeNull();
+  });
+
+  it.each([
+    { name: 'Anuwat Srisawat', expected: 'Anuwat Srisawat', code: 'int.staff1' },
+    { name: '  ', expected: 'int.staff1', code: null },
+  ])(
+    'names the internal staff on the overlay: "$name" -> $expected beside code $code',
+    async ({ name, expected, code }) => {
+      state.staff = [
+        {
+          id: 'int.staff1',
+          employeeId: 'int.staff1',
+          name,
+          email: '',
+          department: '',
+          avatar: null,
+        },
+      ];
+      state.assignments = [
+        {
+          ...draftAssignment,
+          assignmentType: 'Internal',
+          assignmentMethod: 'Manual',
+          assigneeUserId: 'int.staff1',
+        },
+      ];
+      const { user } = render(<AdministrationPage />);
+      await waitFor(() => expect(slipAssign()).toBeEnabled());
+
+      await user.click(slipAssign());
+
+      await waitFor(() => expect(useLiftoffStore.getState().liftoff).not.toBeNull());
+      // An empty name falls back to the code; the code is never shown alone, or twice.
+      expect(useLiftoffStore.getState().liftoff).toMatchObject({
+        nextAssigneeName: expected,
+        nextAssigneeCode: code,
+      });
+    },
+  );
+
   it('posts the same from the bar', async () => {
     externalAuto();
     const { user } = render(<AdministrationPage />);
@@ -1083,6 +1216,9 @@ describe('AdministrationPage: the slip actions', () => {
       assigneeCompanyId: null,
       assigneeCompanyName: null,
     });
+    // The overlay does not name the company still sitting in the form from the earlier pick.
+    await waitFor(() => expect(useLiftoffStore.getState().liftoff).not.toBeNull());
+    expect(useLiftoffStore.getState().liftoff?.nextAssigneeName).toBeNull();
   });
 
   it('saves an off-system external draft as Offline with no company', async () => {
@@ -1968,9 +2104,28 @@ describe('AdministrationPage: the email to the company at Assign', () => {
     return view;
   };
 
+  it('saves the draft before it reads the email for an off-system assignment too', async () => {
+    setDefaults(null, {
+      assignmentType: 'external-offline',
+      assignmentMethod: 'roundrobin',
+      followupStaffMethod: 'roundrobin',
+    });
+    const { user } = render(<AdministrationPage />);
+    await user.click(await screen.findByText('pick-other-company'));
+    await waitFor(() => expect(slipAssign()).toBeEnabled());
+
+    await user.click(slipAssign());
+    await screen.findByRole('button', { name: 'administration.email.assignAndSend' });
+
+    // The preview names the keyer and the company from the saved row: draft first, then preview.
+    expect(state.calls).toEqual(['draft', 'preview']);
+    expect(state.drafted[0]).toMatchObject({ assignmentType: 'External' });
+  });
+
   it('saves the assignment draft before it reads the email, and assigns nothing yet', async () => {
     await openEmail();
 
+    // The BE preview trusts the saved row: if this order flips, the email names stale people.
     expect(state.calls).toEqual(['draft', 'preview']);
     expect(state.drafted[0]).toMatchObject({ assignmentType: 'External' });
     expect(state.posted).toEqual([]);
@@ -2598,6 +2753,18 @@ describe('AdministrationPage: the company email on the read-only slip', () => {
       { documentId: 'd1', source: 'request', fileName: 'deed.pdf', fileSizeBytes: 2048 },
     ],
   };
+  // The preview built from that stored email (what a resend opens on): its subject, body, extra To,
+  // files and Cc, the case's own company and limits.
+  beforeEach(() => {
+    state.fromPreview = {
+      ...emailPreview,
+      extraTo: sentEmail.extraTo,
+      cc: sentEmail.cc,
+      subject: sentEmail.subject,
+      bodyHtml: sentEmail.bodyHtml,
+      attachments: sentEmail.attachments,
+    };
+  });
 
   it('shows exactly what was sent: resolved To and Cc, subject, body and files', async () => {
     state.assignments = [madeExternal];
@@ -2624,10 +2791,32 @@ describe('AdministrationPage: the company email on the read-only slip', () => {
     expect(within(dialog).getByText('deed.pdf')).toBeInTheDocument();
     // The stored HTML as it went out, in a sandbox that runs no script.
     const body = within(dialog).getByTitle('administration.email.view.body');
-    // As stored, after a base that keeps a clicked link from replacing it.
-    expect(body.getAttribute('srcdoc')).toBe(`<base target="_blank">${sentEmail.bodyHtml}`);
+    // As stored, after a base that keeps a clicked link from replacing it and the shell's body font.
+    expect(body.getAttribute('srcdoc')).toMatch(/^<base target="_blank"><style>.*<\/style>/);
+    expect(body.getAttribute('srcdoc')?.endsWith(sentEmail.bodyHtml)).toBe(true);
     // No script; a link may only open a new tab.
     expect(body.getAttribute('sandbox')).toBe('allow-popups allow-popups-to-escape-sandbox');
+  });
+
+  it('headlines the resend drawer from the saved assignment: its company and follow-up', async () => {
+    state.assignments = [
+      { ...madeExternal, internalAppraiserId: 'int.staff2', internalAppraiserName: 'Staff Name' },
+    ];
+    server.use(
+      http.get('*/appraisals/:id/assignment-emails', () => HttpResponse.json([historyItem()])),
+      http.get('*/appraisals/:id/assignment-emails/:emailId', () => HttpResponse.json(sentEmail)),
+    );
+    const user = userEvent.setup();
+    render(<AdministrationPage />);
+
+    await user.click(
+      within(await emailSection()).getByRole('button', { name: 'administration.email.resend' }),
+    );
+    const dialog = await screen.findByRole('dialog');
+
+    expect(
+      within(dialog).getByText(/^Old Co · administration\.slip\.segment\.followup Staff Name/),
+    ).toBeInTheDocument();
   });
 
   it('sends again from the latest email, and the slip shows the new send', async () => {

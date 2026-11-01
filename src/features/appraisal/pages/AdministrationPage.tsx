@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { taskListUrl } from '@features/task/utils/taskReturn';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   useAppraisalContextSafe,
@@ -49,6 +49,8 @@ import {
 import type { ExternalCompany, InternalStaff } from '../types/administration';
 import type { FeePreviewParams } from '../types/feePreview';
 import { personLabel } from '../utils/personLabel';
+import { formatCurrency } from '@/shared/utils/formatUtils';
+import { cancelQueriesFor, useLiftoffStore, type LiftoffPayload } from '../store/liftoffStore';
 import {
   correctSavedSelection,
   isAwaitingSeed,
@@ -68,7 +70,8 @@ import {
   useResendAssignmentEmail,
 } from '../api/assignmentEmail';
 import SearchCompanyModal from '../components/SearchCompanyModal';
-import StaffDisplay, { StoredCode } from '../components/StaffDisplay';
+import { StoredCode } from '../components/StaffDisplay';
+import SelectedStaffDisplay from '../components/SelectedStaffDisplay';
 import CompanyDisplay from '../components/CompanyDisplay';
 import PreviousCompanyBanner from '../components/PreviousCompanyBanner';
 import ChangeCompanyDialog from '../components/ChangeCompanyDialog';
@@ -220,7 +223,12 @@ const AdministrationPage = () => {
   };
 
   const navigate = useNavigate();
+  const { taskId } = useParams<{ taskId: string }>();
   const workflowInstanceId = useWorkflowInstanceId();
+  // The success overlay (the one task submit plays) replaces the toast + redirect after an assign.
+  const showLiftoff = useLiftoffStore(s => s.show);
+  // The pressed button's icon, read at click time: the drawer is gone by the time the request ends.
+  const assignOrigin = useRef<LiftoffPayload['origin']>(null);
   const isTaskOwner = useIsTaskOwner();
 
   // Phase-1 go-live kill switch. While this is false, CompanySelectionActivity refuses to assign
@@ -838,7 +846,9 @@ const AdministrationPage = () => {
       return;
     }
     // The email is filled from the assignment row as saved (company, EXTO, follow-up, remark), so
-    // the decision on screen is saved as the draft first.
+    // the decision on screen is saved as the draft first. The BE preview trusts that saved row to name
+    // the keyer, the follow-up officer and the company: the draft must be saved before the compose
+    // drawer opens (which is what reads the preview). Keep this order (a test pins it).
     setPreparingEmail(true);
     try {
       // With the company this assign will set: the email's To is read from the saved row, so a
@@ -860,20 +870,65 @@ const AdministrationPage = () => {
     setEmailFor(body);
   };
 
+  // The name of the company an assign carries, or null: only a company this page holds the record
+  // of, matched by the id the body carries (a leftover pick in the form is not one, and a raw id is
+  // never shown as a name).
+  const companyNameFor = (id: string | null | undefined) => {
+    if (!id) return null;
+    if (quotationWinner?.companyId === id)
+      return localizeCompanyName(quotationWinner.companyName, quotationWinner.companyNameLocal);
+    if (selectedCompany?.id === id)
+      return localizeCompanyName(selectedCompany.companyName, selectedCompany.companyNameLocal);
+    return null;
+  };
+
   /** `email` undefined = INT (the field is not sent); null = EXT / EXTO assigned without the email. */
   const assign = (
     body: Parameters<typeof createAssignment>[0],
     email?: AssignmentEmailInput | null,
+    origin?: LiftoffPayload['origin'],
   ) => {
+    // The drawer's button, when it was pressed; else the slip's (kept from its click).
+    if (origin) assignOrigin.current = origin;
     createAssignment(
       email === undefined ? body : { ...body, sendEmail: !!email, ...(email && { email }) },
       {
         onSuccess: () => {
           setEmailFor(null);
-          toast.success(t('administration.toasts.assignmentCreated'));
-          // The form is still dirty after assigning; skip the unsaved-changes guard for this redirect.
+          // The task is handed on: this page stays under the success card until it closes and the
+          // app goes to the task list, so stop it asking for the closed task meanwhile.
+          const closedIds = [taskId, workflowInstanceId, appraisalId];
+          void cancelQueriesFor(queryClient, closedIds);
+          // Who the work went to. Only a company this assign carries: an automatic pick (round-robin)
+          // is the system's, named later by the next step.
+          // EXTO hands the next task to the keyer, not to the company: name the keyer (none when the
+          // keyer is automatic), never the company. INT names its staff; EXT its company.
+          const isOffline = body.decisionTaken === 'EXTO';
+          const company = isOffline ? null : companyNameFor(body.assigneeCompanyId);
+          // A person is named by their name, else by their code (an empty name falls through); the code
+          // goes beside the name, never alone, so it is dropped when the name already is the code.
+          const staffCode =
+            (body.assignmentType === 'Internal' || isOffline) && body.assigneeUserId
+              ? body.assigneeUserId
+              : null;
+          const staffName = staffCode
+            ? selectedStaff?.name?.trim() || storedAssigneeName?.trim() || staffCode
+            : null;
+          showLiftoff({
+            origin: assignOrigin.current,
+            scene: 'forward',
+            voteOutcome: null,
+            nextActivityName: null,
+            nextAssigneeName: company ?? staffName,
+            nextAssigneeCode:
+              staffCode && staffName?.toLowerCase() !== staffCode.toLowerCase() ? staffCode : null,
+            referenceNumber: reportNo ?? null,
+            to: taskListUrl(),
+            // The form is still dirty after assigning: let the redirect through the guard.
+            beforeLeave: skipWarning,
+            closedIds,
+          });
           skipWarning();
-          navigate(taskListUrl());
         },
         onError: (error: any) => {
           // The server's detail is English: this code has its own translated message.
@@ -1127,6 +1182,15 @@ const AdministrationPage = () => {
         ? personLabel(name, id)
         : null;
 
+  // The workload shown is the pool's own count for this person (the user record has none); it stays
+  // unknown, and the card shows no pill, when the pool does not list them.
+  const withPoolWorkload = (staff: InternalStaff): InternalStaff => ({
+    ...staff,
+    currentWorkload:
+      eligibleStaff?.find(p => p.id === staff.id || p.id === staff.employeeId)?.currentWorkload ??
+      staff.currentWorkload,
+  });
+
   const renderStaffPicker = (o: {
     staff: InternalStaff | null;
     placeholder: string;
@@ -1142,8 +1206,8 @@ const AdministrationPage = () => {
   }) => (
     <>
       {o.staff ? (
-        <StaffDisplay
-          staff={o.staff}
+        <SelectedStaffDisplay
+          staff={withPoolWorkload(o.staff)}
           onChange={o.canEdit ? o.onOpen : undefined}
           onClear={o.canEdit ? o.onClear : undefined}
         />
@@ -1237,7 +1301,8 @@ const AdministrationPage = () => {
     isDirty,
     isAssigning: isCreating || preparingEmail,
     isSavingDraft,
-    onAssign: () => {
+    onAssign: origin => {
+      assignOrigin.current = origin ?? null;
       void submit();
     },
     onSaveDraft: handleSaveDraft,
@@ -1255,6 +1320,47 @@ const AdministrationPage = () => {
         />
       ) : null,
   };
+
+  // The assignment in one line for the email drawer's header: only what is known (an automatic
+  // follow-up has no name yet, the fee may still be loading).
+  const emailCompanyId =
+    assignmentType === 'external-offline'
+      ? companyId
+      : assignmentType === 'external'
+        ? assignmentMethod === 'quotation'
+          ? quotationWinner?.companyId
+          : assignmentMethod === 'manual'
+            ? companyId
+            : null
+        : null;
+  // The resend drawer reads the saved assignment, not the form (the page is read-only and the form
+  // is only a view of it): its company, its responsible person and the fee on the page.
+  const savedEmailSummary = [
+    assignedCompany
+      ? localizeCompanyName(assignedCompany.companyName, assignedCompany.companyNameLocal)
+      : null,
+    currentAssignment?.assigneeUserId
+      ? `${t('administration.slip.segment.keyer')} ${personLabel(currentAssignment.assigneeUserName, currentAssignment.assigneeUserId)}`
+      : currentAssignment?.internalAppraiserId
+        ? `${t('administration.slip.segment.followup')} ${personLabel(currentAssignment.internalAppraiserName, currentAssignment.internalAppraiserId)}`
+        : null,
+    slipProps.fee
+      ? t('administration.email.summaryFee', { amount: formatCurrency(slipProps.fee.total) })
+      : null,
+  ].filter((part): part is string => !!part);
+  const emailSummary = [
+    companyNameFor(emailCompanyId),
+    assignmentType === 'external' && slipProps.followupName
+      ? `${t('administration.slip.segment.followup')} ${slipProps.followupName}`
+      : assignmentType === 'external-offline' &&
+          assignmentMethod === 'manual' &&
+          slipProps.assigneeName
+        ? `${t('administration.slip.segment.keyer')} ${slipProps.assigneeName}`
+        : null,
+    slipProps.fee
+      ? t('administration.email.summaryFee', { amount: formatCurrency(slipProps.fee.total) })
+      : null,
+  ].filter((part): part is string => !!part);
 
   return (
     // The page content is a size container: the slip sits in a right rail once it is at least
@@ -1321,6 +1427,7 @@ const AdministrationPage = () => {
 
               {/* Assignment Type Card */}
               <FormCard
+                divider={false}
                 title={t('administration.assignmentType.title')}
                 subtitle={t('administration.assignmentType.subtitle')}
               >
@@ -1337,12 +1444,17 @@ const AdministrationPage = () => {
                           handleAssignmentTypeChange(value, field.onChange);
                           touch('type');
                         }}
-                        variant="cards"
                         disabled={!canEditAssignment}
                       />
                     )}
                   />
                   <FieldError>{typeError}</FieldError>
+                  {/* Why internal is off; nothing to pick while the type choice is locked. */}
+                  {isInternalDisabled && canEditAssignment && (
+                    <p className="mt-2 text-xs text-(--palette-warn)">
+                      {t('administration.assignmentType.internalDisabledReason')}
+                    </p>
+                  )}
                   {/* What to pick instead; nothing to pick while the type choice is locked. */}
                   {!canAssignCompanyInSystem && canEditAssignment && (
                     <p className="mt-2 text-xs text-(--palette-warn)">
@@ -1356,6 +1468,7 @@ const AdministrationPage = () => {
                   keys its book in. The keyer records only the book's appraisal date at key-in. */}
               {assignmentType === 'external-offline' && (
                 <FormCard
+                  divider={false}
                   title={t('administration.offlineExternal.title')}
                   subtitle={t('administration.offlineExternal.subtitle')}
                 >
@@ -1419,6 +1532,7 @@ const AdministrationPage = () => {
                   a disabled path look submittable. */}
               {(assignmentType === 'internal' || assignmentType === 'external') && (
                 <FormCard
+                  divider={false}
                   title={
                     assignmentType === 'internal'
                       ? t('administration.assignmentDetails.titleInternal')
@@ -1553,6 +1667,7 @@ const AdministrationPage = () => {
               {/* Remark Card — kept at the bottom of the form */}
               <div ref={sectionRef('remarks')}>
                 <FormCard
+                  divider={false}
                   title={t('administration.remark.title')}
                   subtitle={t('administration.remark.subtitle')}
                 >
@@ -1695,12 +1810,13 @@ const AdministrationPage = () => {
           />
           <AssignmentEmailDialog
             isOpen={!!emailFor}
+            summary={emailSummary}
             appraisalId={appraisalId ?? ''}
             requestId={requestId}
             isPending={isCreating}
             error={emailError}
             onClose={() => setEmailFor(null)}
-            onAssign={email => emailFor && assign(emailFor, email)}
+            onAssign={(email, origin) => emailFor && assign(emailFor, email, origin)}
           />
         </>
       )}
@@ -1713,6 +1829,7 @@ const AdministrationPage = () => {
       />
       <AssignmentEmailDialog
         isOpen={resendFrom !== undefined}
+        summary={savedEmailSummary}
         appraisalId={appraisalId ?? ''}
         requestId={requestId}
         resendFrom={resendFrom}

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 import axios from '@shared/api/axiosInstance';
 import type { AssignAppraisalRequestType, AssignAppraisalResponseType } from '@shared/schemas/v1';
 import type {
@@ -14,26 +15,66 @@ import { type AssignmentDefaults, toFormDefaults } from '../utils/assignmentDefa
 import { invalidateFeePreviews } from './feePreview';
 import type { AssignmentEmailInput } from './assignmentEmail';
 
+// GET /auth/users/{id} -> the staff card's shape. No workload: the user record does not count
+// tasks (the eligible-assignees list does, see eligibleStaffQueryOptions).
+const toStaff = (data: {
+  id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  email?: string | null;
+  department?: string | null;
+  position?: string | null;
+  phoneNumber?: string | null;
+  avatarUrl?: string | null;
+}): InternalStaff => ({
+  id: data.id,
+  employeeId: data.username,
+  name: [data.firstName, data.lastName].filter(Boolean).join(' '),
+  email: data.email ?? '',
+  department: data.department ?? '',
+  position: data.position ?? '',
+  phone: data.phoneNumber ?? '',
+  avatar: data.avatarUrl ?? null,
+});
+
 /**
  * Get a user by ID
  * GET /auth/users/{userId}
  */
 export const useGetUserById = (userId: string | null) => {
   return useQuery({
-    queryKey: ['users', userId],
+    // Its own key: userManagement caches a different shape (AdminUserDetail) under ['users', id].
+    queryKey: ['administration', 'user', userId],
     queryFn: async (): Promise<InternalStaff> => {
       const { data } = await axios.get(`/auth/users/${userId}`);
-      return {
-        id: data.id,
-        employeeId: data.username,
-        name: `${data.firstName} ${data.lastName}`,
-        email: data.email ?? '',
-        department: data.department ?? '',
-        avatar: data.avatarUrl ?? null,
-        currentWorkload: 0,
-      };
+      return toStaff(data);
     },
     enabled: !!userId,
+  });
+};
+
+/**
+ * Get a user by username (what the eligible-assignees pool and the saved assignment carry).
+ * GET /auth/users/by-username/{username}: the same record as GET /auth/users/{id}; 404 (no such
+ * user) is "no details", null.
+ */
+export const useGetUserByUsername = (username: string | null, enabled = true) => {
+  return useQuery({
+    queryKey: ['administration', 'user-by-username', username],
+    queryFn: async (): Promise<InternalStaff | null> => {
+      try {
+        const { data } = await axios.get(
+          `/auth/users/by-username/${encodeURIComponent(username!)}`,
+        );
+        return toStaff(data);
+      } catch (error) {
+        if (isAxiosError(error) && error.response?.status === 404) return null;
+        throw error;
+      }
+    },
+    enabled: enabled && !!username,
+    staleTime: 60_000,
   });
 };
 
@@ -206,15 +247,18 @@ export const eligibleStaffQueryOptions = (
     const { data } = await axios.get(
       `/api/workflows/instances/${workflowInstanceId}/activities/${targetActivityId}/eligible-assignees`,
     );
-    return (data.eligibleAssignees ?? []).map((a: { userId: string; displayName: string }) => ({
-      id: a.userId,
-      employeeId: a.userId,
-      name: a.displayName,
-      email: '',
-      department: '',
-      avatar: null,
-      currentWorkload: 0,
-    }));
+    return (data.eligibleAssignees ?? []).map(
+      (a: { userId: string; displayName: string; activeTaskCount?: number }) => ({
+        id: a.userId,
+        employeeId: a.userId,
+        name: a.displayName,
+        email: '',
+        department: '',
+        avatar: null,
+        // Left out (not 0) when an older server sends no count.
+        currentWorkload: a.activeTaskCount,
+      }),
+    );
   },
   enabled: enabled && !!workflowInstanceId,
 });

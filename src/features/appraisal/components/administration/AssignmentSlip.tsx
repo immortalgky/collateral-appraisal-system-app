@@ -7,6 +7,7 @@ import Icon from '@/shared/components/Icon';
 import FormCard from '@/shared/components/sections/FormCard';
 import { formatLocaleDateTime } from '@/shared/utils/dateUtils';
 import { formatCurrency } from '@/shared/utils/formatUtils';
+import { buttonOrigin, type LiftoffPayload } from '../../store/liftoffStore';
 import { personLabel } from '@/features/appraisal/utils/personLabel';
 import type { FeePreview } from '@/features/appraisal/types/feePreview';
 import type {
@@ -61,7 +62,8 @@ export interface AssignmentSlipProps {
   isDirty: boolean;
   isAssigning: boolean;
   isSavingDraft: boolean;
-  onAssign: () => void;
+  /** `origin`: the pressed button's icon, where the success flight starts. */
+  onAssign: (origin?: LiftoffPayload['origin']) => void;
   onSaveDraft: () => void;
   onCancel: () => void;
 
@@ -383,7 +385,7 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
               type="button"
               size="lg"
               fullWidth
-              onClick={onAssign}
+              onClick={e => onAssign(buttonOrigin(e.currentTarget))}
               isLoading={isAssigning}
               disabled={!!result.blockReason || isSavingDraft}
               aria-describedby={result.blockReason ? reasonId : undefined}

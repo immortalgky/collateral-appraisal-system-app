@@ -448,6 +448,7 @@
     "noData": "No data",
     "workload_one": "{{count}} task",
     "workload_other": "{{count}} tasks",
+    "noRating": "No rating yet",
     "activeCount_one": "{{count}} active",
     "activeCount_other": "{{count}} active",
     "clearSelection": "Clear selection",
@@ -471,12 +472,10 @@
         "search": "Search by company name, registration number, or contact...",
         "loading": "Loading companies...",
         "empty": "No companies found matching your search.",
-        "registrationNo": "Reg. no. {{no}}",
         "mouExpired": "MOU expired"
       }
     },
     "toasts": {
-      "assignmentCreated": "Assignment created successfully",
       "assignmentFailed": "Failed to create assignment. Please try again.",
       "noWorkflowTask": "Assignment requires an active workflow task. Open this page from the Tasks list to assign.",
       "notTaskOwner": "Only the task owner can assign this appraisal.",
@@ -596,8 +595,20 @@
       "addTo": "Add a recipient",
       "addCc": "Add a Cc address",
       "addAddress": "+ Add email",
+      "searchHint": "type @ to browse companies and employees in the system",
+      "suggestions": "Recipients in the system",
+      "searching": "Searching…",
+      "browseFooter": "Keep typing to search",
+      "noMatches": "No one with an email found — type the full address and press Enter",
+      "allAdded": "Everyone who matches is already in this box",
+      "searchPartial": "Part of the search failed",
+      "suggestCompanies": "Companies",
+      "suggestStaff": "Employees",
       "companyLocked": "The company's address, chosen on the assignment; it cannot be changed here",
       "companyPending": "The address of the company the system picks",
+      "summaryFee": "Fee {{amount}} incl. VAT",
+      "companyNoEmail": "{{name}} — no email on file",
+      "companyNoEmailHint": "This company has no email on file · add a recipient address, or choose “Assign without sending”",
       "toHint": "The company comes from the assignment and cannot be changed here · you can add other addresses",
       "ccHint": "● = recipients by role, resolved to addresses at send · people without an email or inactive are skipped",
       "restoreTemplate": "Restore template",
@@ -659,7 +670,9 @@
       "view": {
         "title": "Email sent to the company",
         "body": "Sent email content",
-        "loadFailed": "The sent email could not be loaded"
+        "loadFailed": "The sent email could not be loaded",
+        "download": "Download {{name}}",
+        "downloadFailed": "Could not download the file"
       },
       "pendingHint": "Goes out once the case is handed to the company",
       "sentLabel": "Sent",

@@ -448,6 +448,7 @@
     "noData": "无数据",
     "workload_one": "{{count}} 项任务",
     "workload_other": "{{count}} 项任务",
+    "noRating": "暂无评分",
     "activeCount_one": "{{count}} 项进行中",
     "activeCount_other": "{{count}} 项进行中",
     "clearSelection": "清除所选",
@@ -471,12 +472,10 @@
         "search": "按公司名称、注册号或联系人搜索...",
         "loading": "正在加载公司...",
         "empty": "没有找到符合搜索条件的公司。",
-        "registrationNo": "注册号 {{no}}",
         "mouExpired": "MOU 已失效"
       }
     },
     "toasts": {
-      "assignmentCreated": "分配创建成功",
       "assignmentFailed": "创建分配失败，请重试。",
       "noWorkflowTask": "分配需要活动的工作流任务。请从任务列表打开此页面。",
       "notTaskOwner": "只有任务所有者才能分配此估价。",
@@ -596,8 +595,20 @@
       "addTo": "添加收件人",
       "addCc": "添加抄送地址",
       "addAddress": "+ 添加邮箱",
+      "searchHint": "输入 @ 浏览系统中的公司/员工",
+      "suggestions": "系统中的收件人",
+      "searching": "正在搜索…",
+      "browseFooter": "继续输入以搜索",
+      "noMatches": "未找到有邮箱的联系人 — 可输入完整邮箱后按 Enter",
+      "allAdded": "匹配的人已在此栏中",
+      "searchPartial": "部分搜索失败",
+      "suggestCompanies": "公司",
+      "suggestStaff": "员工",
       "companyLocked": "分配时选择的公司地址，此处不可更改",
       "companyPending": "系统选择的公司邮箱",
+      "summaryFee": "费用 {{amount}}（含增值税）",
+      "companyNoEmail": "{{name}} — 系统中暂无邮箱",
+      "companyNoEmailHint": "该公司系统中暂无邮箱 · 请添加收件地址，或选择“分配但不发送”",
       "toHint": "公司来自分配页面，此处不可更改 · 可添加其他地址",
       "ccHint": "● = 按角色的收件人，发送时解析为实际邮箱 · 无邮箱或已停用的人员将被跳过",
       "restoreTemplate": "恢复模板",
@@ -659,7 +670,9 @@
       "view": {
         "title": "已发送给公司的邮件",
         "body": "已发送邮件内容",
-        "loadFailed": "无法加载已发送的邮件"
+        "loadFailed": "无法加载已发送的邮件",
+        "download": "下载 {{name}}",
+        "downloadFailed": "无法下载文件"
       },
       "pendingHint": "案件移交公司后发送",
       "sentLabel": "发送于",

@@ -1,10 +1,20 @@
-import { useEffect, useId, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
+import {
+  Fragment,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent,
+  type MouseEvent,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueries } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { errorText } from '@/shared/utils/errorUtils';
 import clsx from 'clsx';
 import Modal from '@/shared/components/Modal';
+import SlideOverPanel from '@/shared/components/SlideOverPanel';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import Input from '@/shared/components/Input';
@@ -29,11 +39,12 @@ import {
   CC_ROLES,
   documentSizeQuery,
   useGetAssignmentEmailPreview,
-  useGetAssignmentEmailSent,
   type AssignmentEmailAttachment,
   type AssignmentEmailInput,
   type AssignmentEmailPreview,
 } from '../../api/assignmentEmail';
+import { buttonOrigin, type LiftoffPayload } from '../../store/liftoffStore';
+import { useRecipientSearch, type RecipientSuggestion } from '../../api/recipientSearch';
 
 // The server refuses a subject with any control character or line/paragraph separator.
 // eslint-disable-next-line no-control-regex
@@ -51,11 +62,16 @@ interface AssignmentEmailDialogProps {
   requestId: string | undefined;
   /** The assign call is running. */
   isPending?: boolean;
+  /**
+   * The assignment in one grey line under the title: company, follow-up or keyer, fee total. The page
+   * passes only the parts it knows (an automatic follow-up has no name yet), already worded.
+   */
+  summary?: string[];
   /** Why the last assign was refused (the dialog stays open so the admin can fix it). */
   error?: string | null;
   onClose: () => void;
-  /** `null` = assign without sending the email. */
-  onAssign: (email: AssignmentEmailInput | null) => void;
+  /** `null` = assign without sending the email. `origin` = the pressed button, for the success flight. */
+  onAssign: (email: AssignmentEmailInput | null, origin?: LiftoffPayload['origin']) => void;
   /**
    * Set = "Send again" / "Send email" from the read-only slip: the email goes now, with nothing to assign.
    * An id pre-fills from that email; null starts from the template (nothing was sent yet).
@@ -74,42 +90,40 @@ const AssignmentEmailDialog = (props: AssignmentEmailDialogProps) => {
     if (!props.isPending) props.onClose();
   };
   return (
-    <Modal isOpen={props.isOpen} onClose={close} title={t('administration.email.title')} size="xl">
+    <SlideOverPanel
+      isOpen={props.isOpen}
+      onClose={close}
+      title={t('administration.email.title')}
+      subtitle={props.summary?.length ? props.summary.join(' · ') : undefined}
+      width="drawer"
+      lightOverlay
+    >
       {/* Mounted only while open, so every open reads a fresh preview. */}
       {props.isOpen && <Composer {...props} onClose={close} />}
-    </Modal>
+    </SlideOverPanel>
   );
 };
 
 const Composer = (props: AssignmentEmailDialogProps) => {
   const { t } = useTranslation(['appraisal', 'common', 'request']);
   const isResend = props.resendFrom !== undefined;
-  const preview = useGetAssignmentEmailPreview(props.appraisalId);
-  const last = useGetAssignmentEmailSent(props.appraisalId, props.resendFrom ?? null);
+  // "Send again" opens on the preview built from the latest email (its Cc already expanded to people);
+  // "restore template" reads the plain preview, and an open with nothing to send from starts there.
+  const from = props.resendFrom || null;
+  const template = useGetAssignmentEmailPreview(props.appraisalId, { enabled: !from });
+  const prefilled = useGetAssignmentEmailPreview(props.appraisalId, { from, enabled: !!from });
   // A new key re-seeds the form from the template; files uploaded for this email are kept.
   const [version, setVersion] = useState(0);
   const [keptUploads, setKeptUploads] = useState<AssignmentEmailAttachment[]>([]);
-  const { refetch, isFetching } = preview;
-  // "Send again" starts from the latest email (as composed) until "restore template"; the company
-  // address and the limits are always the case's own.
-  const fromLast = !!props.resendFrom && version === 0;
-  const data: AssignmentEmailPreview | undefined =
-    preview.data && fromLast
-      ? last.data && {
-          ...preview.data,
-          extraTo: last.data.extraTo ?? [],
-          cc: last.data.cc ?? [],
-          subject: last.data.subject,
-          bodyHtml: last.data.bodyHtml,
-          attachments: last.data.attachments ?? [],
-        }
-      : preview.data;
-  const isError = preview.isError || (fromLast && last.isError);
-  // Which read failed: the template, or (resend) the latest email.
-  const lastFailed = !preview.isError && fromLast && last.isError;
+  const fromLast = !!from && version === 0;
+  const shown = fromLast ? prefilled : template;
+  const data: AssignmentEmailPreview | undefined = shown.data;
+  const isError = shown.isError;
+  // The latest email could not be read (the template might still be).
+  const lastFailed = fromLast && prefilled.isError;
 
   const restore = async (uploads: AssignmentEmailAttachment[]) => {
-    const result = await refetch();
+    const result = await template.refetch();
     // A failed read keeps the old data: say so, and keep the admin's edits.
     if (result.isError) toast.error(t('administration.email.loadFailed'));
     else {
@@ -136,21 +150,22 @@ const Composer = (props: AssignmentEmailDialogProps) => {
                 {props.error}
               </span>
             )}
-            {/* The latest email is unreadable but the template is not: start from that. */}
+            {/* The latest email is unreadable: the template can still be the start. */}
             {lastFailed && (
-              <Button variant="outline" onClick={() => setVersion(v => v + 1)}>
+              <Button
+                variant="outline"
+                onClick={() => void restore([])}
+                isLoading={template.isFetching}
+              >
                 {t('administration.email.restoreTemplate')}
               </Button>
             )}
-            {/* Read again whichever failed (the latest email keeps the last send's To and Cc). */}
+            {/* Read again (a resend keeps the latest email's To and Cc). */}
             {isResend && (
               <Button
                 variant="outline"
-                onClick={() => {
-                  if (preview.isError) void refetch();
-                  if (last.isError) void last.refetch();
-                }}
-                isLoading={isFetching || last.isFetching}
+                onClick={() => void shown.refetch()}
+                isLoading={shown.isFetching}
               >
                 {t('common:actions.retry')}
               </Button>
@@ -158,7 +173,7 @@ const Composer = (props: AssignmentEmailDialogProps) => {
             {!isResend && (
               <Button
                 variant="outline"
-                onClick={() => props.onAssign(null)}
+                onClick={e => props.onAssign(null, buttonOrigin(e.currentTarget))}
                 isLoading={props.isPending}
               >
                 {t('administration.email.assignWithoutSend')}
@@ -176,10 +191,10 @@ const Composer = (props: AssignmentEmailDialogProps) => {
       key={version}
       {...props}
       preview={data}
-      templateCc={preview.data?.cc ?? []}
+      templateCc={(template.data ?? prefilled.data)?.cc ?? []}
       keptUploads={keptUploads}
       onRestore={restore}
-      isRestoring={isFetching}
+      isRestoring={template.isFetching}
     />
   );
 };
@@ -203,7 +218,6 @@ const EmailForm = ({
   isRestoring,
   isPending = false,
   error,
-  onClose,
   onAssign,
   resendFrom,
 }: EmailFormProps) => {
@@ -242,6 +256,22 @@ const EmailForm = ({
     ? attachments.reduce((a, b) => ((sizeOf(b) ?? 0) > (sizeOf(a) ?? 0) ? b : a))
     : null;
 
+  // A company we know but hold no address for: nothing reaches it unless an address is added.
+  const noCompanyEmail = !!preview.companyName && !preview.companyTo;
+  // Names for the address chips: the preview's people, and whoever is picked from the suggestions.
+  const [pickedNames, setPickedNames] = useState<Record<string, string>>({});
+  const ccNames = new Map([
+    ...(preview.ccPeople ?? []).map(p => [p.email.toLowerCase(), p.name] as const),
+    ...Object.entries(pickedNames),
+  ]);
+  const addressLabel = (value: string) => {
+    if (isRole(value)) return t(`administration.email.cc.${value}`);
+    const name = ccNames.get(value.toLowerCase());
+    return name ? `${name} <${value}>` : value;
+  };
+  const onRecipientPicked = (email: string, name: string) =>
+    setPickedNames(names => ({ ...names, [email.toLowerCase()]: name }));
+
   // Typed text that is not yet a recipient (invalid, or not committed) must not be dropped silently.
   const [toDraft, setToDraft] = useState(false);
   const [ccDraft, setCcDraft] = useState(false);
@@ -254,6 +284,7 @@ const EmailForm = ({
     !tooMany &&
     !tooBig &&
     !sizesUnknown &&
+    !(noCompanyEmail && extraTo.length === 0) &&
     !uploading &&
     !toDraft &&
     !ccDraft &&
@@ -284,8 +315,9 @@ const EmailForm = ({
           const result = await upload.mutateAsync({
             uploadSessionId: session,
             file,
-            documentType: 'EMAIL_ATTACHMENT',
-            documentCategory: 'email_attachment',
+            // Both columns (document.Documents) are nvarchar(10).
+            documentType: 'EMAIL_ATT',
+            documentCategory: 'email_att',
           });
           setAttachments(list => [
             ...list,
@@ -320,27 +352,33 @@ const EmailForm = ({
     ]);
 
   // An address already a recipient is not repeated in a later list.
-  const send = () => {
+  const send = (e: MouseEvent<HTMLButtonElement>) => {
+    const origin = buttonOrigin(e.currentTarget);
     const company = preview.companyTo?.toLowerCase();
     const to = extraTo.filter(a => a.toLowerCase() !== company);
     const taken = new Set([company, ...to.map(a => a.toLowerCase())]);
-    onAssign({
-      extraTo: to,
-      cc: cc.filter(a => isRole(a) || !taken.has(a.toLowerCase())),
-      subject: subject.trim(),
-      bodyHtml,
-      attachments: attachments.map(({ documentId, source }) => ({ documentId, source })),
-    });
+    onAssign(
+      {
+        extraTo: to,
+        cc: cc.filter(a => isRole(a) || !taken.has(a.toLowerCase())),
+        subject: subject.trim(),
+        bodyHtml,
+        attachments: attachments.map(({ documentId, source }) => ({ documentId, source })),
+      },
+      origin,
+    );
   };
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex min-h-full flex-col gap-3">
       <Row label={t('administration.email.to')}>
         <RecipientBox
           inputLabel={t('administration.email.addTo')}
           values={extraTo}
           onChange={setExtraTo}
           onDraftChange={setToDraft}
+          chipLabel={addressLabel}
+          onPicked={onRecipientPicked}
           leading={
             preview.companyTo ? (
               <span
@@ -348,7 +386,18 @@ const EmailForm = ({
                 className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-purple-200 bg-purple-50 px-2.5 text-xs leading-normal text-purple-800 dark:border-purple-500/30 dark:bg-purple-500/10 dark:text-purple-300"
               >
                 <Icon name="lock" style="solid" className="shrink-0" />
-                <span className="truncate">{preview.companyTo}</span>
+                <span className="truncate">
+                  {preview.companyName
+                    ? `${preview.companyName} <${preview.companyTo}>`
+                    : preview.companyTo}
+                </span>
+              </span>
+            ) : noCompanyEmail ? (
+              <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-red-200 bg-danger-50 px-2.5 text-xs leading-normal text-danger-600 dark:border-red-500/30 dark:bg-red-500/10 dark:text-(--palette-danger)">
+                <Icon name="lock" style="solid" className="shrink-0" />
+                <span className="truncate">
+                  {t('administration.email.companyNoEmail', { name: preview.companyName })}
+                </span>
               </span>
             ) : (
               <span
@@ -360,7 +409,19 @@ const EmailForm = ({
             )
           }
         />
-        <p className="mt-1 text-xs text-(--palette-ink-2)">{t('administration.email.toHint')}</p>
+        {noCompanyEmail && (
+          <p className="mt-1 text-xs text-danger-600 dark:text-(--palette-danger)">
+            {t('administration.email.companyNoEmailHint')}
+          </p>
+        )}
+        <p className="mt-1 text-xs text-(--palette-gray-500)">
+          {[
+            !noCompanyEmail && t('administration.email.toHint'),
+            t('administration.email.searchHint'),
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </p>
       </Row>
 
       <Row label={t('administration.email.ccLabel')}>
@@ -369,7 +430,8 @@ const EmailForm = ({
           values={cc}
           onChange={setCc}
           onDraftChange={setCcDraft}
-          chipLabel={value => (isRole(value) ? t(`administration.email.cc.${value}`) : value)}
+          chipLabel={addressLabel}
+          onPicked={onRecipientPicked}
           isRoleChip={isRole}
         />
         {/* A role taken out can be put back without restoring the whole template. */}
@@ -387,7 +449,14 @@ const EmailForm = ({
             ))}
           </div>
         )}
-        <p className="mt-1 text-xs text-(--palette-ink-2)">{t('administration.email.ccHint')}</p>
+        <p className="mt-1 text-xs text-(--palette-gray-500)">
+          {[
+            cc.some(isRole) && t('administration.email.ccHint'),
+            t('administration.email.searchHint'),
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </p>
       </Row>
 
       <Row label={t('administration.email.subject')} htmlFor="assignment-email-subject">
@@ -399,16 +468,21 @@ const EmailForm = ({
         />
       </Row>
 
-      <div>
+      {/* The editor takes the height the drawer has left, with a floor. */}
+      <div className="flex flex-1 flex-col">
         <RichTextEditor
           value={bodyHtml}
           onChange={setBodyHtml}
           highlight={PLACEHOLDER_RE}
-          minHeightClass="min-h-[14rem]"
+          className="flex flex-1 flex-col"
+          grow
+          minHeightClass="min-h-[16rem]"
+          maxHeightClass="max-h-none"
           toolbarEnd={
-            <Button
-              variant="ghost"
-              size="xs"
+            // Text action, as "แก้ยอด" on the Administration page (AssignmentFeeCard `actionClass`).
+            <button
+              type="button"
+              className="inline-flex h-[1.7143rem] items-center gap-1.5 px-2 text-xs font-medium text-(--palette-primary-text) hover:underline disabled:cursor-not-allowed disabled:no-underline disabled:opacity-50"
               // Only files uploaded in this dialog: an upload the latest email carried is not kept.
               onClick={() =>
                 onRestore(
@@ -419,11 +493,11 @@ const EmailForm = ({
                   ),
                 )
               }
-              disabled={isPending || uploading}
-              isLoading={isRestoring}
+              disabled={isPending || uploading || isRestoring}
             >
+              {isRestoring && <Icon name="spinner" style="solid" className="animate-spin" />}
               {t('administration.email.restoreTemplate')}
-            </Button>
+            </button>
           }
         />
         <p className="mt-1 text-xs text-(--palette-ink-2)">
@@ -570,27 +644,34 @@ const EmailForm = ({
         </p>
       )}
 
-      <div className="-mx-6 -mb-4 mt-1 flex flex-wrap items-center justify-end gap-2 border-t border-(--palette-line-soft) bg-(--palette-surface-2) px-6 py-3">
-        <span className="mr-auto text-xs text-(--palette-ink-2)">
+      {/* Pinned to the bottom of the scrolling body (the drawer's py-4 is cancelled by -mb-4). */}
+      <div className="sticky bottom-0 -mx-6 -mb-4 mt-auto flex flex-col gap-2 border-t border-(--palette-line-soft) bg-(--palette-surface-2) px-6 py-3">
+        {/* The hint takes its own line and wraps; the buttons below never do. The drawer's × is the close. */}
+        <span className="text-xs text-(--palette-gray-500)">
           {t(isResend ? 'administration.email.resendHint' : 'administration.email.footerHint')}
         </span>
-        <Button variant="ghost" onClick={onClose} disabled={isPending}>
-          {t('common:actions.close')}
-        </Button>
-        {!isResend && (
-          <Button variant="outline" onClick={() => onAssign(null)} disabled={isPending}>
-            {t('administration.email.assignWithoutSend')}
+        <div className="flex items-center justify-end gap-2">
+          {!isResend && (
+            <Button
+              variant="outline"
+              className="whitespace-nowrap"
+              onClick={e => onAssign(null, buttonOrigin(e.currentTarget))}
+              disabled={isPending}
+            >
+              {t('administration.email.assignWithoutSend')}
+            </Button>
+          )}
+          <Button
+            variant="primary"
+            className="whitespace-nowrap"
+            onClick={send}
+            disabled={!canSend}
+            isLoading={isPending}
+            leftIcon={<Icon name="paper-plane" style="solid" />}
+          >
+            {t(isResend ? 'administration.email.send' : 'administration.email.assignAndSend')}
           </Button>
-        )}
-        <Button
-          variant="primary"
-          onClick={send}
-          disabled={!canSend}
-          isLoading={isPending}
-          leftIcon={<Icon name="paper-plane" style="solid" />}
-        >
-          {t(isResend ? 'administration.email.send' : 'administration.email.assignAndSend')}
-        </Button>
+        </div>
       </div>
     </div>
   );
@@ -798,6 +879,7 @@ const RecipientBox = ({
   leading,
   chipLabel = v => v,
   isRoleChip = () => false,
+  onPicked,
 }: {
   inputLabel: string;
   values: string[];
@@ -807,17 +889,52 @@ const RecipientBox = ({
   leading?: React.ReactNode;
   chipLabel?: (value: string) => string;
   isRoleChip?: (value: string) => boolean;
+  /** A company or person chosen from the suggestions: the chip shows `name <email>`. */
+  onPicked?: (email: string, name: string) => void;
 }) => {
   const { t } = useTranslation(['appraisal', 'common', 'request']);
   const [text, setText] = useState('');
   const hasText = text.trim().length > 0;
-  useEffect(() => onDraftChange(hasText), [hasText, onDraftChange]);
   const [invalid, setInvalid] = useState(false);
   const errorId = useId();
 
+  // Suggestions from the system: two typed characters (a leading "@" only asks for them; an "@" inside is
+  // an address and keeps this a plain field). Esc closes the list until the text changes.
+  const listId = useId();
+  const [dismissed, setDismissed] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const search = useRecipientSearch(onPicked ? text : '');
+  const suggestions = search.suggestions.filter(
+    s => !values.some(v => v.toLowerCase() === s.email.toLowerCase()),
+  );
+  // Open as soon as the text qualifies (loading, results, or nothing found); Esc closes it.
+  const open = !dismissed && search.active;
+  const hasOptions = open && suggestions.length > 0;
+  // Text that asks for suggestions is a query, not a recipient: it neither errors nor blocks Send. Only
+  // text committed as an address (and refused) does.
+  const blocking = hasText && (!search.active || invalid);
+  useEffect(() => onDraftChange(blocking), [blocking, onDraftChange]);
+  const active = Math.min(activeIndex, suggestions.length - 1);
+  const optionId = (i: number) => `${listId}-${i}`;
+
+  const pick = (suggestion: RecipientSuggestion) => {
+    onChange(unique([...values, suggestion.email]));
+    onPicked?.(suggestion.email, suggestion.name);
+    setText('');
+    setInvalid(false);
+    setDismissed(false);
+    setActiveIndex(0);
+  };
+
   // A pasted list ("a@x.com, b@y.com; c@z.com") adds every valid address; what is not valid stays
   // in the field, marked.
-  const commit = () => {
+  const commit = (leaving = false) => {
+    // Leaving the field with a query in it: nothing was chosen, so it is dropped, not an invalid address.
+    if (leaving && search.active) {
+      setText('');
+      setInvalid(false);
+      return;
+    }
     // "Name <a@x.com>" (as copied from a mail client) yields the bare address.
     const parts = text.split(/[\s,;<>"]+/).filter(Boolean);
     if (parts.length === 0) return;
@@ -830,7 +947,22 @@ const RecipientBox = ({
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',' || e.key === ';') {
+    if (hasOptions && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      e.preventDefault();
+      const step = e.key === 'ArrowDown' ? 1 : -1;
+      setActiveIndex((active + step + suggestions.length) % suggestions.length);
+    } else if (open && search.pending && e.key === 'Enter') {
+      // The rows may be the last search's (dimmed): wait for this one rather than pick a stale row.
+      e.preventDefault();
+    } else if (hasOptions && e.key === 'Enter') {
+      e.preventDefault();
+      pick(suggestions[active]);
+    } else if (open && e.key === 'Escape') {
+      // Only the list: the drawer stays open.
+      e.preventDefault();
+      e.stopPropagation();
+      setDismissed(true);
+    } else if (e.key === 'Enter' || e.key === ',' || e.key === ';') {
       e.preventDefault();
       commit();
     } else if (e.key === 'Backspace' && !text && values.length > 0) {
@@ -839,7 +971,7 @@ const RecipientBox = ({
   };
 
   return (
-    <div>
+    <div className="relative">
       <div
         className={clsx(
           'flex min-h-ctl flex-wrap items-center gap-1.5 rounded-ctl border bg-(--form-input-bg) px-2 py-1 focus-within:border-(--focus-edge) focus-within:ring-[3px] focus-within:ring-(color:--focus-ring)',
@@ -877,6 +1009,11 @@ const RecipientBox = ({
           );
         })}
         <input
+          role={onPicked ? 'combobox' : undefined}
+          aria-expanded={onPicked ? open : undefined}
+          aria-controls={onPicked && hasOptions ? listId : undefined}
+          aria-autocomplete={onPicked ? 'list' : undefined}
+          aria-activedescendant={hasOptions ? optionId(active) : undefined}
           aria-label={inputLabel}
           aria-invalid={invalid || undefined}
           aria-describedby={invalid ? errorId : undefined}
@@ -884,13 +1021,116 @@ const RecipientBox = ({
           onChange={e => {
             setText(e.target.value);
             setInvalid(false);
+            setDismissed(false);
+            setActiveIndex(0);
           }}
           onKeyDown={onKeyDown}
-          onBlur={commit}
+          onBlur={() => commit(true)}
           placeholder={t('administration.email.addAddress')}
           className="h-7 min-w-[10rem] flex-1 bg-transparent px-1 text-sm text-(--palette-ink) outline-none placeholder:text-(--palette-ink-2)"
         />
       </div>
+      {open && (
+        <div
+          role="presentation"
+          // Pressing anything in the list (a scrollbar, a status row) must not blur the input.
+          onMouseDown={e => e.preventDefault()}
+          className="absolute inset-x-0 top-full z-20 mt-1 max-h-72 overflow-y-auto rounded-ctl border border-(--palette-line) bg-(--palette-surface) py-1 text-sm shadow-lg"
+        >
+          {/* Not options: the arrow keys never land on a status row. */}
+          {search.waiting && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="flex items-center gap-2 px-3 py-1.5 text-xs text-(--palette-gray-500)"
+            >
+              <Icon name="spinner" style="solid" className="animate-spin" />
+              {t('administration.email.searching')}
+            </div>
+          )}
+          {suggestions.length > 0 && (
+            <ul
+              id={listId}
+              role="listbox"
+              aria-label={t('administration.email.suggestions')}
+              className={clsx(search.pending && 'opacity-60')}
+            >
+              {suggestions.map((s, i) => (
+                <Fragment key={s.key}>
+                  {s.group !== suggestions[i - 1]?.group && (
+                    <li
+                      role="presentation"
+                      className="px-3 pt-1.5 pb-0.5 text-xs font-semibold text-(--palette-gray-500)"
+                    >
+                      {t(
+                        s.group === 'company'
+                          ? 'administration.email.suggestCompanies'
+                          : 'administration.email.suggestStaff',
+                      )}
+                    </li>
+                  )}
+                  <li
+                    id={optionId(i)}
+                    role="option"
+                    aria-selected={i === active}
+                    aria-disabled={search.pending || undefined}
+                  >
+                    {/* onMouseDown, not click: the input keeps focus, so its blur does not commit the typed name. */}
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      onMouseDown={e => {
+                        e.preventDefault();
+                        // A dimmed row belongs to the last search: not pickable until this one lands.
+                        if (!search.pending) pick(s);
+                      }}
+                      onMouseEnter={() => setActiveIndex(i)}
+                      className={clsx(
+                        'w-full truncate px-3 py-1.5 text-left text-(--palette-ink)',
+                        search.pending && 'cursor-wait',
+                        i === active && 'bg-(--palette-accent-wash)',
+                      )}
+                    >
+                      {`${s.name} <${s.email}>`}
+                    </button>
+                  </li>
+                </Fragment>
+              ))}
+            </ul>
+          )}
+          {search.browse && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="border-t border-(--palette-line-soft) px-3 py-1.5 text-xs text-(--palette-gray-500)"
+            >
+              {t('administration.email.browseFooter')}
+            </div>
+          )}
+          {!search.waiting && suggestions.length === 0 && !search.partial && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="px-3 py-1.5 text-xs text-(--palette-gray-500)"
+            >
+              {t(
+                search.suggestions.length > 0
+                  ? 'administration.email.allAdded'
+                  : 'administration.email.noMatches',
+              )}
+            </div>
+          )}
+          {search.partial && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="px-3 py-1.5 text-xs text-(--palette-gray-500)"
+            >
+              {t('administration.email.searchPartial')}
+            </div>
+          )}
+        </div>
+      )}
       {invalid && (
         <p id={errorId} className="mt-1 text-xs text-danger-600 dark:text-(--palette-danger)">
           {t('common:validation.invalidEmail')}

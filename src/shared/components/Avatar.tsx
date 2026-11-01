@@ -4,9 +4,12 @@ import { getInitials, hashString } from '@shared/utils/stringUtils';
 
 interface AvatarProps {
   src?: string | null;
-  name: string;
+  /** A user record can lack a name: initials fall back to "?". */
+  name?: string | null;
   size?: 'xs' | 'sm' | 'md' | 'lg';
   className?: string;
+  /** One grey tone instead of the colour picked from the name. */
+  neutral?: boolean;
 }
 
 const sizeMap = {
@@ -29,7 +32,13 @@ const colorPalette = [
   { bg: 'bg-slate-100 dark:bg-slate-500/20', text: 'text-slate-700 dark:text-slate-300' },
 ] as const;
 
-export default function Avatar({ src, name, size = 'md', className }: AvatarProps) {
+/** The one grey tone of `neutral` (the slate entry of the palette). */
+const NEUTRAL = {
+  bg: 'bg-slate-100 dark:bg-slate-500/20',
+  text: 'text-slate-700 dark:text-slate-300',
+};
+
+export default function Avatar({ src, name, size = 'md', className, neutral }: AvatarProps) {
   const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
@@ -37,13 +46,13 @@ export default function Avatar({ src, name, size = 'md', className }: AvatarProp
   }, [src]);
 
   const { container, text } = sizeMap[size];
-  const color = colorPalette[hashString(name) % colorPalette.length];
+  const color = neutral ? NEUTRAL : colorPalette[hashString(name ?? '') % colorPalette.length];
 
   if (src && !imgError) {
     return (
       <img
         src={src}
-        alt={name}
+        alt={name ?? ''}
         onError={() => setImgError(true)}
         className={classNames(container, 'rounded-full object-cover shrink-0', className ?? '')}
       />
@@ -59,7 +68,7 @@ export default function Avatar({ src, name, size = 'md', className }: AvatarProp
         className ?? '',
       )}
     >
-      <span className={classNames(text, 'font-medium', color.text)}>{getInitials(name)}</span>
+      <span className={classNames(text, 'font-medium', color.text)}>{getInitials(name ?? '')}</span>
     </div>
   );
 }

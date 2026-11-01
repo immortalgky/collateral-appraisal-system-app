@@ -34,6 +34,8 @@ interface FormCardProps extends HTMLAttributes<HTMLDivElement> {
    * column that fills a height-capped card: `bodyClassName="flex min-h-0 flex-1 flex-col"`.
    */
   bodyClassName?: string;
+  /** `false` drops the line under the header; the body then follows after a small gap (default true). */
+  divider?: boolean;
 }
 
 // Border color styles matching icon colors
@@ -74,6 +76,7 @@ const FormCard = ({
   headingClassName,
   size,
   bodyClassName,
+  divider = true,
   ...props
 }: FormCardProps) => {
   return (
@@ -95,8 +98,11 @@ const FormCard = ({
         required={required}
         headingClassName={headingClassName}
         size={size}
+        divider={divider}
       />
-      <div className={clsx(!noPadding && 'p-5', bodyClassName)}>{children}</div>
+      <div className={clsx(!noPadding && (divider ? 'p-5' : 'px-5 pt-3 pb-5'), bodyClassName)}>
+        {children}
+      </div>
     </div>
   );
 };

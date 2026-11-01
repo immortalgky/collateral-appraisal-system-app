@@ -13,11 +13,15 @@ export interface AssignmentEmailAttachment {
 
 /** GET /appraisals/{id}/assignment-email/preview: the bank template filled from the saved assignment row. */
 export interface AssignmentEmailPreview {
-  /** The assigned company's address, locked; null while the company is not known yet (auto, quotation). */
+  /** The chosen company's name; null while the company is not known yet (auto, quotation). */
+  companyName?: string | null;
+  /** The assigned company's address, locked; null when the company is unknown or has no email. */
   companyTo: string | null;
   extraTo: string[];
-  /** Role tokens (`IntAdminAll`, `FollowupStaff`, …) or addresses. */
+  /** Addresses of people already known, plus role tokens (`IntAdminAll`, …) the system resolves at send. */
   cc: string[];
+  /** A display name for each known address in `cc` (absent on older servers and when resending). */
+  ccPeople?: { email: string; name: string | null }[];
   subject: string;
   /** Holds `{{company}}` / `{{responsible}}` placeholders; the send fills them in. */
   bodyHtml: string;
@@ -43,16 +47,26 @@ export const CC_ROLES = [
   'KeyerSupervisor',
 ] as const;
 
-/** Not cached: every open (and "restore template") reads the case as it is now. */
-export const useGetAssignmentEmailPreview = (appraisalId: string) =>
+/**
+ * Not cached: every open (and "restore template") reads the case as it is now.
+ * `from` (resend): the same shape, but subject, body, extra To and attachments come from that stored
+ * email, and its Cc has the role tokens expanded to the people the row knows (names in `ccPeople`).
+ * Without it, the template. `enabled: false` leaves the read to `refetch()` ("restore template").
+ */
+export const useGetAssignmentEmailPreview = (
+  appraisalId: string,
+  options: { from?: string | null; enabled?: boolean } = {},
+) =>
   useQuery({
-    queryKey: ['appraisal', appraisalId, 'assignment-email-preview'],
+    queryKey: ['appraisal', appraisalId, 'assignment-email-preview', options.from ?? 'template'],
     queryFn: async (): Promise<AssignmentEmailPreview> => {
       const { data } = await axios.get<AssignmentEmailPreview>(
         `/appraisals/${appraisalId}/assignment-email/preview`,
+        { params: options.from ? { from: options.from } : undefined },
       );
       return data;
     },
+    enabled: options.enabled ?? true,
     gcTime: 0,
     staleTime: 0,
     // Coming back from another window must not reload it under the admin's edits; a failure shows

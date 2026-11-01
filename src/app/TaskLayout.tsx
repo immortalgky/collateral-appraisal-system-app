@@ -3,6 +3,7 @@ import { taskListUrl } from '@features/task/utils/taskReturn';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { Trans, useTranslation } from 'react-i18next';
 import Navbar from '@shared/components/Navbar';
 import AppraisalSidebar, { MobileAppraisalSidebar } from '@shared/components/AppraisalSidebar';
 import Breadcrumb from '@shared/components/Breadcrumb';
@@ -99,6 +100,7 @@ function AddressLoader() {
 function TaskLayout() {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation('task');
   useSidebarCssVar('appraisal');
 
   const currentUsername = useAuthStore(s => s.user?.username);
@@ -350,8 +352,15 @@ function TaskLayout() {
                       className="size-4 text-(--palette-warn) flex-shrink-0"
                     />
                     <span className="flex-1">
-                      This task is currently being edited by <strong>{lockOwner}</strong>. You are
-                      viewing in read-only mode.
+                      <Trans
+                        t={t}
+                        ns="task"
+                        i18nKey="pool.banner.other"
+                        values={{ name: lockOwner }}
+                        tOptions={{ interpolation: { escapeValue: true } }}
+                        shouldUnescape
+                        components={{ strong: <strong /> }}
+                      />
                     </span>
                     {isAdmin && (
                       <Button
@@ -370,7 +379,7 @@ function TaskLayout() {
                         ) : (
                           <Icon style="solid" name="lock-open" className="size-3.5 mr-1.5" />
                         )}
-                        Release Lock
+                        {t('pool.banner.release')}
                       </Button>
                     )}
                   </div>
@@ -383,7 +392,7 @@ function TaskLayout() {
                       name="lock"
                       className="size-4 text-blue-500 flex-shrink-0"
                     />
-                    <span>You are currently editing this pool task. Lock is active.</span>
+                    <span>{t('pool.banner.owner')}</span>
                   </div>
                 )}
 

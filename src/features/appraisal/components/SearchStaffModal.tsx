@@ -114,13 +114,15 @@ const SearchStaffModal = ({ isOpen, onClose, onSelect, eligibleStaff }: SearchSt
                       </div>
 
                       <div className="flex shrink-0 items-center gap-2">
-                        <Badge
-                          tone={workloadTone(staff.currentWorkload)}
-                          dot={false}
-                          className="whitespace-nowrap"
-                        >
-                          {t('administration.workload', { count: staff.currentWorkload })}
-                        </Badge>
+                        {staff.currentWorkload != null && (
+                          <Badge
+                            tone={workloadTone(staff.currentWorkload)}
+                            dot={false}
+                            className="whitespace-nowrap"
+                          >
+                            {t('administration.workload', { count: staff.currentWorkload })}
+                          </Badge>
+                        )}
                         {isSelected && (
                           <Icon
                             name="circle-check"

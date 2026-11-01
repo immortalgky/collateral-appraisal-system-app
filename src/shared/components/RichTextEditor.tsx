@@ -75,6 +75,10 @@ interface RichTextEditorProps {
   onBlur?: () => void;
   className?: string;
   minHeightClass?: string;
+  /** Tailwind cap on the editing area before it scrolls (default `max-h-96`); `max-h-none` lets it grow. */
+  maxHeightClass?: string;
+  /** Fill the height the container leaves (use with `className="flex flex-1 flex-col"` on a flex parent). */
+  grow?: boolean;
   /** Text to mark (e.g. `{{company}}` placeholders); read once, when the editor is made. */
   highlight?: RegExp;
   /** Extra controls at the right end of the toolbar. */
@@ -113,6 +117,8 @@ const RichTextEditor = ({
   onBlur,
   className,
   minHeightClass = 'min-h-[12rem]',
+  maxHeightClass = 'max-h-96',
+  grow = false,
   highlight,
   toolbarEnd,
 }: RichTextEditorProps) => {
@@ -199,11 +205,13 @@ const RichTextEditor = ({
       <EditorContent
         editor={editor}
         className={clsx(
-          'flex max-h-96 flex-col overflow-y-auto px-3.5 py-2.5 text-sm leading-relaxed text-(--palette-ink) [&_.ProseMirror]:flex-1',
+          'flex flex-col overflow-y-auto px-3.5 py-2.5 text-sm leading-relaxed text-(--palette-ink) [&_.ProseMirror]:flex-1',
           '[&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5',
           '[&_table]:my-2 [&_table]:w-full [&_table]:table-fixed [&_table]:border-collapse',
           '[&_td]:border [&_td]:border-(--palette-line-strong) [&_td]:p-1.5 [&_td]:break-words [&_th]:border [&_th]:border-(--palette-line-strong) [&_th]:bg-(--palette-surface-3) [&_th]:p-1.5 [&_th]:text-left [&_th]:font-semibold [&_th]:break-words',
+          grow && 'flex-1',
           minHeightClass,
+          maxHeightClass,
         )}
       />
     </div>

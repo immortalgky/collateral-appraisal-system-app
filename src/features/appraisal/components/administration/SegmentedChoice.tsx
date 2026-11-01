@@ -1,14 +1,14 @@
-import { Description, Field, Label, Radio, RadioGroup } from '@headlessui/react';
+import { Description, Radio, RadioGroup } from '@headlessui/react';
 import clsx from 'clsx';
 
 export interface SegmentedOption<V extends string = string> {
   value: V;
   label: string;
-  /** Segmented: shown under the control while this option is selected. Cards: on every card. */
+  /** Shown under the control while this option is selected. */
   description?: string;
   /** This option only: dimmed, not selectable. */
   disabled?: boolean;
-  /** Cards: shown in place of the description while the option is disabled (not in a locked group). */
+  /** Why a disabled option cannot be picked: its hover text and accessible description. */
   disabledReason?: string;
 }
 
@@ -17,11 +17,6 @@ interface SegmentedChoiceProps<V extends string> {
   /** '' = nothing selected. */
   value: V | '';
   onChange: (value: V) => void;
-  /**
-   * segmented = soft pill track for a sub-choice; cards = one radio card per option, for the main
-   * decision (assignment type).
-   */
-  variant?: 'segmented' | 'cards';
   /** The whole control: greyed out (the selection stays visible, in grey), not selectable. */
   disabled?: boolean;
   /**
@@ -34,23 +29,20 @@ interface SegmentedChoiceProps<V extends string> {
 }
 
 /**
- * A radio group drawn either as a soft segmented track (grey track, white selected pill, teal
- * text, the selected option's description as a hint underneath) or as radio cards. Arrow keys move
- * the selection, Space selects (Headless UI RadioGroup).
+ * A radio group drawn as a soft segmented track (grey track, white selected pill, teal text, the
+ * selected option's description as a hint underneath). Arrow keys move the selection, Space selects
+ * (Headless UI RadioGroup).
  */
 export default function SegmentedChoice<V extends string>({
   options,
   value,
   onChange,
-  variant = 'segmented',
   disabled = false,
   ariaLabel,
   className,
 }: SegmentedChoiceProps<V>) {
-  const cards = variant === 'cards';
   // A locked group shows no hint: it reads as what will happen, and on a read-only page it has.
-  const hint =
-    cards || disabled ? undefined : options.find(option => option.value === value)?.description;
+  const hint = disabled ? undefined : options.find(option => option.value === value)?.description;
 
   return (
     <RadioGroup
@@ -60,16 +52,11 @@ export default function SegmentedChoice<V extends string>({
       }}
       disabled={disabled}
       aria-label={ariaLabel}
-      // Cards lay out in a row once the card is 40rem wide, stacked below that.
-      className={clsx(cards && '@container')}
     >
       <div
         className={clsx(
-          cards
-            ? 'grid grid-cols-1 gap-2 @[40rem]:auto-cols-fr @[40rem]:grid-flow-col'
-            : // The text-control height (DESIGN 17.3); the h-8 options sit centred in it.
-              'flex h-ctl items-center gap-0.5 rounded-ctl border border-(--palette-line) bg-(--palette-surface-3) px-[0.2143rem]',
-          'text-sm',
+          // The text-control height (DESIGN 17.3); the h-8 options sit centred in it.
+          'flex h-ctl items-center gap-0.5 rounded-ctl border border-(--palette-line) bg-(--palette-surface-3) px-[0.2143rem] text-sm',
           className,
         )}
       >
@@ -82,77 +69,17 @@ export default function SegmentedChoice<V extends string>({
           const off = disabled || !!option.disabled;
           // Teal only where it can still be chosen; a locked selection is grey.
           const on = checked && !off;
-          if (cards) {
-            // The reason says why it cannot be picked now; a locked (read-only) group picks nothing,
-            // so a saved pick keeps its description and does not read as paused.
-            const text =
-              option.disabled && !disabled && option.disabledReason
-                ? option.disabledReason
-                : option.description;
-            // Field: the card is named by its label and described by the line under it (without
-            // it, Headless UI v2 hands a Label inside a Radio to the group).
-            return (
-              <Field key={option.value} className="flex">
-                <Radio
-                  value={option.value}
-                  disabled={off}
-                  className={clsx(
-                    'flex flex-1 items-start gap-2.5 rounded-section border px-3 py-2.5 text-left transition-colors select-none',
-                    off ? 'cursor-not-allowed' : 'cursor-pointer',
-                    // Disabled is a grey fill, not a fade, so the reason stays readable.
-                    on
-                      ? 'border-primary bg-(--palette-accent-wash) shadow-[inset_0_0_0_1px_var(--color-primary)]'
-                      : off
-                        ? clsx(
-                            'bg-(--palette-surface-2)',
-                            checked ? 'border-(--palette-line-strong)' : 'border-(--palette-line)',
-                          )
-                        : 'border-(--palette-line) bg-(--palette-surface) hover:border-(--palette-input-edge-hover)',
-                  )}
-                >
-                  <span
-                    aria-hidden="true"
-                    className={clsx(
-                      'mt-0.5 size-4 shrink-0 rounded-full bg-(--form-input-bg)',
-                      on
-                        ? 'border-[5px] border-primary'
-                        : checked
-                          ? 'border-[5px] border-(--palette-ink-3)'
-                          : 'border-[1.5px] border-(--palette-input-edge-hover)',
-                    )}
-                  />
-                  <span className="min-w-0">
-                    <Label
-                      className={clsx(
-                        'block font-semibold',
-                        on
-                          ? 'text-(--palette-accent-ink)'
-                          : off && !checked
-                            ? 'text-(--palette-ink-2)'
-                            : 'text-(--palette-ink)',
-                      )}
-                    >
-                      {option.label}
-                    </Label>
-                    {text && (
-                      <Description
-                        as="span"
-                        className="mt-0.5 block text-xs text-(--palette-gray-500)"
-                      >
-                        {text}
-                      </Description>
-                    )}
-                  </span>
-                </Radio>
-              </Field>
-            );
-          }
           return (
             <Radio
               key={option.value}
               value={option.value}
               disabled={off}
-              title={option.label}
+              // A paused option says why (hover, and the accessible description).
+              title={
+                option.disabled && !disabled && option.disabledReason
+                  ? option.disabledReason
+                  : option.label
+              }
               className={clsx(
                 // flex-auto: grow from the label's own width, so a long Thai label gets more room
                 // than a short one; min-w-0 lets it truncate (a Thai-safe `truncate`, DESIGN s.4).

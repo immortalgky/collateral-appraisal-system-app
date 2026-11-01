@@ -11,8 +11,10 @@ export const internalStaffSchema = z.object({
   name: z.string(),
   email: z.string(),
   department: z.string(),
+  position: z.string().optional(),
+  phone: z.string().optional(),
   avatar: z.string().nullable(),
-  currentWorkload: z.number(),
+  currentWorkload: z.number().optional(),
 });
 
 /**
