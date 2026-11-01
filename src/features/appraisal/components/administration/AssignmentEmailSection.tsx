@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import Badge, { type BadgeTone } from '@/shared/components/Badge';
 import Button from '@/shared/components/Button';
@@ -15,10 +16,12 @@ const TONE: Record<AssignmentEmailStatus, BadgeTone> = {
   NotSent: 'gray',
 };
 
+const isTime = (at: string | null | undefined): at is string => !!at && !isNaN(Date.parse(at));
+
 /** A time that does not parse is left out, with its label (the status still reads). */
-function When({ at, label }: { at: string | null; label?: string }) {
+function When({ at, label }: { at: string | null | undefined; label?: string }) {
   const { i18n } = useTranslation();
-  if (!at || isNaN(Date.parse(at))) return null;
+  if (!isTime(at)) return null;
   const time = <time dateTime={at}>{formatLocaleDateTime(at, i18n.language)}</time>;
   return label ? (
     <>
@@ -66,12 +69,16 @@ export default function AssignmentEmailSection({
   const prefill = latest.status === 'NotSent' ? null : latest.id;
   // Not while the latest email waits to go out: Pending is refused by the server (it would go twice),
   // and a Queued one is on its way (both read "waiting to send"; the slip polls until it ends).
+  const failed = latest.status === 'Failed';
   const canResend = canSend && latest.status !== 'Pending' && latest.status !== 'Queued';
 
   return (
     <section
       aria-label={t('administration.email.title')}
-      className="border-b border-(--palette-line-soft) px-5 py-2.5"
+      className={clsx(
+        'border-b border-(--palette-line-soft) px-5 py-2.5',
+        failed && 'bg-(--palette-req-wash) shadow-[inset_3px_0_0_var(--palette-danger)]',
+      )}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs text-(--palette-gray-500)">{t('administration.email.title')}</span>
@@ -92,7 +99,7 @@ export default function AssignmentEmailSection({
                 <HistoryRow email={e} />
               </span>
               <span className="shrink-0 text-(--palette-gray-500) tabular-nums">
-                <When at={e.sentAt || e.createdAt} />
+                <When at={e.sentAt || e.failedAt || e.createdAt} />
               </span>
             </li>
           ))}
@@ -117,6 +124,11 @@ export default function AssignmentEmailSection({
           )}
         </div>
       )}
+      {failed && canSend && (
+        <p className="mt-2 text-xs text-(--palette-gray-500)">
+          {t('administration.email.failedNote')}
+        </p>
+      )}
     </section>
   );
 }
@@ -130,6 +142,17 @@ function LatestLine({ email }: { email: AssignmentEmailHistoryItem }) {
         t('administration.email.notSentHint')
       ) : (
         <>
+          {email.status === 'Failed' && (isTime(email.failedAt) || email.failureReason) && (
+            <div className="text-(--palette-danger)">
+              <When at={email.failedAt} />
+              {email.failureReason && (
+                <>
+                  {isTime(email.failedAt) && ' · '}
+                  {email.failureReason}
+                </>
+              )}
+            </div>
+          )}
           {email.status === 'Pending' && <div>{t('administration.email.pendingHint')}</div>}
           {email.status === 'Queued' && <div>{t('administration.email.queuedHint')}</div>}
           {email.status === 'Sent' && !email.isResend && !email.createdBy && (

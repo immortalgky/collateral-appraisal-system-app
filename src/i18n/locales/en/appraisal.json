@@ -664,7 +664,8 @@
       "pendingHint": "Goes out once the case is handed to the company",
       "sentLabel": "Sent",
       "loadLastFailed": "The latest email could not be loaded",
-      "queuedHint": "On its way; the result shows here once it is sent"
+      "queuedHint": "On its way; the result shows here once it is sent",
+      "failedNote": "The case stays assigned · the assigner and IntAdmins were notified"
     }
   },
   "feePreview": {

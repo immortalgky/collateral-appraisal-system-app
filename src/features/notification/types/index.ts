@@ -9,7 +9,8 @@ export type NotificationType =
   | 'DocumentLineItemDeclined'
   | 'ReportReady'
   | 'ReportFailed'
-  | 'QuotationAutoAssignIncomplete';
+  | 'QuotationAutoAssignIncomplete'
+  | 'AssignmentEmailFailed';
 
 export interface Notification {
   id: string;
@@ -81,4 +82,17 @@ export const notificationTypeConfig: Record<
     iconStyle: 'solid',
     color: 'text-amber-500 bg-(--palette-warn-wash)',
   },
+  AssignmentEmailFailed: {
+    icon: 'circle-exclamation',
+    iconStyle: 'solid',
+    color: 'text-(--palette-danger) bg-(--palette-req-wash)',
+  },
 };
+
+/** A type this build does not know yet (the server ships first) gets a plain bell, not a crash. */
+export const getNotificationConfig = (type: string) =>
+  notificationTypeConfig[type as NotificationType] ?? {
+    icon: 'bell',
+    iconStyle: 'regular' as const,
+    color: 'text-(--palette-gray-500) bg-(--palette-surface-3)',
+  };

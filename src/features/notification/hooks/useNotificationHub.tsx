@@ -6,6 +6,7 @@ import { useAuthStore } from '@features/auth/store';
 import { useNotificationStore } from '../store';
 import { showNotificationToast } from '../components/NotificationToast';
 import { followupKeys } from '@/features/document-followup/api/followup';
+import { assignmentEmailHistoryKey } from '@/features/appraisal/api/assignmentEmail';
 import type { Notification } from '../types';
 import * as appHub from '@shared/realtime/appHub';
 
@@ -73,6 +74,12 @@ export function useNotificationHub() {
           queryClient.invalidateQueries({ queryKey: ['task-group-counts'] });
           queryClient.invalidateQueries({ queryKey: ['task-counts'] });
         }
+      }
+
+      // The slip learns at once that the email failed, not at its next poll.
+      const appraisalId = notification.metadata?.appraisalId;
+      if (notification.type === 'AssignmentEmailFailed' && typeof appraisalId === 'string') {
+        queryClient.invalidateQueries({ queryKey: assignmentEmailHistoryKey(appraisalId) });
       }
 
       // A task was assigned to / completed by this user: refresh every task list +

@@ -664,7 +664,8 @@
       "pendingHint": "案件移交公司后发送",
       "sentLabel": "发送于",
       "loadLastFailed": "无法加载最新的邮件",
-      "queuedHint": "发送中，完成后在此显示结果"
+      "queuedHint": "发送中，完成后在此显示结果",
+      "failedNote": "任务仍按原样分配 · 已通知分配人和 IntAdmin"
     }
   },
   "feePreview": {

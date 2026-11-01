@@ -1,18 +1,14 @@
 import toast from 'react-hot-toast';
 import Icon from '@shared/components/Icon';
 import i18n from '@/i18n';
-import { notificationTypeConfig } from '../types';
+import { getNotificationConfig } from '../types';
 import { timeAgo } from '../utils/timeAgo';
 import type { Notification } from '../types';
 
 export function showNotificationToast(notification: Notification) {
   // Non-component caller: resolve a notification-namespace-bound t from the i18n instance.
   const tr = i18n.getFixedT(null, 'notification');
-  const config = notificationTypeConfig[notification.type] ?? {
-    icon: 'bell',
-    iconStyle: 'regular' as const,
-    color: 'text-(--palette-gray-500) bg-(--palette-surface-3)',
-  };
+  const config = getNotificationConfig(notification.type);
 
   toast.custom(
     t => (

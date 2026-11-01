@@ -2717,6 +2717,34 @@ describe('AdministrationPage: the company email on the read-only slip', () => {
     expect(await within(dialog).findByText('The case is closed.')).toBeInTheDocument();
   });
 
+  it('shows a failed email with its time and reason, a resend and the still-assigned note', async () => {
+    state.assignments = [madeExternal];
+    useHistory([
+      historyItem({
+        status: 'Failed',
+        sentAt: null,
+        failedAt: '2026-10-29T14:41:00',
+        failureReason: 'บริษัทไม่มีอีเมลในระบบ',
+      }),
+    ]);
+    render(<AdministrationPage />);
+
+    const section = within(await emailSection());
+    expect(section.getByText('administration.email.status.Failed')).toBeInTheDocument();
+    expect(section.getByText(/บริษัทไม่มีอีเมลในระบบ/)).toBeInTheDocument();
+    expect(
+      within(section.getByText(/บริษัทไม่มีอีเมลในระบบ/)).getByText(
+        (_, el) => el?.tagName === 'TIME',
+      ),
+    ).toHaveAttribute('dateTime', '2026-10-29T14:41:00');
+    expect(section.getByRole('button', { name: 'administration.email.resend' })).toBeEnabled();
+    expect(section.getByText('administration.email.failedNote')).toBeInTheDocument();
+    // Who it was for still reads.
+    expect(section.getByText('co@example.com')).toBeInTheDocument();
+    // Nothing went out: no "View sent".
+    expect(section.queryByRole('button', { name: 'administration.email.viewSent' })).toBeNull();
+  });
+
   it('names a history row that did not go out by its status', async () => {
     state.assignments = [madeExternal];
     useHistory([
