@@ -1,4 +1,6 @@
+import { useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 import axios from '@shared/api/axiosInstance';
 
 /** Where an attachment comes from: the request's or the appraisal's documents, or a file uploaded for the email only. */
@@ -130,32 +132,62 @@ export const assignmentEmailHistoryKey = (appraisalId: string) => [
   'assignment-emails',
 ];
 
+/** A refusal that polling again cannot change (403 no permission, 404 no such case); 408 / 429 and 5xx are transient. */
+const isTerminalFailure = (error: unknown) => {
+  const status = isAxiosError(error) ? error.response?.status : undefined;
+  return !!status && status >= 400 && status < 500 && status !== 408 && status !== 429;
+};
+
 /**
- * Admin only: a 403 (or any failure) leaves the slip without the email row, so no retry. While the latest
- * email waits to go out the slip reads it again (no focus refetch in this app): every 15 s once Queued
- * (handed to the sender, about to end Sent or Failed), every minute while Pending (the handover can take
- * days).
+ * How long until the history is read again: 15 s while the latest email is Queued (about to end Sent or
+ * Failed), a minute while Pending (the handover can take days), never once it is settled. A transient
+ * failure (network, 5xx) backs the wait off (doubling, up to 5 minutes) instead of ending the polling; a
+ * terminal one (403 and the like) stops it.
  */
-export const useGetAssignmentEmailHistory = (appraisalId: string, enabled: boolean) =>
-  useQuery({
+export const historyPollInterval = (
+  latest: AssignmentEmailStatus | undefined,
+  error: unknown,
+  failures: number,
+): number | false => {
+  if (error && isTerminalFailure(error)) return false;
+  const base = latest === 'Queued' ? 15_000 : latest === 'Pending' ? 60_000 : false;
+  return base === false ? false : Math.min(base * 2 ** failures, 300_000);
+};
+
+/**
+ * Admin only: a 403 (or any other 4xx) leaves the slip without the email row, so no retry. While the latest
+ * email waits to go out the slip reads it again (no focus refetch in this app); see `historyPollInterval`.
+ */
+export const useGetAssignmentEmailHistory = (appraisalId: string, enabled: boolean) => {
+  // Failures in a row, for the back-off: a read that lands resets it.
+  const failures = useRef(0);
+  return useQuery({
     queryKey: assignmentEmailHistoryKey(appraisalId),
     queryFn: async (): Promise<AssignmentEmailHistoryItem[]> => {
-      const { data } = await axios.get<AssignmentEmailHistoryItem[]>(
-        `/appraisals/${appraisalId}/assignment-emails`,
-      );
-      return data;
+      try {
+        const { data } = await axios.get<AssignmentEmailHistoryItem[]>(
+          `/appraisals/${appraisalId}/assignment-emails`,
+        );
+        failures.current = 0;
+        return data;
+      } catch (error) {
+        failures.current += 1;
+        throw error;
+      }
     },
     enabled: enabled && !!appraisalId,
     retry: false,
     // Read on every visit: a re-assignment since the last one adds a row the cache would not have.
     staleTime: 0,
-    // Hidden tabs do not poll (React Query's default); a failed read stops it.
-    refetchInterval: query => {
-      if (query.state.status === 'error') return false;
-      const status = query.state.data?.[0]?.status;
-      return status === 'Queued' ? 15_000 : status === 'Pending' ? 60_000 : false;
-    },
+    // Hidden tabs do not poll (React Query's default).
+    refetchInterval: query =>
+      historyPollInterval(
+        query.state.data?.[0]?.status,
+        query.state.status === 'error' ? query.state.error : null,
+        Math.max(0, failures.current - 1),
+      ),
   });
+};
 
 /** One email as written and sent. Fixed once Sent; before that its status and sent fields still move. */
 export const useGetAssignmentEmailSent = (appraisalId: string, emailId: string | null) =>

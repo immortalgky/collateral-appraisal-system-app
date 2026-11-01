@@ -126,7 +126,7 @@ const TWO_WAY_CHOICE_WIDTH = 'max-w-[18.5rem]';
 
 type FixTarget = 'type' | 'company' | 'assignee' | 'followup' | 'fee' | 'remarks' | 'quotation';
 
-const AdministrationPage = () => {
+const AdministrationPageBody = () => {
   const { t } = useTranslation('appraisal');
   const assignmentSchema = useAssignmentFormSchema();
   const appraisalId = useAppraisalId();
@@ -1849,5 +1849,12 @@ const AdministrationPage = () => {
     </div>
   );
 };
+
+/**
+ * Keyed by the appraisal: the router keeps this page mounted when only the appraisal id in the URL
+ * changes, and everything the page holds (the open email drawers, a draft save still running whose
+ * continuation opens the composer, the form) belongs to the case it was opened on.
+ */
+const AdministrationPage = () => <AdministrationPageBody key={useAppraisalId()} />;
 
 export default AdministrationPage;

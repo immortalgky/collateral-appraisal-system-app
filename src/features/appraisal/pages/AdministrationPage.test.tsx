@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import toast from 'react-hot-toast';
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import userEvent from '@testing-library/user-event';
 import { fireEvent } from '@testing-library/react';
 import { render, screen, waitFor, within } from '@/test/test-utils';
@@ -2817,6 +2817,54 @@ describe('AdministrationPage: the company email on the read-only slip', () => {
     expect(
       within(dialog).getByText(/^Old Co · administration\.slip\.segment\.followup Staff Name/),
     ).toBeInTheDocument();
+  });
+
+  it('closes "View sent" and "Send again" when the page moves to another appraisal', async () => {
+    state.assignments = [madeExternal];
+    useHistory([historyItem()]);
+    server.use(
+      http.get('*/appraisals/:id/assignment-emails/:emailId', () => HttpResponse.json(sentEmail)),
+    );
+    const user = userEvent.setup();
+    const { rerender } = render(<AdministrationPage />);
+
+    await user.click(
+      within(await emailSection()).getByRole('button', { name: 'administration.email.viewSent' }),
+    );
+    await within(await screen.findByRole('dialog')).findByText(sentEmail.subject);
+
+    // The route keeps the page mounted when only the appraisal id changes: nothing open may follow.
+    state.appraisalId = 'A2';
+    state.assignments = [];
+    rerender(<AdministrationPage />);
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.queryByText(sentEmail.subject)).toBeNull();
+  });
+
+  it('does not open the composer for appraisal A when its draft save lands after moving to B', async () => {
+    server.use(
+      http.put('*/appraisals/:id/assignments/draft', async () => {
+        await delay(300);
+        state.calls.push('draft');
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    externalAuto();
+    const { user, rerender } = render(<AdministrationPage />);
+    await screen.findByText('administration.assignmentType.title');
+    await waitFor(() => expect(slipAssign()).toBeEnabled());
+    await user.click(slipAssign());
+
+    state.appraisalId = 'A2';
+    externalAuto();
+    rerender(<AdministrationPage />);
+    await screen.findByText('administration.assignmentType.title');
+    await new Promise(r => setTimeout(r, 600));
+
+    // A's save finished meanwhile, but its composer (and A's preview) must not appear on B.
+    expect(screen.queryByRole('button', { name: 'administration.email.assignAndSend' })).toBeNull();
+    expect(state.calls).not.toContain('preview');
   });
 
   it('sends again from the latest email, and the slip shows the new send', async () => {

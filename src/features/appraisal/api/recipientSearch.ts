@@ -3,6 +3,7 @@ import axios from '@shared/api/axiosInstance';
 import { useDebounce } from '@shared/hooks/useDebounce';
 import { useGetUsers } from '@features/userManagement/api/users';
 import { useLocalizedCompanyName } from '@shared/utils/companyName';
+import { isValidEmail } from '@shared/utils/validationUtils';
 
 export interface RecipientSuggestion {
   /** Unique within a list: the group and the entity's id (two people may share an address). */
@@ -32,6 +33,28 @@ export const searchTermOf = (text: string): string => {
   const typed = trimmed.replace(/^@/, '').trim();
   const min = trimmed.startsWith('@') ? 1 : MIN_CHARS;
   return typed.length >= min && !typed.includes('@') ? typed : '';
+};
+
+/**
+ * The addresses of a master-data email field, the way the API reads them (AssignmentEmailCcRoleExpansion
+ * .PlainAddresses): split on "," / ";", keep a bare address or the address inside "Name <addr>", drop
+ * anything else, no repeats (case-insensitive). "a@x.com; b@x.com" is two addresses, junk is none.
+ */
+export const plainAddresses = (value: string | null | undefined): string[] => {
+  const isPlain = (v: string) => v.length <= 254 && isValidEmail(v);
+  const found = (value ?? '')
+    .split(/[,;]/)
+    .map(part => part.trim())
+    .filter(Boolean)
+    .map(part => {
+      if (isPlain(part)) return part;
+      const open = part.lastIndexOf('<');
+      if (open < 0 || !part.endsWith('>')) return null;
+      const inner = part.slice(open + 1, -1).trim();
+      return isPlain(inner) ? inner : null;
+    })
+    .filter((a): a is string => a !== null);
+  return found.filter((a, i) => found.findIndex(b => b.toLowerCase() === a.toLowerCase()) === i);
 };
 
 interface CompanyHit {
@@ -104,22 +127,27 @@ export const useRecipientSearch = (text: string) => {
     };
   }
 
+  // One row per address the API would accept: a field holding "a; b" is two rows, junk is none.
   const companyRows: RecipientSuggestion[] = (companies.data ?? [])
-    .filter(c => c.isActive && !!c.email?.trim())
-    .map(c => ({
-      key: `company:${c.id}`,
-      group: 'company',
-      name: localizeCompanyName(c.name, c.nameLocal),
-      email: c.email!.trim(),
-    }));
+    .filter(c => c.isActive)
+    .flatMap(c =>
+      plainAddresses(c.email).map(email => ({
+        key: `company:${c.id}:${email.toLowerCase()}`,
+        group: 'company' as const,
+        name: localizeCompanyName(c.name, c.nameLocal),
+        email,
+      })),
+    );
   const staffRows: RecipientSuggestion[] = (staff.data?.items ?? [])
-    .filter(u => u.isActive && !u.isLocked && !!u.email?.trim())
-    .map(u => ({
-      key: `staff:${u.id}`,
-      group: 'staff',
-      name: `${u.firstName} ${u.lastName}`.trim() || u.username,
-      email: u.email.trim(),
-    }));
+    .filter(u => u.isActive && !u.isLocked)
+    .flatMap(u =>
+      plainAddresses(u.email).map(email => ({
+        key: `staff:${u.id}:${email.toLowerCase()}`,
+        group: 'staff' as const,
+        name: `${u.firstName} ${u.lastName}`.trim() || u.username,
+        email,
+      })),
+    );
 
   if (browse) {
     // The first few of each, by name.
