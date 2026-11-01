@@ -149,7 +149,6 @@ export const useGetAssignmentEmailSent = (appraisalId: string, emailId: string |
     },
     enabled: !!emailId,
     staleTime: query => (query.state.data?.status === 'Sent' ? Infinity : 0),
-    retry: 1,
   });
 
 /** "Send again" / "Send email": sends the edited email now; the slip reads the history again. */
@@ -166,24 +165,24 @@ export const useResendAssignmentEmail = (appraisalId: string) => {
     // The new email heads the list at once (no second send while the list is read again), then the
     // list is read; not awaited, so a slow read does not hold the dialog.
     onSuccess: ({ emailId }) => {
-      queryClient.setQueryData<AssignmentEmailHistoryItem[]>(
-        historyKey(appraisalId),
-        list =>
-          list && [
-            {
-              id: emailId,
-              isResend: true,
-              status: 'Queued',
-              createdBy: null,
-              createdByName: null,
-              createdAt: null,
-              sentAt: null,
-              sentTo: [],
-              ccCount: 0,
-              attachmentCount: 0,
-            },
-            ...list,
-          ],
+      queryClient.setQueryData<AssignmentEmailHistoryItem[]>(historyKey(appraisalId), list =>
+        !list || list.some(e => e.id === emailId)
+          ? list
+          : [
+              {
+                id: emailId,
+                isResend: true,
+                status: 'Queued',
+                createdBy: null,
+                createdByName: null,
+                createdAt: null,
+                sentAt: null,
+                sentTo: [],
+                ccCount: 0,
+                attachmentCount: 0,
+              },
+              ...list,
+            ],
       );
       void queryClient.invalidateQueries({ queryKey: historyKey(appraisalId) });
     },

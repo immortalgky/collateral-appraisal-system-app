@@ -284,7 +284,6 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
   // a name without a code is still a person.
   const bySystem =
     isAssigned &&
-    !!assignedAt &&
     !assignedByName?.trim() &&
     (!assignedBy?.trim() || assignedBy.trim().toLowerCase() === 'system');
   const assignedByText = bySystem ? null : personLabel(assignedByName, assignedBy) || null;

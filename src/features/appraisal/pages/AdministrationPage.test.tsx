@@ -2814,4 +2814,30 @@ describe('AdministrationPage: the company email on the read-only slip', () => {
 
     expect(await within(dialog).findByText(sentEmail.subject)).toBeInTheDocument();
   });
+
+  it('still opens what the company last received after a later send failed', async () => {
+    state.assignments = [madeExternal];
+    useHistory([
+      historyItem({ id: 'e2', isResend: true, status: 'Failed', sentAt: null }),
+      historyItem(),
+    ]);
+    let opened = '';
+    server.use(
+      http.get('*/appraisals/:id/assignment-emails/:emailId', ({ params }) => {
+        opened = String(params.emailId);
+        return HttpResponse.json(sentEmail);
+      }),
+    );
+    const user = userEvent.setup();
+    render(<AdministrationPage />);
+
+    await user.click(
+      within(await emailSection()).getByRole('button', { name: 'administration.email.viewSent' }),
+    );
+
+    expect(
+      await within(await screen.findByRole('dialog')).findByText(sentEmail.subject),
+    ).toBeInTheDocument();
+    expect(opened).toBe('e1');
+  });
 });

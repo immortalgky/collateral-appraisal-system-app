@@ -663,7 +663,8 @@
       },
       "pendingHint": "Goes out once the case is handed to the company",
       "sentLabel": "Sent",
-      "loadLastFailed": "The latest email could not be loaded"
+      "loadLastFailed": "The latest email could not be loaded",
+      "queuedHint": "On its way; the result shows here once it is sent"
     }
   },
   "feePreview": {

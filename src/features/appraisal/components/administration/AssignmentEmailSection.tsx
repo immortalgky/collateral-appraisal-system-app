@@ -18,9 +18,8 @@ const TONE: Record<AssignmentEmailStatus, BadgeTone> = {
 /** A time that does not parse is left out, with its label (the status still reads). */
 function When({ at, label }: { at: string | null; label?: string }) {
   const { i18n } = useTranslation();
-  const text = formatLocaleDateTime(at, i18n.language);
-  if (text === '—') return null;
-  const time = <time dateTime={at!}>{text}</time>;
+  if (!at || isNaN(Date.parse(at))) return null;
+  const time = <time dateTime={at}>{formatLocaleDateTime(at, i18n.language)}</time>;
   return label ? (
     <>
       {label} <span className="font-medium text-(--palette-ink)">{time}</span>{' '}
@@ -55,6 +54,8 @@ export default function AssignmentEmailSection({
   const { t } = useTranslation('appraisal');
   const [latest] = items;
   if (!latest) return null;
+  // What the company last received: a later send that failed or is on its way does not hide it.
+  const lastSent = items.find(e => e.status === 'Sent');
 
   // From the latest email; a NotSent one holds only the choice, so the template. Never an older
   // one: it may be the previous assignment's, to another company.
@@ -94,7 +95,7 @@ export default function AssignmentEmailSection({
         </ul>
       )}
 
-      {(canResend || latest.status === 'Sent') && (
+      {(canResend || lastSent) && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {canResend && (
             <Button variant="outline" size="xs" onClick={() => onResend(prefill)}>
@@ -105,8 +106,8 @@ export default function AssignmentEmailSection({
               )}
             </Button>
           )}
-          {latest.status === 'Sent' && (
-            <Button variant="ghost" size="xs" onClick={() => onView(latest.id)}>
+          {lastSent && (
+            <Button variant="ghost" size="xs" onClick={() => onView(lastSent.id)}>
               {t('administration.email.viewSent')}
             </Button>
           )}
@@ -126,6 +127,7 @@ function LatestLine({ email }: { email: AssignmentEmailHistoryItem }) {
       ) : (
         <>
           {email.status === 'Pending' && <div>{t('administration.email.pendingHint')}</div>}
+          {email.status === 'Queued' && <div>{t('administration.email.queuedHint')}</div>}
           {email.status === 'Sent' && !email.isResend && !email.createdBy && (
             <>{t('administration.email.history.system')} · </>
           )}

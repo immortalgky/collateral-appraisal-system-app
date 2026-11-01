@@ -663,7 +663,8 @@
       },
       "pendingHint": "案件移交公司后发送",
       "sentLabel": "发送于",
-      "loadLastFailed": "无法加载最新的邮件"
+      "loadLastFailed": "无法加载最新的邮件",
+      "queuedHint": "发送中，完成后在此显示结果"
     }
   },
   "feePreview": {

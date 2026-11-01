@@ -146,7 +146,10 @@ const Composer = (props: AssignmentEmailDialogProps) => {
             {isResend && (
               <Button
                 variant="outline"
-                onClick={() => void (preview.isError ? refetch() : last.refetch())}
+                onClick={() => {
+                  if (preview.isError) void refetch();
+                  if (last.isError) void last.refetch();
+                }}
                 isLoading={isFetching || last.isFetching}
               >
                 {t('common:actions.retry')}
