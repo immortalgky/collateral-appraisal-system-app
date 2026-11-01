@@ -610,7 +610,7 @@
       "pickTitle": "Choose from case documents",
       "noDocuments": "No documents",
       "attach": "Attach",
-      "footerHint": "The email is sent with the assignment",
+      "footerHint": "The email is sent with the assignment · if it fails to send later, the assignment still stands",
       "assignWithoutSend": "Assign without sending",
       "assignAndSend": "Assign and send",
       "source": {

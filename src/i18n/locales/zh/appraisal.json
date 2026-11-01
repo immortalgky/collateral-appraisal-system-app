@@ -610,7 +610,7 @@
       "pickTitle": "从案件文档中选择",
       "noDocuments": "没有文档",
       "attach": "附加",
-      "footerHint": "邮件随分配一起发送",
+      "footerHint": "邮件随分配一起发送 · 如果之后发送失败，分配仍然有效",
       "assignWithoutSend": "分配但不发送",
       "assignAndSend": "分配并发送",
       "source": {
