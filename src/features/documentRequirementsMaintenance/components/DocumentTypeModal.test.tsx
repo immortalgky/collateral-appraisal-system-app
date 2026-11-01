@@ -14,12 +14,14 @@ describe('DocumentTypeModal carry-forward default', () => {
     expect(dontUse()).toBeChecked();
 
     await user.type(screen.getByLabelText(/Code/), 'D099');
-    await user.type(screen.getByLabelText(/^Name/), 'Test type');
+    await user.type(screen.getByLabelText(/^Name \(EN\)/), 'Test type');
+    await user.type(screen.getByLabelText(/^Name \(TH\)/), 'ประเภททดสอบ');
     await user.click(screen.getByRole('button', { name: 'Add Document Type' }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     expect(onSubmit.mock.calls[0][0]).toMatchObject({
       code: 'D099',
+      nameTh: 'ประเภททดสอบ',
       carryForwardByDefault: false,
     });
   });
@@ -29,6 +31,7 @@ describe('DocumentTypeModal carry-forward default', () => {
       id: 'x',
       code: 'D013',
       name: 'Deed',
+      nameTh: 'โฉนด',
       isActive: true,
       sortOrder: 1,
       carryForwardByDefault: true,

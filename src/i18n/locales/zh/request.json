@@ -1041,5 +1041,43 @@
     "confirmGenerated": "这将替换之前生成的预约函。此行的其他文件保留。",
     "confirmFiles": "此行已有文件，且其中没有系统生成的预约函。这些文件将被生成的预约函替换。",
     "confirm": "生成预约函"
+  },
+  "documentTypeAdmin": {
+    "columns": {
+      "code": "代码",
+      "name": "名称（英文）",
+      "nameTh": "名称（泰文）",
+      "category": "类别",
+      "active": "启用",
+      "actions": "操作"
+    },
+    "categories": {
+      "VAL_REPORT": "完整估价报告",
+      "VAL_DOC": "抵押品估价文件",
+      "SUBMIT_DOC": "估价申请提交文件"
+    },
+    "fields": {
+      "code": "代码",
+      "codePlaceholder": "例如 D044",
+      "category": "类别",
+      "categoryPlaceholder": "选择类别",
+      "name": "名称（英文）",
+      "namePlaceholder": "文件类型英文名称",
+      "nameTh": "名称（泰文）",
+      "nameThPlaceholder": "文件类型泰文名称",
+      "description": "说明",
+      "descriptionPlaceholder": "可选说明",
+      "sortOrder": "排序",
+      "active": "启用"
+    },
+    "titleAdd": "添加文件类型",
+    "titleEdit": "编辑文件类型",
+    "cancel": "取消",
+    "add": "添加文件类型",
+    "save": "保存更改",
+    "yes": "是",
+    "no": "否",
+    "loading": "加载中…",
+    "empty": "暂无文件类型。"
   }
 }

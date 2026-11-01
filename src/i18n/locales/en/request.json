@@ -1041,5 +1041,43 @@
     "confirmGenerated": "This replaces the appointment letter generated earlier. Other files on this row stay.",
     "confirmFiles": "This row already has files, and none of them is a generated letter. They will be replaced by the generated letter.",
     "confirm": "Generate the letter"
+  },
+  "documentTypeAdmin": {
+    "columns": {
+      "code": "Code",
+      "name": "Name (EN)",
+      "nameTh": "Name (TH)",
+      "category": "Category",
+      "active": "Active",
+      "actions": "Actions"
+    },
+    "categories": {
+      "VAL_REPORT": "Complete Valuation Report",
+      "VAL_DOC": "Collateral Valuation Document",
+      "SUBMIT_DOC": "Submission Documents for Valuation"
+    },
+    "fields": {
+      "code": "Code",
+      "codePlaceholder": "e.g. D044",
+      "category": "Category",
+      "categoryPlaceholder": "Select a category",
+      "name": "Name (EN)",
+      "namePlaceholder": "Document type name in English",
+      "nameTh": "Name (TH)",
+      "nameThPlaceholder": "Document type name in Thai",
+      "description": "Description",
+      "descriptionPlaceholder": "Optional description",
+      "sortOrder": "Sort Order",
+      "active": "Active"
+    },
+    "titleAdd": "Add Document Type",
+    "titleEdit": "Edit Document Type",
+    "cancel": "Cancel",
+    "add": "Add Document Type",
+    "save": "Save Changes",
+    "yes": "Yes",
+    "no": "No",
+    "loading": "Loading…",
+    "empty": "No document types."
   }
 }

@@ -75,6 +75,7 @@ const DocumentRequirementsPage = () => {
         await updateType.mutateAsync({
           id: editingType.id,
           name: values.name,
+          nameTh: values.nameTh,
           description: values.description,
           category: values.category,
           sortOrder: values.sortOrder,
@@ -85,6 +86,7 @@ const DocumentRequirementsPage = () => {
         await createType.mutateAsync({
           code: values.code,
           name: values.name,
+          nameTh: values.nameTh,
           description: values.description,
           category: values.category,
           sortOrder: values.sortOrder,

@@ -16,11 +16,13 @@ export interface DocumentRequirementDto {
   createdOn?: string | null;
   updatedOn?: string | null;
 }
+export const DOCUMENT_TYPE_CATEGORIES = ['VAL_REPORT', 'VAL_DOC', 'SUBMIT_DOC'] as const;
 
 export interface DocumentTypeDto {
   id: string;
   code: string;
   name: string;
+  nameTh: string;
   description?: string | null;
   category?: string | null;
   isActive: boolean;
@@ -63,6 +65,7 @@ export interface UpdateDocumentRequirementPayload {
 export interface CreateDocumentTypePayload {
   code: string;
   name: string;
+  nameTh: string;
   description?: string | null;
   category?: string | null;
   sortOrder: number;
@@ -72,6 +75,7 @@ export interface CreateDocumentTypePayload {
 export interface UpdateDocumentTypePayload {
   id: string;
   name: string;
+  nameTh: string;
   description?: string | null;
   category?: string | null;
   sortOrder: number;
