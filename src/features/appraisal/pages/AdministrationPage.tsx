@@ -205,7 +205,7 @@ const AdministrationPage = () => {
   const [emailFor, setEmailFor] = useState<Parameters<typeof createAssignment>[0] | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [preparingEmail, setPreparingEmail] = useState(false);
-  // The read-only slip's email: the one ดูฉบับที่ส่ง shows, and what ส่งอีกครั้ง pre-fills from
+  // The read-only slip's email: the one "View sent" shows, and what "Send again" pre-fills from
   // (undefined = closed, null = the template).
   const [viewEmailId, setViewEmailId] = useState<string | null>(null);
   const [resendFrom, setResendFrom] = useState<string | null | undefined>(undefined);

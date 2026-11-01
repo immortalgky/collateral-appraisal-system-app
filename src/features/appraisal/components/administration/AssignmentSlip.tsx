@@ -69,7 +69,7 @@ export interface AssignmentSlipProps {
   assignedAt?: string | null;
   assignedBy?: string | null;
   assignedByName?: string | null;
-  /** Read-only only: the "อีเมลถึงบริษัท" section (EXT / EXTO), under the details. */
+  /** Read-only only: the "Email to the company" section (EXT / EXTO), under the details. */
   emailSection?: ReactNode;
 }
 

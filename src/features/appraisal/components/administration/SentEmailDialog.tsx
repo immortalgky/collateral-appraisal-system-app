@@ -23,7 +23,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 
 const Dash = () => <span className="text-(--palette-gray-400)">—</span>;
 
-/** ดูฉบับที่ส่ง: the resolved To / Cc, subject, body and files of one email, as they went out. */
+/** "View sent": the resolved To / Cc, subject, body and files of one email, as they went out. */
 export default function SentEmailDialog({ appraisalId, emailId, onClose }: SentEmailDialogProps) {
   const { t } = useTranslation('appraisal');
   const { data, isError } = useGetAssignmentEmailSent(appraisalId, emailId);

@@ -363,7 +363,7 @@ describe('AssignmentEmailDialog: ส่งอีกครั้ง from the read
 
     // The read retries once (about a second) before it gives up.
     expect(
-      await screen.findByText('administration.email.loadFailed', undefined, { timeout: 4000 }),
+      await screen.findByText('administration.email.loadLastFailed', undefined, { timeout: 4000 }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'administration.email.assignWithoutSend' }),
@@ -397,5 +397,26 @@ describe('AssignmentEmailDialog: ส่งอีกครั้ง from the read
     expect(
       screen.getByRole('button', { name: '+ administration.email.cc.FollowupStaff' }),
     ).toBeInTheDocument();
+  });
+
+  it('offers to read the template again when it cannot be read', async () => {
+    let fail = true;
+    server.use(
+      http.get('*/appraisals/:id/assignment-email/preview', () =>
+        fail ? HttpResponse.json({}, { status: 500 }) : HttpResponse.json(state.preview),
+      ),
+    );
+    const { user } = renderDialog({ resendFrom: 'e1' });
+
+    const retry = await screen.findByRole(
+      'button',
+      { name: 'common:actions.retry' },
+      { timeout: 4000 },
+    );
+    expect(screen.getByText('administration.email.loadFailed')).toBeInTheDocument();
+    fail = false;
+    await user.click(retry);
+
+    expect(await screen.findByDisplayValue(latest.subject)).toBeInTheDocument();
   });
 });

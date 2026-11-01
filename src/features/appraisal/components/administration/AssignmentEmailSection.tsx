@@ -19,22 +19,22 @@ const TONE: Record<AssignmentEmailStatus, BadgeTone> = {
 /** A time that does not parse is left out (the status still reads). */
 function When({ at }: { at: string | null }) {
   const { i18n } = useTranslation();
-  if (!at || isNaN(new Date(at).getTime())) return null;
-  return <time dateTime={at}>{formatLocaleDateTime(at, i18n.language)}</time>;
+  const text = formatLocaleDateTime(at, i18n.language);
+  return !at || text === '—' ? null : <time dateTime={at}>{text}</time>;
 }
 
 interface AssignmentEmailSectionProps {
   appraisalId: string;
   /** The case is still open: the server refuses a send once it is completed or cancelled. */
   canSend: boolean;
-  /** ดูฉบับที่ส่ง: the email to show. */
+  /** "View sent": the email to show. */
   onView: (emailId: string) => void;
-  /** ส่งอีกครั้ง / ส่งอีเมล: the email to pre-fill from, null = the template (nothing was sent). */
+  /** "Send again" / "Send email": the email to pre-fill from, null = the template (nothing was sent). */
   onResend: (fromEmailId: string | null) => void;
 }
 
 /**
- * "อีเมลถึงบริษัท" on the read-only slip (EXT / EXTO): the latest email's status, the history and the
+ * "Email to the company" on the read-only slip (EXT / EXTO): the latest email's status, the history and the
  * actions, which stay usable while the rest of the page is read-only. Nothing when the case has no
  * email, or the history is refused (only an admin may read it).
  */
@@ -53,8 +53,9 @@ export default function AssignmentEmailSection({
   // From the latest email; a NotSent one holds only the choice, so the template. Never an older
   // one: it may be the previous assignment's, to another company.
   const prefill = latest.status === 'NotSent' ? null : latest.id;
-  // While the assignment's own email waits for its handover the server refuses: it would go twice.
-  const canResend = canSend && latest.status !== 'Pending';
+  // Not while the latest email waits to go out: Pending is refused by the server (it would go twice),
+  // and a Queued one is on its way (both read "waiting to send"; the slip polls until it ends).
+  const canResend = canSend && latest.status !== 'Pending' && latest.status !== 'Queued';
 
   return (
     <section
@@ -153,6 +154,8 @@ function LatestLine({ email }: { email: AssignmentEmailHistoryItem }) {
 function HistoryLabel({ email: e }: { email: AssignmentEmailHistoryItem }) {
   const { t } = useTranslation('appraisal');
   if (e.status === 'NotSent') return t('administration.email.history.notSent');
+  // One that did not go out is not "sent with the assignment": the row adds its status.
+  if (!e.isResend && e.status !== 'Sent') return t('administration.email.history.firstEmail');
   if (!e.isResend) {
     return e.createdBy
       ? t('administration.email.history.first')

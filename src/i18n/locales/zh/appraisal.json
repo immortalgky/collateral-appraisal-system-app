@@ -643,7 +643,8 @@
         "first": "随分配发送",
         "system": "按系统模板发送",
         "resend": "再次发送",
-        "notSent": "分配时未发送邮件"
+        "notSent": "分配时未发送邮件",
+        "firstEmail": "分配时的邮件"
       },
       "resend": "再次发送",
       "sendNow": "发送邮件",
@@ -654,14 +655,15 @@
       "send": "发送邮件",
       "resendHint": "立即作为新邮件发送给已分配的公司",
       "sendFailed": "邮件发送失败",
-      "sent": "邮件已发送给公司",
+      "sent": "已提交发送给公司的邮件，发送结果见工作单",
       "view": {
         "title": "已发送给公司的邮件",
         "body": "已发送邮件内容",
         "loadFailed": "无法加载已发送的邮件"
       },
       "pendingHint": "案件移交公司后发送",
-      "sentLabel": "发送于"
+      "sentLabel": "发送于",
+      "loadLastFailed": "无法加载最新的邮件"
     }
   },
   "feePreview": {

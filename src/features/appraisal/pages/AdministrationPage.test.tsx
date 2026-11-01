@@ -2476,7 +2476,7 @@ describe('AdministrationPage: the company email on the read-only slip', () => {
     expect(within(section).queryByRole('button')).toBeNull();
   });
 
-  it('reads "waiting to send" once handed over, and may send again', async () => {
+  it('reads "waiting to send" once handed over, with no second send while it is on its way', async () => {
     state.assignments = [madeExternal];
     useHistory([historyItem({ status: 'Queued', sentAt: null })]);
     render(<AdministrationPage />);
@@ -2484,9 +2484,7 @@ describe('AdministrationPage: the company email on the read-only slip', () => {
     const section = await emailSection();
     expect(within(section).getByText('administration.email.status.Queued')).toBeInTheDocument();
     expect(within(section).getByText('co@example.com')).toBeInTheDocument();
-    expect(
-      within(section).getByRole('button', { name: 'administration.email.resend' }),
-    ).toBeInTheDocument();
+    expect(within(section).queryByRole('button')).toBeNull();
   });
 
   it('offers no send once the case is closed', async () => {
@@ -2729,6 +2727,10 @@ describe('AdministrationPage: the company email on the read-only slip', () => {
       name: 'administration.email.history.title',
     });
     const rows = within(history).getAllByRole('listitem');
+    // Not "sent with the assignment": the email of the assignment, and that it failed.
+    expect(
+      within(rows[1]).getByText(/administration\.email\.history\.firstEmail/),
+    ).toBeInTheDocument();
     expect(within(rows[1]).getByText(/administration\.email\.status\.Failed/)).toBeInTheDocument();
     expect(within(rows[0]).queryByText(/administration\.email\.status/)).toBeNull();
   });

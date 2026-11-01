@@ -99,7 +99,7 @@ export interface AssignmentEmailSent {
   sentAt: string | null;
   sentTo: string[];
   sentCc: string[];
-  /** As composed (Cc role chips unresolved): what ส่งอีกครั้ง pre-fills. */
+  /** As composed (Cc role chips unresolved): what "Send again" pre-fills. */
   extraTo: string[];
   cc: string[];
   subject: string;
@@ -111,7 +111,8 @@ const historyKey = (appraisalId: string) => ['appraisal', appraisalId, 'assignme
 
 /**
  * Admin only: a 403 (or any failure) leaves the slip without the email row, so no retry. Read again
- * every 15 s while the latest email waits to go out, so the slip shows how it ended.
+ * every 15 s while the latest email is Queued (handed to the sender, about to end Sent or Failed), so
+ * the slip shows how it ended. A Pending one waits for the handover, which can take days: focus reads it.
  */
 export const useGetAssignmentEmailHistory = (appraisalId: string) =>
   useQuery({
@@ -124,8 +125,7 @@ export const useGetAssignmentEmailHistory = (appraisalId: string) =>
     },
     enabled: !!appraisalId,
     retry: false,
-    refetchInterval: query =>
-      ['Pending', 'Queued'].includes(query.state.data?.[0]?.status ?? '') ? 15_000 : false,
+    refetchInterval: query => (query.state.data?.[0]?.status === 'Queued' ? 15_000 : false),
   });
 
 /** One email's content: it never changes once written (only its status moves, read from the history). */
@@ -143,7 +143,7 @@ export const useGetAssignmentEmailSent = (appraisalId: string, emailId: string |
     retry: 1,
   });
 
-/** ส่งอีกครั้ง / ส่งอีเมล: sends the edited email now; the slip reads the history again. */
+/** "Send again" / "Send email": sends the edited email now; the slip reads the history again. */
 export const useResendAssignmentEmail = (appraisalId: string) => {
   const queryClient = useQueryClient();
   return useMutation({

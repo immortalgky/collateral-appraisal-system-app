@@ -57,7 +57,7 @@ interface AssignmentEmailDialogProps {
   /** `null` = assign without sending the email. */
   onAssign: (email: AssignmentEmailInput | null) => void;
   /**
-   * Set = ส่งอีกครั้ง / ส่งอีเมล from the read-only slip: the email goes now, with nothing to assign.
+   * Set = "Send again" / "Send email" from the read-only slip: the email goes now, with nothing to assign.
    * An id pre-fills from that email; null starts from the template (nothing was sent yet).
    */
   resendFrom?: string | null;
@@ -90,7 +90,7 @@ const Composer = (props: AssignmentEmailDialogProps) => {
   const [version, setVersion] = useState(0);
   const [keptUploads, setKeptUploads] = useState<AssignmentEmailAttachment[]>([]);
   const { refetch, isFetching } = preview;
-  // ส่งอีกครั้ง starts from the latest email (as composed) until "restore template"; the company
+  // "Send again" starts from the latest email (as composed) until "restore template"; the company
   // address and the limits are always the case's own.
   const fromLast = !!props.resendFrom && version === 0;
   const data: AssignmentEmailPreview | undefined =
@@ -105,6 +105,8 @@ const Composer = (props: AssignmentEmailDialogProps) => {
         }
       : preview.data;
   const isError = preview.isError || (fromLast && last.isError);
+  // Which read failed: the template, or (resend) the latest email.
+  const lastFailed = !preview.isError && fromLast && last.isError;
 
   const restore = async (uploads: AssignmentEmailAttachment[]) => {
     const result = await refetch();
@@ -122,16 +124,28 @@ const Composer = (props: AssignmentEmailDialogProps) => {
         {isError ? (
           // The email cannot be written, but the assignment still can.
           <div className="flex flex-col items-center gap-3">
-            <span role="alert">{t('administration.email.loadFailed')}</span>
+            <span role="alert">
+              {t(
+                lastFailed
+                  ? 'administration.email.loadLastFailed'
+                  : 'administration.email.loadFailed',
+              )}
+            </span>
             {props.error && (
               <span role="alert" className="text-xs text-danger-600 dark:text-(--palette-danger)">
                 {props.error}
               </span>
             )}
             {/* The latest email is unreadable but the template is not: start from that. */}
-            {isResend && preview.data && (
+            {isResend && lastFailed && (
               <Button variant="outline" onClick={() => setVersion(v => v + 1)}>
                 {t('administration.email.restoreTemplate')}
+              </Button>
+            )}
+            {/* The template cannot be read: nothing to send yet, but it can be read again. */}
+            {isResend && preview.isError && (
+              <Button variant="outline" onClick={() => void refetch()} isLoading={isFetching}>
+                {t('common:actions.retry')}
               </Button>
             )}
             {!isResend && (

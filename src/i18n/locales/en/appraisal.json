@@ -643,7 +643,8 @@
         "first": "Sent with the assignment",
         "system": "Sent from the system template",
         "resend": "Sent again",
-        "notSent": "Assigned without the email"
+        "notSent": "Assigned without the email",
+        "firstEmail": "Email with the assignment"
       },
       "resend": "Send again",
       "sendNow": "Send email",
@@ -654,14 +655,15 @@
       "send": "Send email",
       "resendHint": "Sends now to the assigned company, as a new email",
       "sendFailed": "The email could not be sent",
-      "sent": "Email sent to the company",
+      "sent": "The email to the company is on its way; the slip shows how it went",
       "view": {
         "title": "Email sent to the company",
         "body": "Sent email content",
         "loadFailed": "The sent email could not be loaded"
       },
       "pendingHint": "Goes out once the case is handed to the company",
-      "sentLabel": "Sent"
+      "sentLabel": "Sent",
+      "loadLastFailed": "The latest email could not be loaded"
     }
   },
   "feePreview": {
