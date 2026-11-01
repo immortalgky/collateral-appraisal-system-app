@@ -439,4 +439,24 @@ describe('AssignmentEmailDialog: ส่งอีกครั้ง from the read
 
     expect(await screen.findByDisplayValue(latest.subject)).toBeInTheDocument();
   });
+
+  it('does not keep a file the latest email uploaded when the template is restored', async () => {
+    server.use(
+      http.get('*/appraisals/:id/assignment-emails/e1', () =>
+        HttpResponse.json({
+          ...latest,
+          attachments: [
+            { documentId: 'd-old-up', source: 'upload', fileName: 'เก่า.pdf', fileSizeBytes: MB },
+          ],
+        }),
+      ),
+    );
+    const { user } = renderDialog({ resendFrom: 'e1' });
+    expect(await screen.findByText('เก่า.pdf')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'administration.email.restoreTemplate' }));
+
+    expect(await screen.findByDisplayValue('ขอนำส่งงานประเมิน 69105526')).toBeInTheDocument();
+    expect(screen.queryByText('เก่า.pdf')).toBeNull();
+  });
 });

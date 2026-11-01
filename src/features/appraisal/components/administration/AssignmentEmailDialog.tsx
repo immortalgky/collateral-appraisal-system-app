@@ -406,7 +406,16 @@ const EmailForm = ({
             <Button
               variant="ghost"
               size="xs"
-              onClick={() => onRestore(attachments.filter(a => a.source === 'upload'))}
+              // Only files uploaded in this dialog: an upload the latest email carried is not kept.
+              onClick={() =>
+                onRestore(
+                  attachments.filter(
+                    a =>
+                      a.source === 'upload' &&
+                      !preview.attachments.some(p => p.documentId === a.documentId),
+                  ),
+                )
+              }
               disabled={isPending || uploading}
               isLoading={isRestoring}
             >

@@ -2624,7 +2624,8 @@ describe('AdministrationPage: the company email on the read-only slip', () => {
     expect(within(dialog).getByText('deed.pdf')).toBeInTheDocument();
     // The stored HTML as it went out, in a sandbox that runs no script.
     const body = within(dialog).getByTitle('administration.email.view.body');
-    expect(body.getAttribute('srcdoc')).toBe(sentEmail.bodyHtml);
+    // As stored, after a base that keeps a clicked link from replacing it.
+    expect(body.getAttribute('srcdoc')).toBe(`<base target="_blank">${sentEmail.bodyHtml}`);
     expect(body.getAttribute('sandbox')).toBe('');
   });
 

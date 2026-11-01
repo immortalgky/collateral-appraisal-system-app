@@ -126,7 +126,11 @@ export const useGetAssignmentEmailHistory = (appraisalId: string) =>
     },
     enabled: !!appraisalId,
     retry: false,
+    // Read on every visit: a re-assignment since the last one adds a row the cache would not have.
+    staleTime: 0,
+    // Hidden tabs do not poll (React Query's default); a failed read stops it.
     refetchInterval: query => {
+      if (query.state.status === 'error') return false;
       const status = query.state.data?.[0]?.status;
       return status === 'Queued' ? 15_000 : status === 'Pending' ? 60_000 : false;
     },
@@ -159,6 +163,9 @@ export const useResendAssignmentEmail = (appraisalId: string) => {
       );
       return data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: historyKey(appraisalId) }),
+    // Not awaited: the email is sent; a slow list read must not hold the dialog.
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: historyKey(appraisalId) });
+    },
   });
 };

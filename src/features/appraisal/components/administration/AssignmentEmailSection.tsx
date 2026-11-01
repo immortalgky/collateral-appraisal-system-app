@@ -16,11 +16,19 @@ const TONE: Record<AssignmentEmailStatus, BadgeTone> = {
   NotSent: 'gray',
 };
 
-/** A time that does not parse is left out (the status still reads). */
-function When({ at }: { at: string | null }) {
+/** A time that does not parse is left out, with its label (the status still reads). */
+function When({ at, label }: { at: string | null; label?: string }) {
   const { i18n } = useTranslation();
   const text = formatLocaleDateTime(at, i18n.language);
-  return !at || text === '—' ? null : <time dateTime={at}>{text}</time>;
+  if (text === '—') return null;
+  const time = <time dateTime={at!}>{text}</time>;
+  return label ? (
+    <>
+      {label} <span className="font-medium text-(--palette-ink)">{time}</span>{' '}
+    </>
+  ) : (
+    time
+  );
 }
 
 interface AssignmentEmailSectionProps {
@@ -111,7 +119,7 @@ export default function AssignmentEmailSection({
 }
 
 function LatestLine({ email }: { email: AssignmentEmailHistoryItem }) {
-  const { t, i18n } = useTranslation('appraisal');
+  const { t } = useTranslation('appraisal');
   const to = email.sentTo.join(', ');
   return (
     <div className="mt-1 text-xs leading-normal text-(--palette-gray-600)">
@@ -123,13 +131,8 @@ function LatestLine({ email }: { email: AssignmentEmailHistoryItem }) {
           {email.status === 'Sent' && !email.isResend && !email.createdBy && (
             <>{t('administration.email.history.system')} · </>
           )}
-          {email.status === 'Sent' && formatLocaleDateTime(email.sentAt, i18n.language) !== '—' && (
-            <>
-              {t('administration.email.sentLabel')}{' '}
-              <span className="font-medium text-(--palette-ink)">
-                <When at={email.sentAt} />
-              </span>{' '}
-            </>
+          {email.status === 'Sent' && (
+            <When at={email.sentAt} label={t('administration.email.sentLabel')} />
           )}
           {to && (
             <>

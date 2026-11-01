@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Modal from '@/shared/components/Modal';
 import Icon from '@/shared/components/Icon';
@@ -21,13 +21,18 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
+/** Links would open inside the frame and replace the email; the sandbox blocks the new tab, so a click does nothing. */
+const LINKS_OUT = '<base target="_blank">';
+
 const Dash = () => <span className="text-(--palette-gray-400)">—</span>;
 
 /** "View sent": the resolved To / Cc, subject, body and files of one email, as they went out. */
 export default function SentEmailDialog({ appraisalId, emailId, onClose }: SentEmailDialogProps) {
   const { t } = useTranslation('appraisal');
-  const { data, isError } = useGetAssignmentEmailSent(appraisalId, emailId);
-  const email = emailId ? data : undefined;
+  // The last email opened stays while the dialog closes, so the close does not flash a spinner.
+  const [shownId, setShownId] = useState(emailId);
+  if (emailId && emailId !== shownId) setShownId(emailId);
+  const { data: email, isError } = useGetAssignmentEmailSent(appraisalId, shownId);
 
   return (
     <Modal
@@ -52,7 +57,7 @@ export default function SentEmailDialog({ appraisalId, emailId, onClose }: SentE
               White on purpose: it is the email as the company reads it (a paper preview, 17.13). */}
           <iframe
             title={t('administration.email.view.body')}
-            srcDoc={email.bodyHtml}
+            srcDoc={`${LINKS_OUT}${email.bodyHtml}`}
             sandbox=""
             className="h-[22rem] w-full rounded-ctl border border-(--palette-line) bg-white"
           />
