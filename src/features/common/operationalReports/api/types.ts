@@ -78,7 +78,10 @@ export interface Rcas002Row {
   applyLimitAmount?: number | null;
   collateralType?: string | null;
   titleDeedNumber?: string | null;
+  collateralAddress?: string | null;
   bankingSegment?: string | null;
+  aoCode?: string | null;
+  aoName?: string | null;
   appraisalCompany?: string | null;
   internalAppraisalStaff?: string | null;
   oldAppraisalValue?: number | null;
