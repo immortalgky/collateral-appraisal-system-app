@@ -310,7 +310,7 @@ describe('FinalizeModal auto-assign', () => {
     ['constructionInspection', 'construction inspection'],
     ['taskHeld', 'task held by Somchai'],
     ['winnerUnavailable', 'winning company not available'],
-    ['assignmentNotReset', 'assignment record not reset yet, assign on Administration'],
+    ['assignmentNotReset', 'routed back after assignment, send it on from the Decision Summary page'],
     ['documentFollowupOpen', 'open document follow-up must be cleared first'],
   ])(
     'a row the BE predicts as Failed (%s) is labelled, uncounted and gets no picker',
