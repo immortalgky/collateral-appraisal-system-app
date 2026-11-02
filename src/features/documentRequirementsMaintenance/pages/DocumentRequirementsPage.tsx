@@ -78,8 +78,8 @@ const DocumentRequirementsPage = () => {
       if (editingType) {
         await updateType.mutateAsync({
           id: editingType.id,
-          name: values.name,
-          nameTh: values.nameTh ?? null,
+          name: values.name.trim(),
+          nameTh: values.nameTh?.trim() || null,
           description: values.description,
           category: values.category,
           sortOrder: values.sortOrder,
@@ -89,8 +89,8 @@ const DocumentRequirementsPage = () => {
       } else {
         await createType.mutateAsync({
           code: values.code,
-          name: values.name,
-          nameTh: values.nameTh ?? null,
+          name: values.name.trim(),
+          nameTh: values.nameTh?.trim() || null,
           description: values.description,
           category: values.category,
           sortOrder: values.sortOrder,

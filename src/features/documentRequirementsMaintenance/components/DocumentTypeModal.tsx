@@ -15,9 +15,21 @@ import RadioGroup from '@shared/components/inputs/RadioGroup';
 import { carryForwardLockKind, DOCUMENT_TYPE_CATEGORIES, type DocumentTypeDto } from '../types';
 
 const Schema = z.object({
-  code: z.string().min(1, vmsg('required')),
-  name: z.string(),
-  nameTh: z.string().min(1, vmsg('required')),
+  code: z
+    .string()
+    .trim()
+    .min(1, vmsg('required'))
+    .max(20, vmsg('maxLength', { max: 20 })),
+  name: z
+    .string()
+    .trim()
+    .min(1, vmsg('required'))
+    .max(200, vmsg('maxLength', { max: 200 })),
+  nameTh: z
+    .string()
+    .trim()
+    .max(200, vmsg('maxLength', { max: 200 }))
+    .nullable(),
   description: z
     .string()
     .max(500, vmsg('maxLength', { max: 500 }))
@@ -51,7 +63,7 @@ export default function DocumentTypeModal({ isOpen, onClose, onSubmit, editing, 
     () => ({
       code: editing?.code ?? '',
       name: editing?.name ?? '',
-      nameTh: editing?.nameTh ?? '',
+      nameTh: editing?.nameTh ?? null,
       description: editing?.description ?? '',
       category: editing?.category ?? '',
       sortOrder: editing?.sortOrder ?? 0,
@@ -94,6 +106,7 @@ export default function DocumentTypeModal({ isOpen, onClose, onSubmit, editing, 
         <div className="grid grid-cols-2 gap-4">
           <TextInput
             label={t('documentTypeAdmin.fields.code')}
+            maxLength={20}
             required
             disabled={isEditing}
             placeholder={t('documentTypeAdmin.fields.codePlaceholder')}
@@ -113,6 +126,7 @@ export default function DocumentTypeModal({ isOpen, onClose, onSubmit, editing, 
 
         <TextInput
           label={t('documentTypeAdmin.fields.name')}
+          maxLength={200}
           required
           placeholder={t('documentTypeAdmin.fields.namePlaceholder')}
           {...register('name')}
@@ -121,6 +135,7 @@ export default function DocumentTypeModal({ isOpen, onClose, onSubmit, editing, 
 
         <TextInput
           label={t('documentTypeAdmin.fields.nameTh')}
+          maxLength={200}
           placeholder={t('documentTypeAdmin.fields.nameThPlaceholder')}
           {...register('nameTh')}
           error={errors.nameTh?.message}

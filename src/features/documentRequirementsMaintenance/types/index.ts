@@ -22,7 +22,7 @@ export interface DocumentTypeDto {
   id: string;
   code: string;
   name: string;
-  nameTh?: string;
+  nameTh?: string | null;
   description?: string | null;
   category?: string | null;
   isActive: boolean;
