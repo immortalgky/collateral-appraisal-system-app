@@ -43,10 +43,10 @@ export interface MeetingStats {
     value: number;
     count: number;
   }[];
+  /** Decision items whose approval round has concluded (non-null `voteOutcome`). */
+  votedCount: number;
   /** First decision item still awaiting a decision — the "now deciding" candidate. */
   firstPendingItem: MeetingItemDto | null;
-  /** True once every decision item has been released. Mirrors the backend's auto-end rule. */
-  allDecisionsReleased: boolean;
 }
 
 const sumValues = (
@@ -116,8 +116,16 @@ export const computeMeetingStats = (meeting: MeetingDetailDto): MeetingStats => 
     progress: decisionItems.length > 0 ? decisionCounts.Released / decisionItems.length : 0,
     appraisedValue: sumValues(allItems, i => i.appraisedValue),
     valueByGroup,
+    votedCount: decisionItems.filter(i => i.voteOutcome != null).length,
     firstPendingItem: decisionItems.find(i => i.itemDecision === 'Pending') ?? null,
-    allDecisionsReleased:
-      decisionItems.length > 0 && decisionCounts.Released === decisionItems.length,
   };
 };
+
+/**
+ * True once the item's approval round has concluded with a result that can't be reopened.
+ * A `reject` outcome is excluded: the round there is still open with everyone voted, so a
+ * (forced) recall stays valid. Anything else non-null is final and the backend answers
+ * RECALL_ALREADY_RESOLVED.
+ */
+export const isVoteRoundResolved = (voteOutcome: string | null | undefined): boolean =>
+  voteOutcome != null && voteOutcome !== 'reject';

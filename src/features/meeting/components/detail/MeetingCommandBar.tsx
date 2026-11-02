@@ -5,7 +5,7 @@
  * `constants.ts` mirrors a backend guard, so this component reads them rather than inventing
  * its own rules.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
@@ -30,6 +30,8 @@ interface MeetingCommandBarProps {
   meeting: MeetingDetailDto;
   canAdminister: boolean;
   totalItems: number;
+  /** Decision items whose approval round hasn't concluded yet. */
+  pendingVotes: number;
   /** True while the page is polling — drives the live dot and "updated" stamp. */
   isLive: boolean;
   /** `dataUpdatedAt` from React Query, so the freshness stamp reflects the real fetch. */
@@ -67,6 +69,8 @@ const ToolbarButton = ({
   tone,
   solid = false,
   iconClassName,
+  disabled = false,
+  describedBy,
   onClick,
 }: {
   icon: string;
@@ -75,15 +79,22 @@ const ToolbarButton = ({
   solid?: boolean;
   /** Tints the icon independently of the fill — used by the quiet white-background buttons. */
   iconClassName?: string;
+  disabled?: boolean;
+  /** Id of the element explaining why the button is disabled. */
+  describedBy?: string;
   onClick: () => void;
 }) => (
   <button
     type="button"
     title={label}
-    onClick={onClick}
+    aria-describedby={describedBy}
+    onClick={disabled ? undefined : onClick}
+    aria-disabled={disabled || undefined}
     className={clsx(
       'inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium',
       'transition-colors focus:outline-none focus-visible:ring-offset-1',
+      // pointer-events-none also suppresses the tone's hover tint; the button stays keyboard-focusable.
+      'aria-disabled:pointer-events-none aria-disabled:opacity-50',
       solid
         ? 'bg-primary text-white shadow-sm hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/40'
         : SOFT_TONES[tone],
@@ -113,6 +124,7 @@ const MeetingCommandBar = ({
   meeting,
   canAdminister,
   totalItems,
+  pendingVotes,
   isLive,
   dataUpdatedAt,
   onEdit,
@@ -127,6 +139,9 @@ const MeetingCommandBar = ({
   const navigate = useNavigate();
   const { status } = meeting;
 
+  // Only AwaitingVotes blocks locally; InProgress keeps the backend's own 409.
+  const endBlockedId = useId();
+  const endBlocked = status === 'AwaitingVotes' && pendingVotes > 0;
   const primaryAction = getPrimaryToolbarAction(status, totalItems > 0);
   const startMs = meeting.startAt ? new Date(meeting.startAt).getTime() : null;
   const isUpcoming = status === 'New' || status === 'InvitationSent';
@@ -234,12 +249,31 @@ const MeetingCommandBar = ({
               onClick={onDocuments}
             />
 
+            {endBlocked && (
+              <span
+                id={endBlockedId}
+                className="sr-only text-xs text-(--palette-gray-500) sm:not-sr-only"
+              >
+                {t(
+                  pendingVotes === 1
+                    ? 'session.endBlockedByVotes'
+                    : 'session.endBlockedByVotesPlural',
+                  {
+                    n: pendingVotes,
+                  },
+                )}
+              </span>
+            )}
+
             {END_ELIGIBLE.has(status) && (
               <ToolbarButton
                 icon="flag-checkered"
                 label={t('buttons.endMeeting')}
                 tone="emerald"
                 solid={primaryAction === 'end'}
+                // Only AwaitingVotes blocks locally; InProgress keeps the backend's own 409.
+                disabled={endBlocked}
+                describedBy={endBlocked ? endBlockedId : undefined}
                 onClick={onEnd}
               />
             )}

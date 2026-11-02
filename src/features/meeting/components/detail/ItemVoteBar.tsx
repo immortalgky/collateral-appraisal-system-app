@@ -27,8 +27,10 @@ import {
   useRole,
 } from '@floating-ui/react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import clsx from 'clsx';
 
+import Badge from '@/shared/components/Badge';
 import Icon from '@/shared/components/Icon';
 import type {
   CommitteeMemberPosition,
@@ -39,7 +41,7 @@ import type {
 import { canVote } from '../../constants';
 import { useMeetingFormat } from '../../utils/useMeetingFormat';
 
-const KNOWN_VOTES = new Set(['approve', 'reject', 'route_back']);
+const KNOWN_VOTES = new Set(['approve', 'reject', 'route_back', 'cancelled']);
 
 /** Tailwind text colours — the shared `Icon` uses `style` for the sprite name, so colour has to
  *  come through `className` rather than an inline style object. */
@@ -70,6 +72,30 @@ const VoterIcon = ({ vote }: { vote: ItemVoteDto | undefined }) => (
     )}
   />
 );
+
+/** Label for a vote key; unrecognised config-driven keys render raw rather than vanishing. */
+const labelFor = (t: TFunction<'meeting'>, vote: string) =>
+  KNOWN_VOTES.has(vote)
+    ? t(
+        `votes.${vote}` as
+          | 'votes.approve'
+          | 'votes.reject'
+          | 'votes.route_back'
+          | 'votes.cancelled',
+      )
+    : vote;
+
+/** Concluded round result for one item — shown under the per-member icons once `voteOutcome` is set. */
+export const VoteOutcomeChip = ({ outcome }: { outcome: string }) => {
+  const { t } = useTranslation('meeting');
+  const label = labelFor(t, outcome);
+  return (
+    <Badge size="xs" type="vote" value={outcome}>
+      <span className="sr-only">{t('votes.outcome', { outcome: label })}</span>
+      <span aria-hidden="true">{label}</span>
+    </Badge>
+  );
+};
 
 interface VoteSlot {
   key: string;
@@ -113,11 +139,6 @@ const ItemVoteBar = ({ item, members }: ItemVoteBarProps) => {
   // (aggregated {vote,count} → per-voter {member,vote,...}), and an API serving the old shape
   // would otherwise crash the page on `undefined.toLowerCase()`.
   const votes = (item.votes ?? []).filter(v => typeof v?.member === 'string' && v.member !== '');
-
-  const labelFor = (vote: string) =>
-    KNOWN_VOTES.has(vote)
-      ? t(`votes.${vote}` as 'votes.approve' | 'votes.reject' | 'votes.route_back')
-      : vote;
 
   // `ApprovalVote.Member` and `MeetingMember.UserId` are both usernames, but they're written by
   // different paths — match case-insensitively rather than trusting them to agree exactly.
@@ -207,7 +228,7 @@ const ItemVoteBar = ({ item, members }: ItemVoteBarProps) => {
                             VOTE_ICON_CLASS[slot.vote.vote] ?? FALLBACK_ICON_CLASS,
                           )}
                         >
-                          {labelFor(slot.vote.vote)}
+                          {labelFor(t, slot.vote.vote)}
                         </p>
                         <p className="text-[10px] text-(--palette-gray-400)">
                           {formatDateTime(slot.vote.votedAt)}

@@ -64,6 +64,15 @@ const MeetingPulse = ({ stats }: MeetingPulseProps) => {
             {t('pulse.title')}
           </h3>
           <MeetingProgressRing stats={stats} animate={animate} />
+          {stats.totalDecision > 0 && (
+            <p className="mt-3 text-xs tabular-nums text-(--palette-gray-500)">
+              {t('pulse.progressLine', {
+                released: stats.decisionCounts.Released,
+                voted: stats.votedCount,
+                total: stats.totalDecision,
+              })}
+            </p>
+          )}
         </div>
 
         {/* KPIs + value distribution */}

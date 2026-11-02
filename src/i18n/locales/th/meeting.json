@@ -93,6 +93,7 @@
     "InvitationSent": "ส่งหนังสือเชิญแล้ว",
     "InProgress": "กำลังดำเนินการ",
     "RoutedBack": "ส่งกลับแก้ไข",
+    "AwaitingVotes": "รอกรรมการลงมติ",
     "Ended": "เสร็จสิ้น",
     "Cancelled": "ยกเลิกแล้ว"
   },
@@ -374,6 +375,7 @@
   "pulse": {
     "title": "ภาพรวมการประชุม",
     "released": "ปล่อยแล้ว",
+    "progressLine": "ส่งต่อแล้ว {{released}}/{{total}} · ลงมติแล้ว {{voted}}/{{total}}",
     "decisionTotal": "รายการพิจารณา",
     "valueDistribution": "มูลค่าตามประเภทการประเมิน",
     "kpiDecision": "รายการพิจารณา",
@@ -402,9 +404,13 @@
     "approve": "อนุมัติ",
     "reject": "ไม่อนุมัติ",
     "route_back": "ส่งกลับแก้ไข",
-    "notVoted": "ยังไม่ลงมติ"
+    "cancelled": "ยกเลิก",
+    "notVoted": "ยังไม่ลงมติ",
+    "outcome": "ผลลงมติ: {{outcome}}"
   },
   "session": {
+    "endBlockedByVotes": "ยังรอลงมติ {{n}} รายการ",
+    "endBlockedByVotesPlural": "ยังรอลงมติ {{n}} รายการ",
     "live": "สด",
     "updatedAgo": "อัปเดต {{time}}",
     "justNow": "เมื่อครู่นี้",

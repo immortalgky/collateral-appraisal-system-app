@@ -63,12 +63,13 @@ export const NON_VOTING_POSITIONS: readonly string[] = ['Secretary'];
 export const canVote = (position: string | null | undefined): boolean =>
   !!position && !NON_VOTING_POSITIONS.includes(position);
 
-/** All 6 effective statuses in display order. */
+/** All 7 effective statuses in display order. */
 export const MEETING_STATUS_OPTIONS: MeetingStatus[] = [
   'New',
   'InvitationSent',
   'InProgress',
   'RoutedBack',
+  'AwaitingVotes',
   'Ended',
   'Cancelled',
 ];
@@ -78,6 +79,7 @@ export const MEETING_STATUS_LABELS: Record<MeetingStatus, string> = {
   InvitationSent: 'Invitation Sent',
   InProgress: 'In Progress',
   RoutedBack: 'Routed Back',
+  AwaitingVotes: 'Awaiting votes',
   Ended: 'Ended',
   Cancelled: 'Cancelled',
 };
@@ -90,6 +92,7 @@ export const MEETING_STATUS_BADGE_VARIANT: Record<
   InvitationSent: 'primary',
   InProgress: 'warning',
   RoutedBack: 'secondary',
+  AwaitingVotes: 'warning',
   Ended: 'success',
   Cancelled: 'danger',
 };
@@ -105,10 +108,11 @@ export const CANCEL_ELIGIBLE: ReadonlySet<MeetingStatus> = new Set(['New', 'Invi
 
 /**
  * Statuses in which the meeting can be manually ended.
- * Mirrors the backend Meeting.EndNow guard — only an in-progress meeting
- * (InvitationSent + StartAt passed, surfaced as InProgress) can be ended.
+ * Mirrors the backend Meeting.EndNow guard — an in-progress meeting (InvitationSent + StartAt
+ * passed, surfaced as InProgress) or one AwaitingVotes. From AwaitingVotes the backend answers 409
+ * while any approval round is still open; it is the fallback if the automatic end misses a race.
  */
-export const END_ELIGIBLE: ReadonlySet<MeetingStatus> = new Set(['InProgress']);
+export const END_ELIGIBLE: ReadonlySet<MeetingStatus> = new Set(['InProgress', 'AwaitingVotes']);
 
 /** Statuses in which the invitation can be re-sent (idempotent on the backend). */
 export const RESEND_INVITATION_ELIGIBLE: ReadonlySet<MeetingStatus> = new Set([
@@ -135,7 +139,7 @@ export const ITEM_REMOVE_ELIGIBLE: ReadonlySet<MeetingStatus> = new Set(['New', 
 
 /**
  * Statuses in which a Released decision item can be recalled back to Pending.
- * Includes `Ended` — releasing the last item is the most likely accident, and
+ * Includes `AwaitingVotes` and `Ended` — releasing the last item is the most likely accident, and
  * `Meeting.UndoRelease` reopens an Ended meeting as part of the recall.
  * Deliberately broader than `ITEM_ACTION_ELIGIBLE` (no `Ended` there): do not
  * "align" the two sets, they gate different actions with different rules.
@@ -143,6 +147,7 @@ export const ITEM_REMOVE_ELIGIBLE: ReadonlySet<MeetingStatus> = new Set(['New', 
 export const ITEM_RECALL_ELIGIBLE: ReadonlySet<MeetingStatus> = new Set([
   'InProgress',
   'RoutedBack',
+  'AwaitingVotes',
   'Ended',
 ]);
 
@@ -165,6 +170,7 @@ export const MEETING_MODE_BY_STATUS: Record<MeetingStatus, MeetingMode> = {
   InvitationSent: 'prep',
   InProgress: 'session',
   RoutedBack: 'session',
+  AwaitingVotes: 'session',
   Ended: 'minutes',
   Cancelled: 'archived',
 };

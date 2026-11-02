@@ -93,6 +93,7 @@
     "InvitationSent": "Invitation Sent",
     "InProgress": "In Progress",
     "RoutedBack": "Routed Back",
+    "AwaitingVotes": "Awaiting votes",
     "Ended": "Ended",
     "Cancelled": "Cancelled"
   },
@@ -374,6 +375,7 @@
   "pulse": {
     "title": "Meeting Pulse",
     "released": "Released",
+    "progressLine": "Released {{released}}/{{total}} · Voted {{voted}}/{{total}}",
     "decisionTotal": "Decision items",
     "valueDistribution": "Value by appraisal type",
     "kpiDecision": "Decision Items",
@@ -402,9 +404,13 @@
     "approve": "Approve",
     "reject": "Reject",
     "route_back": "Route back",
-    "notVoted": "Not yet voted"
+    "cancelled": "Cancelled",
+    "notVoted": "Not yet voted",
+    "outcome": "Outcome: {{outcome}}"
   },
   "session": {
+    "endBlockedByVotes": "Still awaiting votes on {{n}} item",
+    "endBlockedByVotesPlural": "Still awaiting votes on {{n}} items",
     "live": "Live",
     "updatedAgo": "Updated {{time}}",
     "justNow": "just now",

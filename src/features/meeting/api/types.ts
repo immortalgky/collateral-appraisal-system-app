@@ -12,6 +12,7 @@ export type MeetingStatus =
   | 'InvitationSent'
   | 'InProgress'
   | 'RoutedBack'
+  | 'AwaitingVotes'
   | 'Ended'
   | 'Cancelled';
 
@@ -121,6 +122,11 @@ export interface MeetingItemDto {
   /** Approver votes recorded after release. Absent/empty until the item is released and voted on. */
   votes?: ItemVoteDto[] | null;
   lastVotedAt?: string | null;
+  /**
+   * The concluded approval decision (config-driven key, e.g. `approve` / `reject`). Null while the
+   * round is still open, the item isn't released, or it's an acknowledgement item.
+   */
+  voteOutcome?: string | null;
 }
 
 /** Groups items by AppraisalType (Decision) or AcknowledgementGroup (Acknowledgement). */

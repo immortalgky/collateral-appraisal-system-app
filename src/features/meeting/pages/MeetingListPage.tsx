@@ -198,7 +198,8 @@ const MeetingRow = ({
     });
   }
 
-  if (isAdmin && END_ELIGIBLE.has(status)) {
+  // AwaitingVotes is ended from the detail page, which knows whether any round is still open.
+  if (isAdmin && END_ELIGIBLE.has(status) && status !== 'AwaitingVotes') {
     actions.push({
       label: t('actions.endMeeting'),
       icon: 'flag-checkered',
