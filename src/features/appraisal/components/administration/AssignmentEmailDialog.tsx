@@ -49,7 +49,8 @@ import { useRecipientSearch, type RecipientSuggestion } from '../../api/recipien
 // The server refuses a subject with any control character or line/paragraph separator.
 // eslint-disable-next-line no-control-regex
 const SUBJECT_BREAKS = /[\u0000-\u001f\u007f\u2028\u2029]+/g;
-const PLACEHOLDER_RE = /\{\{\s*(company|responsible)\s*\}\}/;
+// `responsible` is the pre-rename name of `internal_staff`; drafts saved before it still carry it.
+const PLACEHOLDER_RE = /\{\{\s*(company|internal_staff|responsible)\s*\}\}/;
 /** Without repeats, compared case-insensitively (an address is). */
 const unique = (values: string[]) =>
   values.filter((v, i) => values.findIndex(other => other.toLowerCase() === v.toLowerCase()) === i);
@@ -645,7 +646,7 @@ const EmailForm = ({
       )}
 
       {/* Pinned to the bottom of the scrolling body (the drawer's py-4 is cancelled by -mb-4). */}
-      <div className="sticky bottom-0 -mx-6 -mb-4 mt-auto flex flex-col gap-2 border-t border-(--palette-line-soft) bg-(--palette-surface-2) px-6 py-3">
+      <div className="sticky -bottom-4 -mx-6 -mb-4 mt-auto flex flex-col gap-2 border-t border-(--palette-line-soft) bg-(--palette-surface-2) px-6 py-3">
         {/* The hint takes its own line and wraps; the buttons below never do. The drawer's × is the close. */}
         <span className="text-xs text-(--palette-gray-500)">
           {t(isResend ? 'administration.email.resendHint' : 'administration.email.footerHint')}

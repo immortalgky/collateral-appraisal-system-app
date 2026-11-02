@@ -36,7 +36,7 @@
       "slaBusinessDays": "SLA（天）",
       "submittedAt": "提交日期",
       "groupTag": "分组",
-      "assignee": "负责人",
+      "assignee": "银行内部员工",
       "requestor": "申请人"
     },
     "filters": {

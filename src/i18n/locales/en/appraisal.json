@@ -612,7 +612,7 @@
       "toHint": "The company comes from the assignment and cannot be changed here · you can add other addresses",
       "ccHint": "● = recipients by role, resolved to addresses at send · people without an email or inactive are skipped",
       "restoreTemplate": "Restore template",
-      "placeholderHint": "Dashed yellow = filled in at send (company name, responsible person)",
+      "placeholderHint": "Dashed yellow = filled in at send (company name, internal staff)",
       "attachments": "Attachments",
       "overLimit": "The attachments are over the limit (count or total size) — remove files before sending",
       "pickDocuments": "Choose from case documents",
