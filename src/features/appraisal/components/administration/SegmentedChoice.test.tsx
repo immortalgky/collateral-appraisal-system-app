@@ -59,6 +59,33 @@ describe('SegmentedChoice', () => {
     expect(screen.queryByText('A company')).not.toBeInTheDocument();
   });
 
+  it('the group is named and described by the selected option hint', () => {
+    render(<Harness initial="internal" />);
+    expect(screen.getByRole('radiogroup', { name: 'Assignment type' })).toHaveAccessibleDescription(
+      'Own staff',
+    );
+  });
+
+  it('the hint describes the group, not each option', () => {
+    render(<Harness initial="internal" />);
+    expect(screen.getByRole('radio', { name: 'External' })).not.toHaveAccessibleDescription(
+      'Own staff',
+    );
+  });
+
+  it('a locked group marks every option disabled, even one marked enabled', () => {
+    const options = OPTIONS.map(option => ({ ...option, disabled: false }));
+    render(<Harness initial="internal" options={options} disabled />);
+    for (const radio of screen.getAllByRole('radio')) {
+      expect(radio).toHaveAttribute('aria-disabled', 'true');
+    }
+  });
+
+  it('a locked group shows no hint', () => {
+    render(<Harness initial="internal" disabled />);
+    expect(screen.queryByText('Own staff')).not.toBeInTheDocument();
+  });
+
   it('clicking an option selects it and swaps the description', async () => {
     const onChange = vi.fn();
     const { user } = render(<Harness initial="internal" onChange={onChange} />);
@@ -100,5 +127,21 @@ describe('SegmentedChoice', () => {
     const { user } = render(<Harness initial="internal" onChange={onChange} disabled />);
     await user.click(screen.getByRole('radio', { name: 'External' }));
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('a paused option gives its reason as its description, a locked group does not', () => {
+    const options: SegmentedOption<V>[] = [
+      OPTIONS[0],
+      { ...OPTIONS[1], disabled: true, disabledReason: 'Paused for now' },
+    ];
+    const { unmount } = render(<Harness initial="internal" options={options} />);
+    expect(screen.getByRole('radio', { name: 'External' })).toHaveAccessibleDescription(
+      'Paused for now',
+    );
+    unmount();
+    render(<Harness initial="internal" options={options} disabled />);
+    expect(screen.getByRole('radio', { name: 'External' })).not.toHaveAccessibleDescription(
+      'Paused for now',
+    );
   });
 });

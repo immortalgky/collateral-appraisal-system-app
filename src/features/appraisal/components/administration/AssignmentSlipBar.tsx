@@ -7,6 +7,7 @@ import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import { NO_OUTLINE } from '@/shared/hooks/usePointerMode';
 import { formatCurrency } from '@/shared/utils/formatUtils';
+import { buttonOrigin } from '../../store/liftoffStore';
 import AssignmentSlip, { type AssignmentSlipProps } from './AssignmentSlip';
 
 const CHIP: Record<AssignmentSlipProps['result']['tone'], { box: string; icon?: string }> = {
@@ -129,7 +130,7 @@ export default function AssignmentSlipBar(props: AssignmentSlipProps) {
               type="button"
               size="lg"
               className="ml-auto shrink-0"
-              onClick={props.onAssign}
+              onClick={e => props.onAssign(buttonOrigin(e.currentTarget))}
               isLoading={isAssigning}
               disabled={!!result.blockReason || isSavingDraft}
               aria-describedby={result.blockReason ? reasonId : undefined}
@@ -169,7 +170,7 @@ export default function AssignmentSlipBar(props: AssignmentSlipProps) {
               {...props}
               embedded
               onFix={id => leaveThen(() => props.onFix(id))}
-              onAssign={() => leaveThen(props.onAssign)}
+              onAssign={origin => leaveThen(() => props.onAssign(origin))}
               onSaveDraft={() => leaveThen(props.onSaveDraft)}
               onCancel={() => leaveThen(props.onCancel)}
             />

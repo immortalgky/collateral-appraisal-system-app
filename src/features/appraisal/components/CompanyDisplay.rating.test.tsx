@@ -30,5 +30,6 @@ describe('company rating on the company card', () => {
     render(<CompanyDisplay company={{ ...company, rating: 0 }} />);
 
     expect(screen.queryByText(/^\(\d/)).not.toBeInTheDocument();
+    expect(screen.getByText('administration.noRating')).toBeInTheDocument();
   });
 });

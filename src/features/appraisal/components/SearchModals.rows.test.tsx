@@ -35,25 +35,22 @@ const renderCompanies = (companies: ExternalCompany[], previousCompanyId?: strin
   );
 
 describe('SearchCompanyModal rows', () => {
-  it('shows only what exists: no "()" for a missing registration, no stars or contact for empty ones', () => {
+  it('shows "no rating yet" instead of stars, and nothing for an empty contact', () => {
     renderCompanies([
       { ...company, registrationNo: '', rating: 0, contactPerson: '', contactPhone: '' },
     ]);
 
-    expect(
-      screen.queryByText('administration.modal.company.registrationNo'),
-    ).not.toBeInTheDocument();
-    expect(screen.queryByText('()')).not.toBeInTheDocument();
+    expect(screen.getByText('administration.noRating')).toBeInTheDocument();
     expect(screen.queryByText(/\(\s*\)/)).not.toBeInTheDocument();
     expect(screen.queryByText('(0.0)')).not.toBeInTheDocument();
     expect(screen.queryByText('0800000000')).not.toBeInTheDocument();
     expect(document.body.innerHTML).not.toContain('#star');
   });
 
-  it('shows registration, rating and contact when they exist', () => {
+  it('shows rating, contact and phone, and not the registration number', () => {
     renderCompanies([company]);
 
-    expect(screen.getByText('administration.modal.company.registrationNo')).toBeInTheDocument();
+    expect(screen.queryByText(company.registrationNo)).not.toBeInTheDocument();
     expect(screen.getByText('(4.0)')).toBeInTheDocument();
     expect(screen.getByText('Contact')).toBeInTheDocument();
     expect(screen.getByText('0800000000')).toBeInTheDocument();
@@ -119,6 +116,15 @@ describe('SearchStaffModal rows', () => {
     expect(screen.getByText('administration.modal.staff.code · Valuation')).toBeInTheDocument();
   });
 
+  it('shows the workload pill only when the list gave a count', () => {
+    const { unmount } = renderStaff({ ...staff, currentWorkload: 0 });
+    expect(screen.getByText('administration.workload')).toBeInTheDocument();
+    unmount();
+
+    renderStaff({ ...staff, currentWorkload: undefined });
+    expect(screen.queryByText('administration.workload')).toBeNull();
+  });
+
   it('omits the empty department', () => {
     renderStaff({ ...staff, department: '' });
 
@@ -143,7 +149,7 @@ describe('SearchStaffModal rows', () => {
 });
 
 describe('CompanyDisplay', () => {
-  it('hides the empty registration "()", stars and contact icons', () => {
+  it('shows "no rating yet" in the stars\' place, and no icons', () => {
     render(
       <CompanyDisplay
         company={{ ...company, registrationNo: '', rating: 0, contactPerson: '', contactPhone: '' }}
@@ -157,13 +163,42 @@ describe('CompanyDisplay', () => {
     expect(document.body.innerHTML).not.toContain('#phone');
   });
 
-  it('shows the contact icons when the contact exists, and the previous-company badge when given', () => {
+  it('shows the contact name and phone as plain text when the contact exists, and the previous-company badge when given', () => {
     render(<CompanyDisplay company={company} badge="Previous" />);
 
     expect(screen.getByText('Contact')).toBeInTheDocument();
     expect(screen.getByText('0800000000')).toBeInTheDocument();
-    expect(document.body.innerHTML).toContain('#user');
-    expect(document.body.innerHTML).toContain('#phone');
+    // Plain text: no icon and no label before the name or the number.
+    expect(document.body.innerHTML).not.toContain('#user');
+    expect(document.body.innerHTML).not.toContain('#phone');
     expect(screen.getByText('Previous')).toBeInTheDocument();
+    // Rating, contact, phone and email, a dot between each.
+    expect(screen.getByText('Contact').parentElement?.textContent).toBe(
+      '(4.0)·Contact·0800000000·c@example.com',
+    );
+    // The registration number (123) is not on the selected card.
+    expect(screen.queryByText(/123/)).not.toBeInTheDocument();
+  });
+
+  it('has no × unless the caller can clear it, and no purple tint', async () => {
+    const onClear = vi.fn();
+    const { container, rerender } = render(<CompanyDisplay company={company} />);
+    expect(screen.queryByRole('button', { name: 'administration.clearSelection' })).toBeNull();
+    expect(container.innerHTML).not.toContain('bg-purple-50');
+
+    rerender(<CompanyDisplay company={company} onClear={onClear} />);
+    expect(
+      screen.getByRole('button', { name: 'administration.clearSelection' }),
+    ).toBeInTheDocument();
+  });
+
+  it('says "no rating yet" in place of stars for an unrated company, and shows the stars for a rated one', () => {
+    const { rerender } = render(<CompanyDisplay company={{ ...company, rating: 0 }} />);
+    expect(screen.getByText('administration.noRating')).toBeInTheDocument();
+    expect(screen.queryByText('(0.0)')).not.toBeInTheDocument();
+
+    rerender(<CompanyDisplay company={{ ...company, rating: 4 }} />);
+    expect(screen.getByText('(4.0)')).toBeInTheDocument();
+    expect(screen.queryByText('administration.noRating')).not.toBeInTheDocument();
   });
 });

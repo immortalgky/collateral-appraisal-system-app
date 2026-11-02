@@ -30,6 +30,8 @@ interface SectionHeaderProps extends HTMLAttributes<HTMLDivElement> {
    * data-dense panes, `px-4 py-2.5` (DESIGN.md section 8).
    */
   size?: 'md' | 'sm';
+  /** Card variant only: `false` drops the line under the header (the body follows after a small gap). */
+  divider?: boolean;
   /** Default variant: beside the title on its line, e.g. a count. */
   titleAddon?: React.ReactNode;
   /** Default variant: after the title block, still on the left, e.g. a view switch. */
@@ -61,6 +63,7 @@ const SectionHeader = ({
   required,
   headingClassName = 'text-base',
   size = 'md',
+  divider = true,
   titleAddon,
   afterTitle,
 }: SectionHeaderProps) => {
@@ -73,8 +76,16 @@ const SectionHeader = ({
     return (
       <div
         className={clsx(
-          'flex items-center justify-between border-b border-(--palette-line-soft)',
-          size === 'sm' ? 'px-4 py-2.5' : 'px-5 py-4',
+          'flex items-center justify-between',
+          divider && 'border-b border-(--palette-line-soft)',
+          // Without the line the header has no bottom padding: the body sets the gap.
+          size === 'sm'
+            ? divider
+              ? 'px-4 py-2.5'
+              : 'px-4 pt-2.5'
+            : divider
+              ? 'px-5 py-4'
+              : 'px-5 pt-5',
           className,
         )}
       >

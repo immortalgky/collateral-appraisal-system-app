@@ -398,19 +398,21 @@
       "title": "Assignment Type",
       "subtitle": "Select whether to assign internally or to an external company",
       "internal": "Internal Appraisal",
-      "internalDesc": "Assign to internal appraisal staff",
+      "internalDesc": "Done by the bank's own appraisal staff",
       "external": "External Company",
-      "externalDesc": "Assign to external appraisal company",
+      "externalDesc": "An appraisal company works in the system",
       "externalOffline": "External (Appraised Offline)",
-      "externalOfflineDesc": "Company engaged outside the system; internal staff keys in its book",
-      "internalDisabledHint": "Internal assignment is not available for facility limits exceeding 50M",
-      "externalDisabledHint": "Assigning to an external company in the system is currently unavailable — appraisal companies are engaged outside the system. Use \"External (Appraised Offline)\" to record such an engagement, or assign internally."
+      "externalOfflineDesc": "Engaged outside the system; staff key in the report",
+      "externalDisabledHint": "Assigning to an external company in the system is currently unavailable — appraisal companies are engaged outside the system. Use \"External (Appraised Offline)\" to record such an engagement, or assign internally.",
+      "internalDisabledReason": "Facility limit over 50 million",
+      "externalDisabledReason": "Temporarily unavailable"
     },
     "offlineExternal": {
       "title": "Offline External Engagement",
       "subtitle": "The company was engaged outside the system",
       "keyerMethodLabel": "Who keys in the book",
-      "keyerRoundrobinDesc": "The system will automatically assign an internal staff member to key in the company's appraisal book."
+      "keyerRoundrobinDesc": "The system will automatically assign an internal staff member to key in the company's appraisal book.",
+      "companyLabel": "External company"
     },
     "assignmentDetails": {
       "titleInternal": "Internal Assignment Details",
@@ -419,8 +421,7 @@
       "methodLabel": "Assignment Method",
       "manual": "Manual Selection",
       "manualDesc": "Select specific assignee",
-      "roundrobin": "Round-robin",
-      "roundrobinDesc": "System auto-assigns based on workload",
+      "roundrobin": "Automatic",
       "quotation": "Request Quotation",
       "quotationDesc": "Request quotation from company first"
     },
@@ -433,16 +434,11 @@
       "placeholder": "Click to search and select external company..."
     },
     "roundrobinInfo": {
-      "title": "Round-robin Assignment",
       "internalDesc": "The system will automatically assign this appraisal to the next available staff member based on current workload distribution.",
       "externalDesc": "The system will automatically assign this appraisal to the next external company based on the rotation schedule."
     },
     "followupStaff": {
       "label": "Internal Followup Staff",
-      "manualLabel": "Manual Select",
-      "manualDesc": "Select specific staff",
-      "roundrobinLabel": "Round Robin",
-      "roundrobinDesc": "System auto-assigns",
       "roundrobinInfo": "The system will automatically assign a followup staff member based on round-robin distribution.",
       "placeholder": "Click to search and select internal followup staff..."
     },
@@ -452,6 +448,7 @@
     "noData": "No data",
     "workload_one": "{{count}} task",
     "workload_other": "{{count}} tasks",
+    "noRating": "No rating yet",
     "activeCount_one": "{{count}} active",
     "activeCount_other": "{{count}} active",
     "clearSelection": "Clear selection",
@@ -475,12 +472,10 @@
         "search": "Search by company name, registration number, or contact...",
         "loading": "Loading companies...",
         "empty": "No companies found matching your search.",
-        "registrationNo": "Reg. no. {{no}}",
         "mouExpired": "MOU expired"
       }
     },
     "toasts": {
-      "assignmentCreated": "Assignment created successfully",
       "assignmentFailed": "Failed to create assignment. Please try again.",
       "noWorkflowTask": "Assignment requires an active workflow task. Open this page from the Tasks list to assign.",
       "notTaskOwner": "Only the task owner can assign this appraisal.",
@@ -532,13 +527,14 @@
         "assignee": "Assignee",
         "keyer": "Keyed by",
         "followup": "Follow-up",
-        "fee": "Fee"
+        "fee": "Fee",
+        "company": "Company"
       },
       "offlineSuffix": "(appraised offline)",
       "previousCompany": "(previous company)",
       "notSelected": "Not selected yet",
       "awaitingWinner": "Awaiting winner",
-      "auto": "Auto-assigned",
+      "auto": "Automatic",
       "fee": {
         "total": "Total",
         "beforeVat": "Before VAT {{amount}}",
@@ -573,7 +569,8 @@
         "winnerTodo": "Winner not finalized yet",
         "feeOk": "Fee amount set",
         "feeMissing": "Fee amount not set",
-        "remarksTooLong": "Remark exceeds {{max}} characters"
+        "remarksTooLong": "Remark exceeds {{max}} characters",
+        "companyOk": "External company selected"
       },
       "reason": {
         "companyMissing": "No external company selected",
@@ -583,11 +580,105 @@
       },
       "readOnly": {
         "assignedAt": "Assigned on {{at}}",
-        "assignedBy": "by {{by}}"
+        "assignedBy": "by {{by}}",
+        "bySystem": "Assigned by the system (automatic)"
       },
       "bar": {
         "open": "View assignment slip"
       }
+    },
+    "email": {
+      "title": "Email to the company",
+      "loadFailed": "Could not load the email template",
+      "to": "To",
+      "subject": "Subject",
+      "addTo": "Add a recipient",
+      "addCc": "Add a Cc address",
+      "addAddress": "+ Add email",
+      "searchHint": "type @ to browse companies and employees in the system",
+      "suggestions": "Recipients in the system",
+      "searching": "Searching…",
+      "browseFooter": "Keep typing to search",
+      "noMatches": "No one with an email found — type the full address and press Enter",
+      "allAdded": "Everyone who matches is already in this box",
+      "searchPartial": "Part of the search failed",
+      "suggestCompanies": "Companies",
+      "suggestStaff": "Employees",
+      "companyLocked": "The company's address, chosen on the assignment; it cannot be changed here",
+      "companyPending": "The address of the company the system picks",
+      "summaryFee": "Fee {{amount}} incl. VAT",
+      "companyNoEmail": "{{name}} — no email on file",
+      "companyNoEmailHint": "This company has no email on file · add a recipient address, or choose “Assign without sending”",
+      "toHint": "The company comes from the assignment and cannot be changed here · you can add other addresses",
+      "ccHint": "● = recipients by role, resolved to addresses at send · people without an email or inactive are skipped",
+      "restoreTemplate": "Restore template",
+      "placeholderHint": "Dashed yellow = filled in at send (company name, responsible person)",
+      "attachments": "Attachments",
+      "overLimit": "The attachments are over the limit (count or total size) — remove files before sending",
+      "pickDocuments": "Choose from case documents",
+      "uploadButton": "Upload from computer",
+      "upload": "Upload an attachment from your computer",
+      "uploadFailed": "Upload failed",
+      "pickTitle": "Choose from case documents",
+      "noDocuments": "No documents",
+      "attach": "Attach",
+      "footerHint": "The email is sent with the assignment · if it fails to send later, the assignment still stands",
+      "assignWithoutSend": "Assign without sending",
+      "assignAndSend": "Assign and send",
+      "source": {
+        "request": "Request document",
+        "appraisal": "Appraisal document",
+        "upload": "Uploaded"
+      },
+      "cc": {
+        "IntAdminAll": "All IntAdmins",
+        "FollowupStaff": "Follow-up officer",
+        "FollowupSupervisor": "Follow-up officer's supervisor",
+        "Keyer": "Book keyer",
+        "KeyerSupervisor": "Book keyer's supervisor"
+      },
+      "ccLabel": "Cc",
+      "removeItem": "Remove {{name}}",
+      "sizeUnknown": "Size unknown",
+      "sizeFailed": "Some attachments' sizes could not be read — remove them or reopen this dialog before sending",
+      "documentsFailed": "Could not load the documents",
+      "status": {
+        "Pending": "Waiting to send",
+        "Queued": "Waiting to send",
+        "Sent": "Sent",
+        "Failed": "Failed",
+        "NotSent": "Not sent"
+      },
+      "history": {
+        "title": "Send history",
+        "first": "Sent with the assignment",
+        "system": "Sent from the system template",
+        "resend": "Sent again",
+        "notSent": "Assigned without the email",
+        "firstEmail": "Email with the assignment"
+      },
+      "resend": "Send again",
+      "sendNow": "Send email",
+      "viewSent": "View sent",
+      "notSentHint": "\"Assign without sending\" was chosen",
+      "toLabel": "to",
+      "counts": "Cc: {{cc}} · Attachments: {{files}}",
+      "send": "Send email",
+      "resendHint": "Sends now to the assigned company, as a new email",
+      "sendFailed": "The email could not be sent",
+      "sent": "The email to the company is on its way; the slip shows how it went",
+      "view": {
+        "title": "Email sent to the company",
+        "body": "Sent email content",
+        "loadFailed": "The sent email could not be loaded",
+        "download": "Download {{name}}",
+        "downloadFailed": "Could not download the file"
+      },
+      "pendingHint": "Goes out once the case is handed to the company",
+      "sentLabel": "Sent",
+      "loadLastFailed": "The latest email could not be loaded",
+      "queuedHint": "On its way; the result shows here once it is sent",
+      "failedNote": "The case stays assigned · the assigner and IntAdmins were notified"
     }
   },
   "feePreview": {
@@ -3254,7 +3345,9 @@
     "outstandingCompany": "Record appraisal company",
     "blockedOnSubmit": "Record the external appraisal company and the appraisal date from its book before submitting.",
     "outstandingBoth": "Record appraisal company & date",
-    "outstandingDate": "Record appraisal date"
+    "outstandingDate": "Record appraisal date",
+    "companyLockedHint": "This company is already recorded. If it is wrong, route the case back to assignment to change it.",
+    "hintLocked": "Record the appraisal date printed on this company's appraisal book."
   },
   "photoTopics": {
     "title": "Report photo topics",

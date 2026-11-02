@@ -1,11 +1,10 @@
 import { useTranslation } from 'react-i18next';
-import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
 import Button from '@/shared/components/Button';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import type { ExternalCompany } from '../types/administration';
 import StarRating from '@/features/serviceQualityEvaluation/components/StarRating';
-import { ClearButton } from './StaffDisplay';
+import { ClearButton, MetaLine, selectedCardClass } from './StaffDisplay';
 
 interface CompanyDisplayProps {
   company: ExternalCompany;
@@ -16,60 +15,56 @@ interface CompanyDisplayProps {
   badge?: string;
 }
 
+/** The stars and the average; "no rating yet" in their place, never 0 stars passed off as a score. */
+export const CompanyRating = ({ rating }: { rating: number }) => {
+  const { t } = useTranslation('appraisal');
+  return rating > 0 ? (
+    <span className="flex items-center gap-1">
+      <StarRating score={rating} />
+      <span>({rating.toFixed(1)})</span>
+    </span>
+  ) : (
+    <span>{t('administration.noRating')}</span>
+  );
+};
+
 const CompanyDisplay = ({ company, onClear, onChange, badge }: CompanyDisplayProps) => {
   const { t } = useTranslation('appraisal');
   const localizeCompanyName = useLocalizedCompanyName();
 
   return (
-    <div className="flex items-start justify-between gap-3 rounded-lg border border-purple-200 dark:border-purple-500/30 bg-purple-50 dark:bg-purple-500/10 px-3 py-2.5">
+    <div className={`${selectedCardClass} items-start border-l-4 border-l-purple-500`}>
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
           <span className="text-sm font-semibold text-(--palette-ink)">
             {localizeCompanyName(company.companyName, company.companyNameLocal)}
           </span>
-          {company.registrationNo && (
-            <span className="text-xs text-(--palette-gray-500)">({company.registrationNo})</span>
-          )}
           {badge && (
             <Badge tone="purple" dot={false} className="whitespace-nowrap">
               {badge}
             </Badge>
           )}
         </div>
-        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-(--palette-gray-500)">
-          {company.rating > 0 && (
-            <span className="flex items-center gap-1">
-              <StarRating score={company.rating} />
-              <span>({company.rating.toFixed(1)})</span>
-            </span>
-          )}
-          {company.contactPerson && (
-            <span className="flex items-center gap-1">
-              <Icon name="user" style="regular" />
-              {company.contactPerson}
-            </span>
-          )}
-          {company.contactPhone && (
-            <span className="flex items-center gap-1">
-              <Icon name="phone" style="regular" />
-              {company.contactPhone}
-            </span>
-          )}
-        </div>
+        <MetaLine>
+          <CompanyRating rating={company.rating} />
+          {company.contactPerson && <span>{company.contactPerson}</span>}
+          {company.contactPhone && <span>{company.contactPhone}</span>}
+          {company.contactEmail && <span>{company.contactEmail}</span>}
+        </MetaLine>
       </div>
 
-      <div className="flex shrink-0 flex-col items-end gap-1.5">
-        <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex flex-col items-end gap-1.5">
           <Badge tone="green" dot={false} className="whitespace-nowrap">
             {t('administration.activeCount', { count: company.activeAssignments })}
           </Badge>
-          {onClear && <ClearButton onClick={onClear} />}
+          {onChange && (
+            <Button type="button" variant="outline" size="xs" onClick={onChange}>
+              {t('administration.changeCompanyButton')}
+            </Button>
+          )}
         </div>
-        {onChange && (
-          <Button type="button" variant="outline" size="xs" onClick={onChange}>
-            {t('administration.changeCompanyButton')}
-          </Button>
-        )}
+        {onClear && <ClearButton onClick={onClear} />}
       </div>
     </div>
   );

@@ -8,7 +8,8 @@ import Badge from '@/shared/components/Badge';
 import Input from '@/shared/components/Input';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import type { ExternalCompany } from '../types/administration';
-import StarRating from '@/features/serviceQualityEvaluation/components/StarRating';
+import { CompanyRating } from './CompanyDisplay';
+import { MetaLine } from './StaffDisplay';
 
 interface SearchCompanyModalProps {
   isOpen: boolean;
@@ -124,24 +125,13 @@ const SearchCompanyModal = ({
                             </Badge>
                           )}
                         </div>
-                        {/* Only what exists: no empty parentheses, stars or icons. */}
-                        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-(--palette-gray-500)">
-                          {company.registrationNo && (
-                            <span>
-                              {t('administration.modal.company.registrationNo', {
-                                no: company.registrationNo,
-                              })}
-                            </span>
-                          )}
-                          {company.rating > 0 && (
-                            <span className="flex items-center gap-1">
-                              <StarRating score={company.rating} />
-                              <span>({company.rating.toFixed(1)})</span>
-                            </span>
-                          )}
+                        {/* The same line as the selected card: rating, contact, phone (no registration number). */}
+                        <MetaLine>
+                          <CompanyRating rating={company.rating} />
                           {company.contactPerson && <span>{company.contactPerson}</span>}
                           {company.contactPhone && <span>{company.contactPhone}</span>}
-                        </div>
+                          {company.contactEmail && <span>{company.contactEmail}</span>}
+                        </MetaLine>
                       </div>
 
                       <div className="flex shrink-0 items-center gap-2">

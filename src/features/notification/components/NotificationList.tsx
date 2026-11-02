@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import { useNotificationStore } from '../store';
-import { notificationTypeConfig } from '../types';
+import { getNotificationConfig } from '../types';
 import { timeAgo } from '../utils/timeAgo';
 import clsx from 'clsx';
 
@@ -12,7 +12,7 @@ export default function NotificationList() {
   return (
     <div className="divide-y divide-(--palette-line-soft) bg-(--palette-surface) rounded-xl ring-1 ring-(--palette-line)">
       {notifications.map(notification => {
-        const config = notificationTypeConfig[notification.type];
+        const config = getNotificationConfig(notification.type);
         return (
           <div
             key={notification.id}

@@ -7,6 +7,7 @@ import Icon from '@/shared/components/Icon';
 import FormCard from '@/shared/components/sections/FormCard';
 import { formatLocaleDateTime } from '@/shared/utils/dateUtils';
 import { formatCurrency } from '@/shared/utils/formatUtils';
+import { buttonOrigin, type LiftoffPayload } from '../../store/liftoffStore';
 import { personLabel } from '@/features/appraisal/utils/personLabel';
 import type { FeePreview } from '@/features/appraisal/types/feePreview';
 import type {
@@ -44,6 +45,8 @@ export interface AssignmentSlipProps {
   isPreviousCompany?: boolean;
   followupMethod: SlipChecksInput['followupStaffMethod'];
   followupName?: string | null;
+  /** Off-system external: the company the bank engaged (the recipient row is the keyer). */
+  offlineCompanyName?: string | null;
   /** The finalized quotation's winner, once there is one (quotation method). */
   quotationWinnerName?: string | null;
 
@@ -59,7 +62,8 @@ export interface AssignmentSlipProps {
   isDirty: boolean;
   isAssigning: boolean;
   isSavingDraft: boolean;
-  onAssign: () => void;
+  /** `origin`: the pressed button's icon, where the success flight starts. */
+  onAssign: (origin?: LiftoffPayload['origin']) => void;
   onSaveDraft: () => void;
   onCancel: () => void;
 
@@ -67,6 +71,8 @@ export interface AssignmentSlipProps {
   assignedAt?: string | null;
   assignedBy?: string | null;
   assignedByName?: string | null;
+  /** Read-only only: the "Email to the company" section (EXT / EXTO), under the details. */
+  emailSection?: ReactNode;
 }
 
 const MARKER: Record<SlipCheckStatus, { box: string; icon?: string }> = {
@@ -230,6 +236,7 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
     assignmentType,
     followupMethod,
     followupName,
+    offlineCompanyName,
     fee,
     feeStatus,
     result,
@@ -243,6 +250,7 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
     assignedAt,
     assignedBy,
     assignedByName,
+    emailSection,
   } = props;
 
   const recipient = useRecipient(props);
@@ -274,7 +282,13 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
   );
 
   const assignedAtText = assignedAt ? formatLocaleDateTime(assignedAt, i18n.language) : null;
-  const assignedByText = personLabel(assignedByName, assignedBy) || null;
+  // The system stamps "System", or nothing, on an assignment it made itself (as the API reads it);
+  // a name without a code is still a person.
+  const bySystem =
+    isAssigned &&
+    !assignedByName?.trim() &&
+    (!assignedBy?.trim() || assignedBy.trim().toLowerCase() === 'system');
+  const assignedByText = bySystem ? null : personLabel(assignedByName, assignedBy) || null;
 
   return (
     <FormCard
@@ -291,11 +305,11 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
       }
     >
       {/* Two columns once the slip is wider than the sticky rail (the bottom sheet): type and
-          follow-up side by side, recipient and fee full width. */}
+          follow-up (off-system: the company) side by side, recipient and fee full width. */}
       <dl className="grid @lg:grid-cols-2">
         <Row
           label={t('administration.slip.segment.type')}
-          className={clsx('@lg:order-1', !showFollowup && '@lg:col-span-2')}
+          className={clsx('@lg:order-1', !showFollowup && !isOffline && '@lg:col-span-2')}
         >
           {typeLabel}
         </Row>
@@ -309,6 +323,15 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
         >
           {recipient}
         </Row>
+        {isOffline && (
+          <Row label={t('administration.slip.segment.company')} className="@lg:order-2">
+            {offlineCompanyName || (
+              <Muted>
+                {t(readOnly ? 'administration.noData' : 'administration.slip.notSelected')}
+              </Muted>
+            )}
+          </Row>
+        )}
         {showFollowup && (
           <Row label={t('administration.slip.segment.followup')} className="@lg:order-2">
             {followup}
@@ -319,8 +342,10 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
         </Row>
       </dl>
 
+      {readOnly && emailSection}
+
       {readOnly ? (
-        (assignedAtText || assignedByText) && (
+        (assignedAtText || assignedByText || bySystem) && (
           <div className="flex flex-col gap-0.5 px-5 py-3 text-xs text-(--palette-gray-500)">
             {assignedAtText && (
               <span>{t('administration.slip.readOnly.assignedAt', { at: assignedAtText })}</span>
@@ -328,6 +353,7 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
             {assignedByText && (
               <span>{t('administration.slip.readOnly.assignedBy', { by: assignedByText })}</span>
             )}
+            {bySystem && <span>{t('administration.slip.readOnly.bySystem')}</span>}
           </div>
         )
       ) : (
@@ -359,7 +385,7 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
               type="button"
               size="lg"
               fullWidth
-              onClick={onAssign}
+              onClick={e => onAssign(buttonOrigin(e.currentTarget))}
               isLoading={isAssigning}
               disabled={!!result.blockReason || isSavingDraft}
               aria-describedby={result.blockReason ? reasonId : undefined}

@@ -31,8 +31,15 @@ export interface InternalStaff {
   name: string;
   email: string;
   department: string;
+  /** Job title and phone: only the user record (GET /auth/users/{id}) carries them. */
+  position?: string;
+  phone?: string;
   avatar: string | null;
-  currentWorkload: number; // Number of active assignments
+  /**
+   * Open tasks, as the eligible-assignees list counts them. Absent when no real number is known
+   * (the user record has none; an older server omits it): show nothing, never 0.
+   */
+  currentWorkload?: number;
 }
 
 /**
