@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { vi } from 'vitest';
 import { waitFor } from '@testing-library/react';
 import { format } from 'date-fns';
@@ -202,19 +202,30 @@ describe('DatePickerInput popover', () => {
     await waitFor(() => expect(dialog).toContainElement(document.activeElement as HTMLElement));
   });
 
-  it('keeps focus inside the calendar after a year is picked from the year grid', async () => {
-    const { user } = render(<DatePickerInput label="Day" />);
-    await user.click(screen.getByRole('button', { name: 'Open calendar' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Calendar' });
-    await pickYearByKeyboard(user);
+  describe('year grid', () => {
+    // Focus lands on the current month; in Nov/Dec fewer than 3 tabbable buttons follow it, so pin the date.
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date(2026, 5, 15));
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
 
-    await waitFor(() => expect(dialog).toContainElement(document.activeElement as HTMLElement));
-    expect(document.activeElement).toHaveTextContent(/^[A-Z][a-z]{2}$/);
-    // Still inside after a few Tabs through the month grid: the calendar is open, focus is not lost.
-    for (let i = 0; i < 3; i++) {
-      await user.tab();
-      expect(dialog).toContainElement(document.activeElement as HTMLElement);
-    }
+    it('keeps focus inside the calendar after a year is picked from the year grid', async () => {
+      const { user } = render(<DatePickerInput label="Day" />);
+      await user.click(screen.getByRole('button', { name: 'Open calendar' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Calendar' });
+      await pickYearByKeyboard(user);
+
+      await waitFor(() => expect(dialog).toContainElement(document.activeElement as HTMLElement));
+      expect(document.activeElement).toHaveTextContent(/^[A-Z][a-z]{2}$/);
+      // Still inside after a few Tabs through the month grid: the calendar is open, focus is not lost.
+      for (let i = 0; i < 3; i++) {
+        await user.tab();
+        expect(dialog).toContainElement(document.activeElement as HTMLElement);
+      }
+    });
   });
 
   describe('onBlur', () => {
