@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import Icon from '@shared/components/Icon';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
 import type { DocumentRequirementDto } from '../types';
+import { useTranslation } from 'react-i18next';
 
 export interface RequirementScope {
   propertyTypeCode: string | null;
@@ -28,6 +29,7 @@ export default function DocumentRequirementTable({
   onEdit,
   onDelete,
 }: Props) {
+  const { t } = useTranslation('request');
   const collateralOptions = useParameterOptions('CollateralType');
   const purposeOptions = useParameterOptions('AppraisalPurpose');
 
@@ -83,10 +85,18 @@ export default function DocumentRequirementTable({
     <table className="min-w-full divide-y divide-(--palette-line) text-table">
       <thead className="bg-(--palette-surface-2) text-left text-xs font-medium text-(--palette-gray-500) uppercase">
         <tr>
-          <th className="text-xs px-4 py-3 font-semibold">Collateral Type</th>
-          <th className="text-xs px-4 py-3 font-semibold">Purpose</th>
-          <th className="text-xs px-4 py-3 font-semibold">Documents</th>
-          <th className="text-xs px-4 py-3 text-right font-semibold">Actions</th>
+          <th className="text-xs px-4 py-3 font-semibold">
+            {t('documentRequirementAdmin.columns.collateralType')}
+          </th>
+          <th className="text-xs px-4 py-3 font-semibold">
+            {t('documentRequirementAdmin.columns.purpose')}
+          </th>
+          <th className="text-xs px-4 py-3 font-semibold">
+            {t('documentRequirementAdmin.columns.documents')}
+          </th>
+          <th className="text-xs px-4 py-3 text-right font-semibold">
+            {t('documentRequirementAdmin.columns.actions')}
+          </th>
         </tr>
       </thead>
       <tbody className="divide-y divide-(--palette-line-soft)">

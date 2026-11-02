@@ -1079,5 +1079,35 @@
     "no": "否",
     "loading": "加载中…",
     "empty": "暂无文件类型。"
+  },
+  "documentRequirementAdmin": {
+    "columns": {
+      "collateralType": "抵押品类型",
+      "purpose": "用途",
+      "documents": "文件",
+      "actions": "操作"
+    },
+    "fields": {
+      "collateralType": "抵押品类型",
+      "purpose": "用途"
+    },
+    "title": "管理文件要求",
+    "any": "全部",
+    "scope": {
+      "all": "适用于所有申请（全系统）。",
+      "both": "仅适用于此抵押品类型与用途的组合。",
+      "collateralType": "适用于此抵押品类型（任何用途）。",
+      "purpose": "适用于此用途（任何抵押品类型）。"
+    },
+    "checklist": {
+      "documents": "文件（已选 {{count}} 项）",
+      "required": "必需"
+    },
+    "loadFailed": "无法加载文件类型。",
+    "retry": "重试",
+    "noTypes": "暂无文件类型，请先在“文件类型”标签页中添加。",
+    "loadingTypes": "正在加载文件类型…",
+    "cancel": "取消",
+    "save": "保存"
   }
 }

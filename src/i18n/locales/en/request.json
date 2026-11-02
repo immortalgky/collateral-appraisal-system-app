@@ -1079,5 +1079,35 @@
     "no": "No",
     "loading": "Loading…",
     "empty": "No document types."
+  },
+  "documentRequirementAdmin": {
+    "columns": {
+      "collateralType": "Collateral Type",
+      "purpose": "Purpose",
+      "documents": "Documents",
+      "actions": "Actions"
+    },
+    "fields": {
+      "collateralType": "Collateral Type",
+      "purpose": "Purpose"
+    },
+    "title": "Manage Document Requirements",
+    "any": "Any",
+    "scope": {
+      "all": "Applies to all requests (application-wide).",
+      "both": "Applies only to this collateral type AND purpose combination.",
+      "collateralType": "Applies to this collateral type (any purpose).",
+      "purpose": "Applies to this purpose (any collateral type)."
+    },
+    "checklist": {
+      "documents": "Documents ({{count}} selected)",
+      "required": "Required"
+    },
+    "loadFailed": "Could not load document types.",
+    "retry": "Retry",
+    "noTypes": "No document types. Add some in the Document Types tab first.",
+    "loadingTypes": "Loading document types…",
+    "cancel": "Cancel",
+    "save": "Save"
   }
 }

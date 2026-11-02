@@ -177,14 +177,16 @@ const DocumentRequirementsPage = () => {
           {tabBtn('types', 'Document Types')}
           {tabBtn('requirements', 'Requirements')}
         </div>
-        <label className="flex items-center gap-2 text-sm text-(--palette-gray-600)">
-          <input
-            type="checkbox"
-            checked={includeInactive}
-            onChange={e => setIncludeInactive(e.target.checked)}
-          />
-          Show inactive
-        </label>
+        {tab == 'types' && (
+          <label className="flex items-center gap-2 text-sm text-(--palette-gray-600)">
+            <input
+              type="checkbox"
+              checked={includeInactive}
+              onChange={e => setIncludeInactive(e.target.checked)}
+            />
+            Show inactive
+          </label>
+        )}
       </div>
 
       <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm overflow-hidden">
