@@ -19,7 +19,8 @@ const preview = (over: Record<string, unknown> = {}) => ({
   extraTo: [],
   cc: ['IntAdminAll', 'FollowupStaff', 'FollowupSupervisor'],
   subject: 'ขอนำส่งงานประเมิน 69105526',
-  bodyHtml: '<p>เรียน {{company}}</p><p>ผู้รับผิดชอบ : {{responsible}}</p>',
+  bodyHtml:
+    '<p>เรียน {{company}}</p><p>ผู้รับผิดชอบ : {{internal_staff}}</p><p>{{responsible}}</p>',
   attachments: [],
   maxAttachments: 10,
   maxAttachmentBytes: 10 * MB,
@@ -139,6 +140,18 @@ describe('AssignmentEmailDialog', () => {
       'ขอนำส่งงานประเมิน 69105526',
     );
     expect(screen.getByText('administration.email.cc.IntAdminAll')).toBeInTheDocument();
+  });
+
+  it('highlights the company, internal_staff and legacy responsible placeholders', async () => {
+    renderDialog();
+
+    await screen.findByTitle('administration.email.companyLocked');
+    await waitFor(() => {
+      const marked = Array.from(document.querySelectorAll('.border-dashed')).map(
+        e => e.textContent,
+      );
+      expect(marked).toEqual(['{{company}}', '{{internal_staff}}', '{{responsible}}']);
+    });
   });
 
   it('sends the email as edited, with the role tokens and added addresses', async () => {

@@ -25,7 +25,7 @@ export interface AssignmentEmailPreview {
   /** A display name for each known address in `cc` (absent on older servers and when resending). */
   ccPeople?: { email: string; name: string | null }[];
   subject: string;
-  /** Holds `{{company}}` / `{{responsible}}` placeholders; the send fills them in. */
+  /** Holds `{{company}}` / `{{internal_staff}}` placeholders; the send fills them in. */
   bodyHtml: string;
   attachments: AssignmentEmailAttachment[];
   maxAttachments: number;
