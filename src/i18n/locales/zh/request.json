@@ -1108,6 +1108,39 @@
     "noTypes": "暂无文件类型，请先在“文件类型”标签页中添加。",
     "loadingTypes": "正在加载文件类型…",
     "cancel": "取消",
-    "save": "保存"
+    "save": "保存",
+    "loading": "加载中…",
+    "empty": "尚未配置文件要求。",
+    "documentCount_one": "{{count}} 个文件",
+    "documentCount_other": "{{count}} 个文件",
+    "requiredCount": "{{count}} 个必需"
+  },
+  "documentRequirementsPage": {
+    "title": "文件要求",
+    "subtitle": "按抵押品类型和用途配置所需文件",
+    "tabs": {
+      "types": "文件类型",
+      "requirements": "文件要求"
+    },
+    "addRequirement": "添加文件要求",
+    "addDocumentType": "添加文件类型",
+    "showInactive": "显示未启用",
+    "toasts": {
+      "requirementsSaved": "文件要求已保存",
+      "saveRequirementsFailed": "保存文件要求失败。",
+      "typeSaved": "文件类型已保存",
+      "saveTypeFailed": "保存文件类型失败。",
+      "requirementsRemoved": "文件要求已移除",
+      "typeDeleted": "文件类型已删除",
+      "deleteFailed": "删除失败。",
+      "orderUpdated": "排序已更新",
+      "reorderFailed": "排序失败。"
+    },
+    "confirm": {
+      "removeScopeTitle": "移除文件要求",
+      "removeScopeMessage": "将移除此范围内的全部 {{count}} 项文件要求，是否继续？",
+      "deleteTypeTitle": "删除文件类型",
+      "deleteTypeMessage": "将删除此文件类型，是否继续？"
+    }
   }
 }

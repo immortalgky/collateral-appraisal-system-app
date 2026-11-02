@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import { Button } from '@/shared/components';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
@@ -25,6 +26,7 @@ import type { DocumentTypeDto } from '../types';
 type Tab = 'requirements' | 'types';
 
 const DocumentRequirementsPage = () => {
+  const { t } = useTranslation('request');
   const [tab, setTab] = useState<Tab>('types');
   const [includeInactive, setIncludeInactive] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -58,11 +60,13 @@ const DocumentRequirementsPage = () => {
     setIsSaving(true);
     try {
       await setScope.mutateAsync(payload);
-      toast.success('Requirements saved');
+      toast.success(t('documentRequirementsPage.toasts.requirementsSaved'));
       setReqModalOpen(false);
       setReqScope(null);
     } catch (e: any) {
-      toast.error(e?.apiError?.detail || 'Failed to save requirements.');
+      toast.error(
+        e?.apiError?.detail || t('documentRequirementsPage.toasts.saveRequirementsFailed'),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -75,7 +79,7 @@ const DocumentRequirementsPage = () => {
         await updateType.mutateAsync({
           id: editingType.id,
           name: values.name,
-          nameTh: values.nameTh,
+          nameTh: values.nameTh ?? null,
           description: values.description,
           category: values.category,
           sortOrder: values.sortOrder,
@@ -86,18 +90,18 @@ const DocumentRequirementsPage = () => {
         await createType.mutateAsync({
           code: values.code,
           name: values.name,
-          nameTh: values.nameTh,
+          nameTh: values.nameTh ?? null,
           description: values.description,
           category: values.category,
           sortOrder: values.sortOrder,
           carryForwardByDefault: values.carryForwardByDefault,
         });
       }
-      toast.success('Document type saved');
+      toast.success(t('documentRequirementsPage.toasts.typeSaved'));
       setTypeModalOpen(false);
       setEditingType(null);
     } catch (e: any) {
-      toast.error(e?.apiError?.detail || 'Failed to save document type.');
+      toast.error(e?.apiError?.detail || t('documentRequirementsPage.toasts.saveTypeFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -111,9 +115,9 @@ const DocumentRequirementsPage = () => {
         purposeCode: deletingScope.purposeCode,
         items: [],
       });
-      toast.success('Requirements removed');
+      toast.success(t('documentRequirementsPage.toasts.requirementsRemoved'));
     } catch (e: any) {
-      toast.error(e?.apiError?.detail || 'Failed to delete.');
+      toast.error(e?.apiError?.detail || t('documentRequirementsPage.toasts.deleteFailed'));
     } finally {
       setDeletingScope(null);
     }
@@ -123,9 +127,9 @@ const DocumentRequirementsPage = () => {
     if (!deletingType) return;
     try {
       await deleteType.mutateAsync(deletingType.id);
-      toast.success('Document type deleted');
+      toast.success(t('documentRequirementsPage.toasts.typeDeleted'));
     } catch (e: any) {
-      toast.error(e?.apiError?.detail || 'Failed to delete.');
+      toast.error(e?.apiError?.detail || t('documentRequirementsPage.toasts.deleteFailed'));
     } finally {
       setDeletingType(null);
     }
@@ -149,9 +153,11 @@ const DocumentRequirementsPage = () => {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold text-(--palette-ink)">Document Requirements</h3>
+          <h3 className="text-base font-semibold text-(--palette-ink)">
+            {t('documentRequirementsPage.title')}
+          </h3>
           <p className="text-xs text-(--palette-gray-500) mt-0.5">
-            Configure required documents by collateral type and purpose
+            {t('documentRequirementsPage.subtitle')}
           </p>
         </div>
         <Button
@@ -168,25 +174,26 @@ const DocumentRequirementsPage = () => {
           }}
           leftIcon={<Icon name="plus" style="solid" className="size-3.5" />}
         >
-          {tab === 'requirements' ? 'Add Requirement' : 'Add Document Type'}
+          {tab === 'requirements'
+            ? t('documentRequirementsPage.addRequirement')
+            : t('documentRequirementsPage.addDocumentType')}
         </Button>
       </div>
 
       <div className="flex items-center justify-between border-b border-(--palette-line)">
         <div className="flex gap-2">
-          {tabBtn('types', 'Document Types')}
-          {tabBtn('requirements', 'Requirements')}
+          {tabBtn('types', t('documentRequirementsPage.tabs.types'))}
+          {tabBtn('requirements', t('documentRequirementsPage.tabs.requirements'))}
         </div>
-        {tab == 'types' && (
-          <label className="flex items-center gap-2 text-sm text-(--palette-gray-600)">
-            <input
-              type="checkbox"
-              checked={includeInactive}
-              onChange={e => setIncludeInactive(e.target.checked)}
-            />
-            Show inactive
-          </label>
-        )}
+
+        <label className="flex items-center gap-2 text-sm text-(--palette-gray-600)">
+          <input
+            type="checkbox"
+            checked={includeInactive}
+            onChange={e => setIncludeInactive(e.target.checked)}
+          />
+          {t('documentRequirementsPage.showInactive')}
+        </label>
       </div>
 
       <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm overflow-hidden">
@@ -215,9 +222,11 @@ const DocumentRequirementsPage = () => {
             onReorder={async items => {
               try {
                 await reorderTypes.mutateAsync(items);
-                toast.success('Order updated');
+                toast.success(t('documentRequirementsPage.toasts.orderUpdated'));
               } catch (e: any) {
-                toast.error(e?.apiError?.detail || 'Failed to reorder.');
+                toast.error(
+                  e?.apiError?.detail || t('documentRequirementsPage.toasts.reorderFailed'),
+                );
               }
             }}
           />
@@ -251,16 +260,18 @@ const DocumentRequirementsPage = () => {
         isOpen={!!deletingScope}
         onClose={() => setDeletingScope(null)}
         onConfirm={confirmDeleteScope}
-        title="Remove requirements"
-        message={`This will remove all ${deletingScope?.total ?? ''} document requirement(s) for this scope. Continue?`}
+        title={t('documentRequirementsPage.confirm.removeScopeTitle')}
+        message={t('documentRequirementsPage.confirm.removeScopeMessage', {
+          count: deletingScope?.total ?? 0,
+        })}
       />
 
       <ConfirmDialog
         isOpen={!!deletingType}
         onClose={() => setDeletingType(null)}
         onConfirm={confirmDeleteType}
-        title="Delete document type"
-        message="This will delete the document type. Continue?"
+        title={t('documentRequirementsPage.confirm.deleteTypeTitle')}
+        message={t('documentRequirementsPage.confirm.deleteTypeMessage')}
       />
     </div>
   );

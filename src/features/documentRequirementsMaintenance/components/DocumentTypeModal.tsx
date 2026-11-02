@@ -16,7 +16,7 @@ import { carryForwardLockKind, DOCUMENT_TYPE_CATEGORIES, type DocumentTypeDto } 
 
 const Schema = z.object({
   code: z.string().min(1, vmsg('required')),
-  name: z.string().min(1, vmsg('required')),
+  name: z.string(),
   nameTh: z.string().min(1, vmsg('required')),
   description: z
     .string()
@@ -121,7 +121,6 @@ export default function DocumentTypeModal({ isOpen, onClose, onSubmit, editing, 
 
         <TextInput
           label={t('documentTypeAdmin.fields.nameTh')}
-          required
           placeholder={t('documentTypeAdmin.fields.nameThPlaceholder')}
           {...register('nameTh')}
           error={errors.nameTh?.message}

@@ -1108,6 +1108,39 @@
     "noTypes": "No document types. Add some in the Document Types tab first.",
     "loadingTypes": "Loading document types…",
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save",
+    "loading": "Loading…",
+    "empty": "No requirements configured.",
+    "documentCount_one": "{{count}} document",
+    "documentCount_other": "{{count}} documents",
+    "requiredCount": "{{count}} required"
+  },
+  "documentRequirementsPage": {
+    "title": "Document Requirements",
+    "subtitle": "Configure required documents by collateral type and purpose",
+    "tabs": {
+      "types": "Document Types",
+      "requirements": "Requirements"
+    },
+    "addRequirement": "Add Requirement",
+    "addDocumentType": "Add Document Type",
+    "showInactive": "Show inactive",
+    "toasts": {
+      "requirementsSaved": "Requirements saved",
+      "saveRequirementsFailed": "Failed to save requirements.",
+      "typeSaved": "Document type saved",
+      "saveTypeFailed": "Failed to save document type.",
+      "requirementsRemoved": "Requirements removed",
+      "typeDeleted": "Document type deleted",
+      "deleteFailed": "Failed to delete.",
+      "orderUpdated": "Order updated",
+      "reorderFailed": "Failed to reorder."
+    },
+    "confirm": {
+      "removeScopeTitle": "Remove requirements",
+      "removeScopeMessage": "This will remove all {{count}} document requirement(s) for this scope. Continue?",
+      "deleteTypeTitle": "Delete document type",
+      "deleteTypeMessage": "This will delete the document type. Continue?"
+    }
   }
 }

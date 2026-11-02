@@ -70,7 +70,7 @@ const categoryPill: Record<string, string> = {
 };
 
 const SortableRow = ({ dt, onEdit, onDelete }: RowProps) => {
-  const { t } = useTranslation('request');
+  const { t } = useTranslation(['request', 'common']);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: dt.id,
   });
@@ -116,14 +116,14 @@ const SortableRow = ({ dt, onEdit, onDelete }: RowProps) => {
           <button
             onClick={() => onEdit(dt)}
             className="text-(--palette-gray-400) hover:text-(--palette-ink)"
-            aria-label="Edit"
+            aria-label={t('common:actions.edit')}
           >
             <Icon name="pen" style="regular" className="size-3.5" />
           </button>
           <button
             onClick={() => onDelete(dt)}
             className="text-(--palette-gray-400) hover:text-danger"
-            aria-label="Delete"
+            aria-label={t('common:actions.delete')}
           >
             <Icon name="trash" style="regular" className="size-3.5" />
           </button>
