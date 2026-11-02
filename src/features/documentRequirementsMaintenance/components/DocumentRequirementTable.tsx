@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import Icon from '@shared/components/Icon';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
 import type { DocumentRequirementDto } from '../types';
+import { useTranslation } from 'react-i18next';
 
 export interface RequirementScope {
   propertyTypeCode: string | null;
@@ -28,6 +29,7 @@ export default function DocumentRequirementTable({
   onEdit,
   onDelete,
 }: Props) {
+  const { t } = useTranslation(['request', 'common']);
   const collateralOptions = useParameterOptions('CollateralType');
   const purposeOptions = useParameterOptions('AppraisalPurpose');
 
@@ -65,17 +67,23 @@ export default function DocumentRequirementTable({
   }, [requirements]);
 
   const collateralLabel = (code: string | null) =>
-    code ? `${code} - ${collateralMap.get(code) ?? ''}` : 'Any';
+    code ? `${code} - ${collateralMap.get(code) ?? ''}` : t('documentRequirementAdmin.any');
   const purposeLabel = (code: string | null) =>
-    code ? `${code} - ${purposeMap.get(code) ?? ''}` : 'Any';
+    code ? `${code} - ${purposeMap.get(code) ?? ''}` : t('documentRequirementAdmin.any');
 
   if (isLoading) {
-    return <div className="p-8 text-center text-(--palette-gray-500)">Loading…</div>;
+    return (
+      <div className="p-8 text-center text-(--palette-gray-500)">
+        {t('documentRequirementAdmin.loading')}
+      </div>
+    );
   }
 
   if (groups.length === 0) {
     return (
-      <div className="p-8 text-center text-(--palette-gray-500)">No requirements configured.</div>
+      <div className="p-8 text-center text-(--palette-gray-500)">
+        {t('documentRequirementAdmin.empty')}
+      </div>
     );
   }
 
@@ -83,10 +91,18 @@ export default function DocumentRequirementTable({
     <table className="min-w-full divide-y divide-(--palette-line) text-table">
       <thead className="bg-(--palette-surface-2) text-left text-xs font-medium text-(--palette-gray-500) uppercase">
         <tr>
-          <th className="text-xs px-4 py-3 font-semibold">Collateral Type</th>
-          <th className="text-xs px-4 py-3 font-semibold">Purpose</th>
-          <th className="text-xs px-4 py-3 font-semibold">Documents</th>
-          <th className="text-xs px-4 py-3 text-right font-semibold">Actions</th>
+          <th className="text-xs px-4 py-3 font-semibold">
+            {t('documentRequirementAdmin.columns.collateralType')}
+          </th>
+          <th className="text-xs px-4 py-3 font-semibold">
+            {t('documentRequirementAdmin.columns.purpose')}
+          </th>
+          <th className="text-xs px-4 py-3 font-semibold">
+            {t('documentRequirementAdmin.columns.documents')}
+          </th>
+          <th className="text-xs px-4 py-3 text-right font-semibold">
+            {t('documentRequirementAdmin.columns.actions')}
+          </th>
         </tr>
       </thead>
       <tbody className="divide-y divide-(--palette-line-soft)">
@@ -97,8 +113,11 @@ export default function DocumentRequirementTable({
             </td>
             <td className="px-4 py-3 text-(--palette-ink)">{purposeLabel(g.purposeCode)}</td>
             <td className="px-4 py-3 text-(--palette-gray-600)">
-              {g.total} {g.total === 1 ? 'document' : 'documents'}
-              <span className="text-(--palette-gray-400)"> · {g.requiredCount} required</span>
+              {t('documentRequirementAdmin.documentCount', { count: g.total })}
+              <span className="text-(--palette-gray-400)">
+                {' · '}
+                {t('documentRequirementAdmin.requiredCount', { count: g.requiredCount })}
+              </span>
             </td>
             <td className="px-4 py-3">
               <div className="flex justify-end gap-2">
@@ -107,14 +126,14 @@ export default function DocumentRequirementTable({
                     onEdit({ propertyTypeCode: g.propertyTypeCode, purposeCode: g.purposeCode })
                   }
                   className="text-(--palette-gray-400) hover:text-(--palette-ink)"
-                  aria-label="Edit"
+                  aria-label={t('common:actions.edit')}
                 >
                   <Icon name="pen" style="regular" className="size-3.5" />
                 </button>
                 <button
                   onClick={() => onDelete(g)}
                   className="text-(--palette-gray-400) hover:text-danger"
-                  aria-label="Delete"
+                  aria-label={t('common:actions.delete')}
                 >
                   <Icon name="trash" style="regular" className="size-3.5" />
                 </button>

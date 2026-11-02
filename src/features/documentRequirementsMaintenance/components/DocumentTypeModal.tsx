@@ -12,17 +12,24 @@ import Checkbox from '@shared/components/inputs/Checkbox';
 import Dropdown from '@shared/components/inputs/Dropdown';
 import Textarea from '@shared/components/inputs/Textarea';
 import RadioGroup from '@shared/components/inputs/RadioGroup';
-import { carryForwardLockKind, type DocumentTypeDto } from '../types';
-
-const CATEGORY_OPTIONS = [
-  { value: 'VAL_REPORT', label: 'Complete Valuation Report' },
-  { value: 'VAL_DOC', label: 'Collateral Valuation Document' },
-  { value: 'SUBMIT_DOC', label: 'Submission Documents for Valuation' },
-];
+import { carryForwardLockKind, DOCUMENT_TYPE_CATEGORIES, type DocumentTypeDto } from '../types';
 
 const Schema = z.object({
-  code: z.string().min(1, vmsg('required')),
-  name: z.string().min(1, vmsg('required')),
+  code: z
+    .string()
+    .trim()
+    .min(1, vmsg('required'))
+    .max(20, vmsg('maxLength', { max: 20 })),
+  name: z
+    .string()
+    .trim()
+    .min(1, vmsg('required'))
+    .max(200, vmsg('maxLength', { max: 200 })),
+  nameTh: z
+    .string()
+    .trim()
+    .max(200, vmsg('maxLength', { max: 200 }))
+    .nullable(),
   description: z
     .string()
     .max(500, vmsg('maxLength', { max: 500 }))
@@ -47,11 +54,16 @@ interface Props {
 export default function DocumentTypeModal({ isOpen, onClose, onSubmit, editing, isSaving }: Props) {
   const { t } = useTranslation('request');
   const isEditing = !!editing;
+  const categoryOptions = DOCUMENT_TYPE_CATEGORIES.map(value => ({
+    value,
+    label: t(`documentTypeAdmin.categories.${value}`),
+  }));
 
   const defaults = useMemo<DocumentTypeFormValues>(
     () => ({
       code: editing?.code ?? '',
       name: editing?.name ?? '',
+      nameTh: editing?.nameTh ?? null,
       description: editing?.description ?? '',
       category: editing?.category ?? '',
       sortOrder: editing?.sortOrder ?? 0,
@@ -87,24 +99,25 @@ export default function DocumentTypeModal({ isOpen, onClose, onSubmit, editing, 
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title={isEditing ? 'Edit Document Type' : 'Add Document Type'}
+      title={isEditing ? t('documentTypeAdmin.titleEdit') : t('documentTypeAdmin.titleAdd')}
       size="md"
     >
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-4">
           <TextInput
-            label="Code"
+            label={t('documentTypeAdmin.fields.code')}
+            maxLength={20}
             required
             disabled={isEditing}
-            placeholder="e.g. D044"
+            placeholder={t('documentTypeAdmin.fields.codePlaceholder')}
             {...register('code')}
             error={errors.code?.message}
           />
           <Dropdown
-            label="Category"
-            options={CATEGORY_OPTIONS}
+            label={t('documentTypeAdmin.fields.category')}
+            options={categoryOptions}
             showValuePrefix={false}
-            placeholder="Select a category"
+            placeholder={t('documentTypeAdmin.fields.categoryPlaceholder')}
             value={watch('category') ?? undefined}
             onChange={v => setValue('category', v ?? null)}
             error={errors.category?.message}
@@ -112,16 +125,25 @@ export default function DocumentTypeModal({ isOpen, onClose, onSubmit, editing, 
         </div>
 
         <TextInput
-          label="Name"
+          label={t('documentTypeAdmin.fields.name')}
+          maxLength={200}
           required
-          placeholder="Document type name"
+          placeholder={t('documentTypeAdmin.fields.namePlaceholder')}
           {...register('name')}
           error={errors.name?.message}
         />
 
+        <TextInput
+          label={t('documentTypeAdmin.fields.nameTh')}
+          maxLength={200}
+          placeholder={t('documentTypeAdmin.fields.nameThPlaceholder')}
+          {...register('nameTh')}
+          error={errors.nameTh?.message}
+        />
+
         <Textarea
-          label="Description"
-          placeholder="Optional description"
+          label={t('documentTypeAdmin.fields.description')}
+          placeholder={t('documentTypeAdmin.fields.descriptionPlaceholder')}
           maxLength={500}
           showCharCount
           value={watch('description') ?? ''}
@@ -130,7 +152,7 @@ export default function DocumentTypeModal({ isOpen, onClose, onSubmit, editing, 
         />
 
         <NumberInput
-          label="Sort Order"
+          label={t('documentTypeAdmin.fields.sortOrder')}
           decimalPlaces={0}
           min={0}
           name="sortOrder"
@@ -178,7 +200,7 @@ export default function DocumentTypeModal({ isOpen, onClose, onSubmit, editing, 
 
         {isEditing && (
           <Checkbox
-            label="Active"
+            label={t('documentTypeAdmin.fields.active')}
             checked={watch('isActive')}
             onChange={c => setValue('isActive', c)}
           />
@@ -186,10 +208,10 @@ export default function DocumentTypeModal({ isOpen, onClose, onSubmit, editing, 
 
         <div className="flex justify-end gap-3 pt-4 border-t border-(--palette-line)">
           <Button type="button" variant="ghost" onClick={handleClose} disabled={isSaving}>
-            Cancel
+            {t('documentTypeAdmin.cancel')}
           </Button>
           <Button type="submit" variant="primary" isLoading={isSaving}>
-            {isEditing ? 'Save Changes' : 'Add Document Type'}
+            {isEditing ? t('documentTypeAdmin.save') : t('documentTypeAdmin.add')}
           </Button>
         </div>
       </form>

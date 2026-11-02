@@ -3,9 +3,11 @@ import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import Dropdown from '@shared/components/inputs/Dropdown';
 import Checkbox from '@shared/components/inputs/Checkbox';
-import { useGetDocumentTypes } from '@/features/request/api/documentTypes';
+import { documentTypeLabel, useGetDocumentTypes } from '@/features/request/api/documentTypes';
 import type { DocumentRequirementDto } from '../types';
 import type { SetScopeRequirementsPayload } from '../api/documentRequirements';
+import { useTranslation } from 'react-i18next';
+import { useLocaleStore } from '@shared/store';
 
 interface Props {
   isOpen: boolean;
@@ -33,6 +35,8 @@ export default function DocumentRequirementModal({
   initialScope,
   isSaving,
 }: Props) {
+  const { t } = useTranslation('request');
+  const language = useLocaleStore(s => s.language);
   const { data: documentTypes, isError, isFetching, refetch } = useGetDocumentTypes();
   // A failed refetch over cached types is not a load failure: the list is still there.
   const loadFailed = isError && !documentTypes;
@@ -42,6 +46,7 @@ export default function DocumentRequirementModal({
         id: dt.id as string,
         code: dt.code ?? '',
         name: dt.name ?? '',
+        nameTh: dt.nameTh ?? '',
       })),
     [documentTypes],
   );
@@ -88,12 +93,12 @@ export default function DocumentRequirementModal({
 
   const scopeHint =
     !propertyTypeCode && !purposeCode
-      ? 'Applies to all requests (application-wide).'
+      ? t('documentRequirementAdmin.scope.all')
       : propertyTypeCode && purposeCode
-        ? 'Applies only to this collateral type AND purpose combination.'
+        ? t('documentRequirementAdmin.scope.both')
         : propertyTypeCode
-          ? 'Applies to this collateral type (any purpose).'
-          : 'Applies to this purpose (any collateral type).';
+          ? t('documentRequirementAdmin.scope.collateralType')
+          : t('documentRequirementAdmin.scope.purpose');
 
   const handleSave = async () => {
     const items = types
@@ -118,21 +123,21 @@ export default function DocumentRequirementModal({
     setRows(prev => ({ ...prev, [id]: { ...prev[id], ...patch } }));
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Manage Document Requirements" size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('documentRequirementAdmin.title')} size="lg">
       <div className="flex flex-col gap-4">
         {/* Scope selectors */}
         <div className="grid grid-cols-2 gap-4">
           <Dropdown
-            label="Collateral Type"
+            label={t('documentRequirementAdmin.fields.collateralType')}
             group="CollateralType"
-            placeholder="Any"
+            placeholder={t('documentRequirementAdmin.any')}
             value={propertyTypeCode ?? undefined}
             onChange={v => setPropertyTypeCode(v ?? null)}
           />
           <Dropdown
-            label="Purpose"
+            label={t('documentRequirementAdmin.fields.purpose')}
             group="AppraisalPurpose"
-            placeholder="Any"
+            placeholder={t('documentRequirementAdmin.any')}
             value={purposeCode ?? undefined}
             onChange={v => setPurposeCode(v ?? null)}
           />
@@ -142,15 +147,17 @@ export default function DocumentRequirementModal({
         {/* Document checklist */}
         <div className="border border-(--palette-line) rounded-lg overflow-hidden">
           <div className="flex items-center justify-between bg-(--palette-surface-2) px-4 py-2 text-xs font-medium text-(--palette-gray-500) uppercase">
-            <span>Documents ({includedCount} selected)</span>
-            <span>Required</span>
+            <span>
+              {t('documentRequirementAdmin.checklist.documents', { count: includedCount })}
+            </span>
+            <span>{t('documentRequirementAdmin.checklist.required')}</span>
           </div>
           <div className="max-h-80 overflow-y-auto divide-y divide-(--palette-line-soft)">
             {types.length === 0 ? (
               <div className="px-4 py-6 text-center text-sm text-(--palette-gray-500)">
                 {loadFailed ? (
                   <>
-                    Could not load document types.{' '}
+                    {t('documentRequirementAdmin.loadFailed')}{' '}
                     <Button
                       type="button"
                       variant="ghost"
@@ -158,13 +165,13 @@ export default function DocumentRequirementModal({
                       onClick={() => refetch()}
                       disabled={isFetching}
                     >
-                      Retry
+                      {t('documentRequirementAdmin.retry')}
                     </Button>
                   </>
                 ) : documentTypes ? (
-                  'No document types. Add some in the Document Types tab first.'
+                  t('documentRequirementAdmin.noTypes')
                 ) : (
-                  'Loading document types…'
+                  t('documentRequirementAdmin.loadingTypes')
                 )}
               </div>
             ) : (
@@ -173,7 +180,7 @@ export default function DocumentRequirementModal({
                 return (
                   <div key={dt.id} className="flex items-center justify-between px-4 py-2.5">
                     <Checkbox
-                      label={`${dt.code} - ${dt.name}`}
+                      label={`${dt.code} - ${documentTypeLabel(dt, language)}`}
                       checked={row.included}
                       onChange={c => setRow(dt.id, { included: c })}
                     />
@@ -191,7 +198,7 @@ export default function DocumentRequirementModal({
 
         <div className="flex justify-end gap-3 pt-4 border-t border-(--palette-line)">
           <Button type="button" variant="ghost" onClick={onClose} disabled={isSaving}>
-            Cancel
+            {t('documentRequirementAdmin.cancel')}
           </Button>
           <Button
             type="button"
@@ -200,7 +207,7 @@ export default function DocumentRequirementModal({
             isLoading={isSaving}
             disabled={!documentTypes}
           >
-            Save
+            {t('documentRequirementAdmin.save')}
           </Button>
         </div>
       </div>

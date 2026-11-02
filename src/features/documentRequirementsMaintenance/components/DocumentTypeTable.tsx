@@ -17,6 +17,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import { carryForwardLockKind, type DocumentTypeDto } from '../types';
+import clsx from 'clsx';
 
 interface Props {
   documentTypes: DocumentTypeDto[];
@@ -62,7 +63,14 @@ const CarryForwardPill = ({ dt }: { dt: DocumentTypeDto }) => {
   );
 };
 
+const categoryPill: Record<string, string> = {
+  VAL_REPORT: 'bg-cyan-500',
+  VAL_DOC: 'bg-blue-500',
+  SUBMIT_DOC: 'bg-emerald-500',
+};
+
 const SortableRow = ({ dt, onEdit, onDelete }: RowProps) => {
+  const { t } = useTranslation(['request', 'common']);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: dt.id,
   });
@@ -82,26 +90,44 @@ const SortableRow = ({ dt, onEdit, onDelete }: RowProps) => {
       >
         <Icon name="grip-vertical" style="solid" className="size-4" />
       </td>
-      <td className="px-4 py-3 font-medium text-(--palette-ink)">{dt.code}</td>
-      <td className="px-4 py-3 text-(--palette-ink)">{dt.name}</td>
-      <td className="px-4 py-3 text-(--palette-gray-500)">{dt.category}</td>
+      <td className="px-4 py-3 font-medium whitespace-nowrap text-(--palette-ink)">{dt.code}</td>
+      <td className="px-4 py-3 text-(--palette-ink)">
+        <div className="min-w-40 max-w-72 break-words">{dt.name}</div>
+      </td>
+      <td className="px-4 py-3 text-(--palette-ink)">
+        <div className="min-w-40 max-w-72 break-words">{dt.nameTh}</div>
+      </td>
+      <td className="px-4 py-3">
+        {dt.category && (
+          <span
+            className={clsx(
+              'inline-flex items-center gap-1.5 whitespace-nowrap font-medium rounded-md px-1.5 py-0.5 text-[11px] text-white',
+              categoryPill[dt.category] ?? 'bg-gray-500',
+            )}
+          >
+            {t(`documentTypeAdmin.categories.${dt.category}`, { defaultValue: dt.category })}
+          </span>
+        )}
+      </td>
       <td className="px-4 py-3">
         <CarryForwardPill dt={dt} />
       </td>
-      <td className="px-4 py-3">{dt.isActive ? 'Yes' : 'No'}</td>
+      <td className="px-4 py-3 whitespace-nowrap">
+        {dt.isActive ? t('documentTypeAdmin.yes') : t('documentTypeAdmin.no')}
+      </td>
       <td className="px-4 py-3">
         <div className="flex justify-end gap-2">
           <button
             onClick={() => onEdit(dt)}
             className="text-(--palette-gray-400) hover:text-(--palette-ink)"
-            aria-label="Edit"
+            aria-label={t('common:actions.edit')}
           >
             <Icon name="pen" style="regular" className="size-3.5" />
           </button>
           <button
             onClick={() => onDelete(dt)}
             className="text-(--palette-gray-400) hover:text-danger"
-            aria-label="Delete"
+            aria-label={t('common:actions.delete')}
           >
             <Icon name="trash" style="regular" className="size-3.5" />
           </button>
@@ -142,35 +168,60 @@ export default function DocumentTypeTable({
   };
 
   if (isLoading) {
-    return <div className="p-8 text-center text-(--palette-gray-500)">Loading…</div>;
+    return (
+      <div className="p-8 text-center text-(--palette-gray-500)">
+        {t('documentTypeAdmin.loading')}
+      </div>
+    );
   }
 
   if (order.length === 0) {
-    return <div className="p-8 text-center text-(--palette-gray-500)">No document types.</div>;
+    return (
+      <div className="p-8 text-center text-(--palette-gray-500)">
+        {t('documentTypeAdmin.empty')}
+      </div>
+    );
   }
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <table className="min-w-full divide-y divide-(--palette-line) text-table">
-        <thead className="bg-(--palette-surface-2) text-left text-xs font-medium text-(--palette-gray-500) uppercase">
-          <tr>
-            <th className="text-xs px-2 py-3 w-10 font-semibold" />
-            <th className="text-xs px-4 py-3 font-semibold">Code</th>
-            <th className="text-xs px-4 py-3 font-semibold">Name</th>
-            <th className="text-xs px-4 py-3 font-semibold">Category</th>
-            <th className="text-xs px-4 py-3 font-semibold">{t('carryForward.admin.column')}</th>
-            <th className="text-xs px-4 py-3 font-semibold">Active</th>
-            <th className="text-xs px-4 py-3 text-right font-semibold">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-(--palette-line-soft)">
-          <SortableContext items={order.map(d => d.id)} strategy={verticalListSortingStrategy}>
-            {order.map(dt => (
-              <SortableRow key={dt.id} dt={dt} onEdit={onEdit} onDelete={onDelete} />
-            ))}
-          </SortableContext>
-        </tbody>
-      </table>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-(--palette-line) text-table">
+          <thead className="bg-(--palette-surface-2) text-left text-xs font-medium whitespace-nowrap text-(--palette-gray-500) uppercase">
+            <tr>
+              <th className="text-xs px-2 py-3 w-10 font-semibold" />
+              <th className="text-xs px-4 py-3 font-semibold">
+                {t('documentTypeAdmin.columns.code')}
+              </th>
+              <th className="text-xs px-4 py-3 font-semibold">
+                {t('documentTypeAdmin.columns.name')}
+              </th>
+              <th className="text-xs px-4 py-3 font-semibold">
+                {t('documentTypeAdmin.columns.nameTh')}
+              </th>
+              <th className="text-xs px-4 py-3 font-semibold">
+                {t('documentTypeAdmin.columns.category')}
+              </th>
+              <th className="text-xs px-4 py-3 font-semibold whitespace-normal">
+                {t('carryForward.admin.column')}
+              </th>
+              <th className="text-xs px-4 py-3 font-semibold">
+                {t('documentTypeAdmin.columns.active')}
+              </th>
+              <th className="text-xs px-4 py-3 text-right font-semibold">
+                {t('documentTypeAdmin.columns.actions')}
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-(--palette-line-soft)">
+            <SortableContext items={order.map(d => d.id)} strategy={verticalListSortingStrategy}>
+              {order.map(dt => (
+                <SortableRow key={dt.id} dt={dt} onEdit={onEdit} onDelete={onDelete} />
+              ))}
+            </SortableContext>
+          </tbody>
+        </table>
+      </div>
     </DndContext>
   );
 }

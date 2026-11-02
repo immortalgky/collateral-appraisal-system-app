@@ -1041,5 +1041,106 @@
     "confirmGenerated": "这将替换之前生成的预约函。此行的其他文件保留。",
     "confirmFiles": "此行已有文件，且其中没有系统生成的预约函。这些文件将被生成的预约函替换。",
     "confirm": "生成预约函"
+  },
+  "documentTypeAdmin": {
+    "columns": {
+      "code": "代码",
+      "name": "名称（英文）",
+      "nameTh": "名称（泰文）",
+      "category": "类别",
+      "active": "启用",
+      "actions": "操作"
+    },
+    "categories": {
+      "VAL_REPORT": "完整估价报告",
+      "VAL_DOC": "抵押品估价文件",
+      "SUBMIT_DOC": "估价申请提交文件"
+    },
+    "fields": {
+      "code": "代码",
+      "codePlaceholder": "例如 D044",
+      "category": "类别",
+      "categoryPlaceholder": "选择类别",
+      "name": "名称（英文）",
+      "namePlaceholder": "文件类型英文名称",
+      "nameTh": "名称（泰文）",
+      "nameThPlaceholder": "文件类型泰文名称",
+      "description": "说明",
+      "descriptionPlaceholder": "可选说明",
+      "sortOrder": "排序",
+      "active": "启用"
+    },
+    "titleAdd": "添加文件类型",
+    "titleEdit": "编辑文件类型",
+    "cancel": "取消",
+    "add": "添加文件类型",
+    "save": "保存更改",
+    "yes": "是",
+    "no": "否",
+    "loading": "加载中…",
+    "empty": "暂无文件类型。"
+  },
+  "documentRequirementAdmin": {
+    "columns": {
+      "collateralType": "抵押品类型",
+      "purpose": "用途",
+      "documents": "文件",
+      "actions": "操作"
+    },
+    "fields": {
+      "collateralType": "抵押品类型",
+      "purpose": "用途"
+    },
+    "title": "管理文件要求",
+    "any": "全部",
+    "scope": {
+      "all": "适用于所有申请（全系统）。",
+      "both": "仅适用于此抵押品类型与用途的组合。",
+      "collateralType": "适用于此抵押品类型（任何用途）。",
+      "purpose": "适用于此用途（任何抵押品类型）。"
+    },
+    "checklist": {
+      "documents": "文件（已选 {{count}} 项）",
+      "required": "必需"
+    },
+    "loadFailed": "无法加载文件类型。",
+    "retry": "重试",
+    "noTypes": "暂无文件类型，请先在“文件类型”标签页中添加。",
+    "loadingTypes": "正在加载文件类型…",
+    "cancel": "取消",
+    "save": "保存",
+    "loading": "加载中…",
+    "empty": "尚未配置文件要求。",
+    "documentCount_one": "{{count}} 个文件",
+    "documentCount_other": "{{count}} 个文件",
+    "requiredCount": "{{count}} 个必需"
+  },
+  "documentRequirementsPage": {
+    "title": "文件要求",
+    "subtitle": "按抵押品类型和用途配置所需文件",
+    "tabs": {
+      "types": "文件类型",
+      "requirements": "文件要求"
+    },
+    "addRequirement": "添加文件要求",
+    "addDocumentType": "添加文件类型",
+    "showInactive": "显示未启用",
+    "toasts": {
+      "requirementsSaved": "文件要求已保存",
+      "saveRequirementsFailed": "保存文件要求失败。",
+      "typeSaved": "文件类型已保存",
+      "saveTypeFailed": "保存文件类型失败。",
+      "requirementsRemoved": "文件要求已移除",
+      "typeDeleted": "文件类型已删除",
+      "deleteFailed": "删除失败。",
+      "orderUpdated": "排序已更新",
+      "reorderFailed": "排序失败。"
+    },
+    "confirm": {
+      "removeScopeTitle": "移除文件要求",
+      "removeScopeMessage": "将移除此范围内的全部 {{count}} 项文件要求，是否继续？",
+      "deleteTypeTitle": "删除文件类型",
+      "deleteTypeMessage": "将删除此文件类型，是否继续？"
+    }
   }
 }
