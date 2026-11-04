@@ -1,4 +1,3 @@
-import '@features/pricingAnalysis/i18n';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';

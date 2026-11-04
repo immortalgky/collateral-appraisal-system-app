@@ -1,4 +1,3 @@
-import '@/features/document-followup/i18n';
 import { taskListUrl } from '@features/task/utils/taskReturn';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';

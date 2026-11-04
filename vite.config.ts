@@ -48,8 +48,7 @@ function manualChunks(id: string): string | undefined {
   if (/[\\/]node_modules[\\/]@microsoft[\\/]signalr/.test(id)) return 'signalr';
   // Only the lazy collateral 3D scene imports it; naming the chunk keeps it out of every other one.
   if (/[\\/]node_modules[\\/]three[\\/]/.test(id)) return 'three';
-  // Matches i18next, react-i18next, i18next-browser-languagedetector, and
-  // i18next-resources-to-backend (all start with i18next or react-i18next).
+  // Matches i18next, react-i18next and i18next-browser-languagedetector.
   if (/[\\/]node_modules[\\/](react-)?i18next/.test(id)) return 'i18n-vendor';
   if (
     /[\\/]node_modules[\\/](@tanstack[\\/]react-query|react-hook-form|@hookform|zod|axios)/.test(id)
