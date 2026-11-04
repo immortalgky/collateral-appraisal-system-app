@@ -1,4 +1,3 @@
-import '@/features/serviceQualityEvaluation/admin/i18n';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';

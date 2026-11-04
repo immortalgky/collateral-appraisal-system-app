@@ -5,8 +5,10 @@ How to internationalize a feature. Languages: **en** (source), **th** (productio
 ## Adding a namespace
 
 1. Create `src/i18n/locales/{en,th,zh}/<namespace>.json`. **All three files must have an identical key set** (parity is enforced).
-2. Register in `src/i18n/index.ts` — three import lines + three `resources` entries, exactly like the existing namespaces (`reappraisal`, `taskMonitor`, `committee`, `notification`, …). `src/i18n/types.ts` picks up the new namespace automatically from `resources['en']`.
+2. Register the **en** file in `src/i18n/index.ts` — one import line + one `resources.en` entry, like the existing namespaces. `th` and `zh` need no registration: every `locales/{th,zh}/*.json` is bundled inline by an eager glob. `src/i18n/types.ts` picks up the new namespace automatically from `resources['en']`.
 3. Group keys by surface: `page`, `list`, `detail`, `columns`, `filters`, `forms`, `fields`, `toasts`, `validation`, `aria`, `empty`, `errors`, etc.
+
+All namespaces of all languages ship in the initial bundle (nothing is lazy-loaded). Do not reintroduce a lazy backend: a namespace that loads after a page's data arrives suspends the component, which hides and re-shows the task page's `SuspenseOutlet` and makes its queries refetch 2–3 times. A namespace with no `zh` file falls back to `en` per key.
 
 ## Using translations in components
 

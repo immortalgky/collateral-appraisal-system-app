@@ -1,4 +1,3 @@
-import '@/features/document-followup/i18n';
 import { createPortal } from 'react-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
