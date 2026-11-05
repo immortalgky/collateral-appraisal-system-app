@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { render, screen, userEvent, within } from '@/test/test-utils';
 import { AppraisalProvider } from '@/features/appraisal/context/AppraisalContext';
 import { PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
+import { CondoShellContext } from '../condo/CondoShellContext';
 import UnitListingTab from './UnitListingTab';
 
 vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() } }));
@@ -478,5 +479,56 @@ describe('UnitListingTab (condo)', () => {
     );
     expect(screen.queryByText('101')).toBeNull();
     expect(screen.getByText('301')).toBeInTheDocument();
+  });
+});
+
+describe('UnitListingTab expand table', () => {
+  const renderFocus = (focus: boolean, onFocusChange = vi.fn()) => {
+    state.units = oneUnit;
+    state.unitsLoading = false;
+    state.unitsFetching = false;
+    state.failed = false;
+    const view = render(
+      <CondoShellContext.Provider
+        value={{
+          projectType: 'U',
+          tabs: [],
+          activeTab: 'unit-listing',
+          onTabChange: vi.fn(),
+          focus,
+          onFocusChange,
+        }}
+      >
+        <AppraisalProvider
+          value={{
+            appraisal: { appraisalId: 'a1', requestId: 'r1', appraisalType: 'Initial' },
+            isLoading: false,
+            isError: false,
+            error: null,
+          }}
+        >
+          <UnitListingTab projectType="U" />
+        </AppraisalProvider>
+      </CondoShellContext.Provider>,
+    );
+    return { ...view, onFocusChange };
+  };
+  const expandLabel = () => i18n.t('blockProject:condoUnitsPrice.dense.expand');
+  const collapseLabel = () => i18n.t('blockProject:condoUnitsPrice.dense.collapse');
+
+  it('the filters row has the button; it asks the shell to expand and keeps the import card', async () => {
+    const { user, onFocusChange } = renderFocus(false);
+    expect(
+      screen.getByLabelText(i18n.t('blockProject:unitListing.importUnits')),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: expandLabel() }));
+    expect(onFocusChange).toHaveBeenCalledWith(true);
+  });
+
+  it('while expanded the import card is gone and the button collapses', async () => {
+    const { user, onFocusChange } = renderFocus(true);
+    expect(screen.queryByLabelText(i18n.t('blockProject:unitListing.importUnits'))).toBeNull();
+    await user.click(screen.getByRole('button', { name: collapseLabel() }));
+    expect(onFocusChange).toHaveBeenCalledWith(false);
   });
 });
