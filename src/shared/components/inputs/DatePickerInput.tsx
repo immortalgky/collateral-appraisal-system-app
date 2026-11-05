@@ -458,8 +458,8 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
             type="text"
             className={clsx(
               'block',
-              controlFrame(layout, cell),
-              controlPad(layout, cell, 'l'),
+              controlFrame(layout, { cell }),
+              controlPad(layout, { cell, side: 'l' }),
               // The calendar button is absolutely positioned over the field's right end: keep the
               // text clear of it (a range, "11/08/2026 → 15/08/2026", is long enough to reach it).
               CALENDAR_BUTTON_PADDING,

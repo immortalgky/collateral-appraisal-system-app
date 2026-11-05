@@ -714,7 +714,7 @@ export const AdjustFinalValueSection = ({
                   // palette (bold text + tinted border + tinted fill, all non-default
                   // colours) has nothing in common with dense's own transparent-border
                   // treatment to reuse, so it's fully specified here instead.
-                  inputClassName="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
+                  inputClassName="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! min-h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
                   onUserChange={
                     // For unit 03 (machinery) the rounded appraisal price IS the user's
                     // adjusted final value — sync them so finalValueAdjusted persists too.
@@ -748,7 +748,7 @@ export const AdjustFinalValueSection = ({
                   }}
                   // Green — mock:587-589's `.kv .final .in`, same reasoning as the other
                   // two green inputs below.
-                  inputClassName="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
+                  inputClassName="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! min-h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
                   onUserChange={
                     // For unit 03 (total price comparables) the rounded appraisal price
                     // IS the user's adjusted final value — sync them on input.
@@ -923,7 +923,7 @@ export const AdjustFinalValueSection = ({
                   }}
                   // Green — mock:587-589's `.kv .final .in`, same reasoning as the other
                   // two green inputs above.
-                  inputClassName="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
+                  inputClassName="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! min-h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
                 />,
                 t('wqs.summary.baht'),
                 editedBadge(

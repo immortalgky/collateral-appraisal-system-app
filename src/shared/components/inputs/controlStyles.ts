@@ -9,14 +9,39 @@ import type { FormLayoutMode } from '../form/formLayoutContext';
  * utilities would resolve by stylesheet order, not by their order in the string.
  */
 
+type SizeKey = 'standard' | 'cell' | 'compact';
+
+/** Standard, a Compact table-cell input, or Compact: the one key every geometry table below uses. */
+function sizeKey(layout: FormLayoutMode, cell: boolean): SizeKey {
+  return layout === 'standard' ? 'standard' : cell ? 'cell' : 'compact';
+}
+
+// Full literals on purpose: Tailwind finds classes by scanning the source text.
+const HEIGHT = {
+  standard: { min: 'min-h-ctl', fixed: 'h-ctl' },
+  cell: { min: 'min-h-8', fixed: 'h-8' },
+  compact: { min: 'min-h-ctl-c', fixed: 'h-ctl-c' },
+} as const;
+const RADIUS = {
+  standard: 'rounded-ctl',
+  cell: 'rounded-ctl-c',
+  compact: 'rounded-ctl-c',
+} as const;
+
 /**
- * Height and radius. The height is fixed, never derived from vertical padding, so a Thai line box
- * can neither grow nor clip the control (17.12). `cell`: a table cell input, which is 28px in
- * Compact and the plain Standard control in Standard (17.7).
+ * Height and radius. A native text `<input>` takes a `min-h-*`, never `h-*` and never vertical
+ * padding: Chromium clips the top of Thai tone marks in an input with a fixed height and no padding
+ * (line-height does not help), while `height:auto` + `min-height` renders the same box unclipped
+ * (17.12). Anything else (a button trigger, a read-only `<div>`, a native `<select>` that daisyUI
+ * sizes itself) passes `fixed` and keeps `h-*`, so its content can never grow it.
+ * `cell`: a table cell input, 28px in Compact and the plain Standard control in Standard (17.7).
  */
-export function controlFrame(layout: FormLayoutMode, cell = false): string {
-  if (layout === 'standard') return 'h-ctl rounded-ctl';
-  return cell ? 'h-8 rounded-ctl-c' : 'h-ctl-c rounded-ctl-c';
+export function controlFrame(
+  layout: FormLayoutMode,
+  { cell = false, fixed = false }: { cell?: boolean; fixed?: boolean } = {},
+): string {
+  const key = sizeKey(layout, cell);
+  return clsx(HEIGHT[key][fixed ? 'fixed' : 'min'], RADIUS[key]);
 }
 
 const PAD = {
@@ -26,13 +51,19 @@ const PAD = {
 } as const;
 
 /** Side padding: both sides, or one side when the other is taken by a suffix or an icon. */
-export function controlPad(layout: FormLayoutMode, cell = false, side: 'x' | 'l' | 'r' = 'x') {
-  return PAD[layout === 'standard' ? 'standard' : cell ? 'cell' : 'compact'][side];
+export function controlPad(
+  layout: FormLayoutMode,
+  { cell = false, side = 'x' }: { cell?: boolean; side?: 'x' | 'l' | 'r' } = {},
+) {
+  return PAD[sizeKey(layout, cell)][side];
 }
 
 /** Frame and side padding of a plain text control. */
-export function controlGeometry(layout: FormLayoutMode, cell = false): string {
-  return clsx(controlFrame(layout, cell), controlPad(layout, cell));
+export function controlGeometry(
+  layout: FormLayoutMode,
+  opts: { cell?: boolean; fixed?: boolean } = {},
+): string {
+  return clsx(controlFrame(layout, opts), controlPad(layout, { cell: opts.cell }));
 }
 
 /**

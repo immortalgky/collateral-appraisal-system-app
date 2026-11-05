@@ -432,7 +432,7 @@ export function CostMachinePanel({
                             disabled={isReadOnly}
                             // Green — same `.kv .final .in` palette as WQSAdjustFinalValueSection's
                             // Indicated Value inputs (mock:587-589).
-                            className="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]!"
+                            className="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! min-h-[26px]! py-0! px-[5px]! rounded-[4px]!"
                           />
                         }
                         hint={

@@ -114,9 +114,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>((allProps, ref) => {
                     : 'bg-(--palette-surface-2) hover:border-(--palette-line-strong) focus:bg-(--form-input-bg)',
                 )
               : // The form-system box (17.3). No `leading-*`: index.css gives every text input
-                // a 1.8 line height for Thai marks, and the fixed height keeps the text centred.
+                // a 1.8 line height for Thai marks, and the min-height keeps the text centred.
                 clsx(
-                  controlGeometry(layout, cell),
+                  controlGeometry(layout, { cell }),
                   controlSkin({ error: !!error, disabled: isDisabled }),
                 ),
             leftIcon && 'pl-9',

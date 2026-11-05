@@ -171,8 +171,8 @@ export function CurrentValueCell({
           invalid={shown > override.max}
           className={clsx(
             panel && 'text-base! font-bold! bg-(--palette-surface)!',
-            panel && (standard ? 'h-[2.8571rem]!' : 'h-[2.4286rem]!'),
-            !panel && standard && 'h-ctl-c!',
+            panel && (standard ? 'min-h-[2.8571rem]!' : 'min-h-[2.4286rem]!'),
+            !panel && standard && 'min-h-ctl-c!',
             overridden && 'border-(--palette-warn)! text-(--palette-warn)!',
           )}
         />

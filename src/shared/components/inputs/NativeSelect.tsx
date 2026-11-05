@@ -17,7 +17,7 @@ interface NativeSelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
  * `<select>` still match its height, border, focus and states.
  *
  * Give it `<option>` children and a width class as before. `index.css` already removes the OS
- * arrow, draws the chevron and keeps the right inset; the fixed height centres the text.
+ * arrow, draws the chevron and keeps the right inset; a fixed height (`controlFrame(layout, { fixed: true })`) centres the text.
  */
 const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(
   ({ error, cell = false, className, disabled, ...props }, ref) => {
@@ -29,8 +29,8 @@ const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(
         aria-invalid={error ? true : undefined}
         className={clsx(
           'block',
-          controlFrame(layout, cell),
-          controlPad(layout, cell, 'l'),
+          controlFrame(layout, { cell, fixed: true }),
+          controlPad(layout, { cell, side: 'l' }),
           controlSkin({ error, disabled }),
           !disabled && 'cursor-pointer',
           className,

@@ -89,7 +89,7 @@ export function IndicatedValueRow({
           onBlur={() => setEditingEmpty(false)}
           decimalPlaces={2}
           disabled={disabled}
-          className="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
+          className="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! min-h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
         />
       }
       unit={t('finalValue.baht')}

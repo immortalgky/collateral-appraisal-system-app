@@ -1028,7 +1028,7 @@ const RecipientBox = ({
           onKeyDown={onKeyDown}
           onBlur={() => commit(true)}
           placeholder={t('administration.email.addAddress')}
-          className="h-7 min-w-[10rem] flex-1 bg-transparent px-1 text-sm text-(--palette-ink) outline-none placeholder:text-(--palette-ink-2)"
+          className="min-h-7 min-w-[10rem] flex-1 bg-transparent px-1 text-sm text-(--palette-ink) outline-none placeholder:text-(--palette-ink-2)"
         />
       </div>
       {open && (

@@ -197,7 +197,7 @@ const SearchUserModal = ({
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={onSearchKeyDown}
-                className="h-10 w-full rounded-lg border border-(--palette-line) bg-(--palette-surface) pl-9 pr-9 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="min-h-10 w-full rounded-lg border border-(--palette-line) bg-(--palette-surface) pl-9 pr-9 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 autoFocus // eslint-disable-line jsx-a11y/no-autofocus -- a search dialog: typing is the first thing to do
               />
               {query && (
