@@ -44,7 +44,7 @@ function ReadBox({
       <span className={CAPTION}>{label}</span>
       <div
         className={clsx(
-          controlGeometry(layout),
+          controlGeometry(layout, { fixed: true }),
           'flex items-center justify-end bg-(--palette-surface-2) text-sm tabular-nums text-(--palette-ink-2)',
           className,
         )}

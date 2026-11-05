@@ -82,7 +82,7 @@ const ACTIONS_W = 3.4286;
 /** Longest name the server stores for a work item. */
 const NAME_MAX = 200;
 
-/** Row heights of the mock, per layout. Cells' own padding and `h-ctl` give way to these. */
+/** Row heights of the mock, per layout. Cells' own padding and the Compact td's `h-ctl` (`form/table/styles.ts`) give way to these. */
 const ROW = {
   standard: {
     head: '[&_thead_th]:h-[2.8571rem] [&_thead_th]:py-0',
@@ -382,7 +382,7 @@ export function ConstructionDetailTable({
           onKeyDown={handleKeyDown}
           aria-label={`${itemName(item)} ${field === 'proportionPct' ? t('constructionInspection.grid.proportion') : t('constructionInspection.grid.currentProgress')}`}
           invalid={regressedCell}
-          className={standard ? 'h-ctl-c!' : undefined}
+          className={standard ? 'min-h-ctl-c!' : undefined}
         />
       </FormTableCell>
     );

@@ -623,7 +623,7 @@ export function DirectComparisonAdjustAppraisalPriceSection({
                   // Green — mock:587-589's `.kv .final .in`, the one input in this card
                   // the mixed-unit-row instruction inherits from WQS's own ruling
                   // ("เขียวใช้เฉพาะผลสุดท้ายของวิธี").
-                  inputClassName="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
+                  inputClassName="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! min-h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
                   onUserChange={
                     !isUnitPrice
                       ? (next: any) => {
@@ -657,7 +657,7 @@ export function DirectComparisonAdjustAppraisalPriceSection({
                   maxValue: 999_999_999_999_999.0,
                   allowNegative: false,
                 }}
-                inputClassName="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
+                inputClassName="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! min-h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
                 onUserChange={
                   !isUnitPrice
                     ? (next: any) => {
@@ -798,7 +798,7 @@ export function DirectComparisonAdjustAppraisalPriceSection({
                     maxValue: 999_999_999_999_999.0,
                     allowNegative: false,
                   }}
-                  inputClassName="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
+                  inputClassName="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! min-h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
                 />
               }
               unit={t('finalValue.baht')}

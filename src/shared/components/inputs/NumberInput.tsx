@@ -336,7 +336,7 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
             // The box itself when the unit sits inside it: border, fill and focus ring live here.
             suffixInBox && [
               'flex items-center',
-              controlFrame(layout, cell),
+              controlFrame(layout, { cell }),
               controlSkin({ error: hasError, disabled: isDisabled, within: true }),
               className,
             ],
@@ -360,8 +360,8 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
                 ? // Borderless: colour, size and focus come from the wrapper. The right edge is the
                   // suffix's, so the input takes only the left padding.
                   clsx(
-                    'min-w-0 flex-1 h-full bg-transparent border-0 pr-0 placeholder:text-(--palette-ink-2) focus:outline-none disabled:cursor-not-allowed',
-                    controlPad(layout, cell, 'l'),
+                    'min-w-0 flex-1 self-stretch bg-transparent border-0 pr-0 placeholder:text-(--palette-ink-2) focus:outline-none disabled:cursor-not-allowed',
+                    controlPad(layout, { cell, side: 'l' }),
                   )
                 : dense
                   ? // Dense follows the mock's `.in` exactly (pricing-analysis-compact-mock.html:
@@ -378,9 +378,9 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
                         : 'bg-(--palette-surface-2) hover:border-(--palette-line-strong) focus:bg-(--form-input-bg)',
                     )
                   : // The form-system box (17.3). No `leading-*`: index.css gives every text input
-                    // a 1.8 line height for Thai marks, and the fixed height keeps it centred.
+                    // a 1.8 line height for Thai marks, and the min-height keeps it centred.
                     clsx(
-                      controlGeometry(layout, cell),
+                      controlGeometry(layout, { cell }),
                       controlSkin({ error: hasError, disabled: isDisabled }),
                     ),
               // `!`: the icon sits over the box, and a table cell's skin padding would put the
@@ -418,7 +418,7 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
                 suffixInBox
                   ? clsx(
                       'shrink-0 pl-2 text-xs text-(--palette-ink-2) select-none',
-                      controlPad(layout, cell, 'r'),
+                      controlPad(layout, { cell, side: 'r' }),
                     )
                   : 'absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-xs font-medium text-(--palette-gray-400) select-none'
               }

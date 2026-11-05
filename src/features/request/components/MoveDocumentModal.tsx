@@ -162,7 +162,7 @@ const MoveDocumentModal: React.FunctionComponent<MoveDocumentModalProps> = ({
             onChange={e => setQuery(e.target.value)}
             placeholder={t('moveDocument.searchPlaceholder')}
             aria-label={t('moveDocument.searchPlaceholder')}
-            className="h-9 w-full rounded-lg border border-(--palette-line) bg-(--palette-surface) px-3 text-sm outline-none focus:border-primary"
+            className="min-h-9 w-full rounded-lg border border-(--palette-line) bg-(--palette-surface) px-3 text-sm outline-none focus:border-primary"
           />
         )}
 

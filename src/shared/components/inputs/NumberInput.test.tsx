@@ -361,7 +361,7 @@ describe('NumberInput', () => {
       const input = screen.getByLabelText('Width');
       const box = input.parentElement!;
       expect(input).toHaveClass('border-0', 'text-right', 'tabular-nums');
-      expect(box).toHaveClass('border', 'focus-within:ring-[3px]', 'h-ctl');
+      expect(box).toHaveClass('border', 'focus-within:ring-[3px]', 'min-h-ctl');
       expect(box).toContainElement(screen.getByText('m'));
     });
 

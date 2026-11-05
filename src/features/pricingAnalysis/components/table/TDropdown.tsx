@@ -198,8 +198,8 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
                 : // The form-system box (17.3): the same trigger as `inputs/Dropdown`.
                   clsx(
                     'flex items-center leading-normal',
-                    controlFrame(layout, cell),
-                    controlPad(layout, cell, 'l'),
+                    controlFrame(layout, { cell, fixed: true }),
+                    controlPad(layout, { cell, side: 'l' }),
                     'pr-[2.2857rem]',
                     controlSkin({ error: !!error, disabled, trigger: true }),
                   ),

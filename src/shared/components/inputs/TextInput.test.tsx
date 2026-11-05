@@ -314,7 +314,7 @@ describe('TextInput', () => {
       render(<TextInput label="Name" />);
 
       const input = screen.getByLabelText('Name');
-      expect(input).toHaveClass('h-ctl', 'rounded-ctl', 'px-[0.8571rem]');
+      expect(input).toHaveClass('min-h-ctl', 'rounded-ctl', 'px-[0.8571rem]');
       expect(input.className).not.toMatch(/(^|\s)py-/);
     });
 
@@ -325,7 +325,7 @@ describe('TextInput', () => {
         </FormLayoutProvider>,
       );
 
-      expect(screen.getByLabelText('Name')).toHaveClass('h-ctl-c', 'rounded-ctl-c');
+      expect(screen.getByLabelText('Name')).toHaveClass('min-h-ctl-c', 'rounded-ctl-c');
     });
 
     it('should be 28px as a table cell in a Compact form, and unchanged in Standard', () => {
@@ -338,8 +338,8 @@ describe('TextInput', () => {
         </>,
       );
 
-      expect(screen.getByLabelText('Compact cell')).toHaveClass('h-8');
-      expect(screen.getByLabelText('Standard cell')).toHaveClass('h-ctl');
+      expect(screen.getByLabelText('Compact cell')).toHaveClass('min-h-8');
+      expect(screen.getByLabelText('Standard cell')).toHaveClass('min-h-ctl');
     });
   });
 });
