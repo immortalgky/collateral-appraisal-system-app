@@ -52,9 +52,21 @@ vi.mock('../components/tabs/ProjectInfoTab', () => ({
 vi.mock('../components/tabs/ProjectLandTab', () => ({ default: () => null }));
 vi.mock('../components/tabs/ModelListingTab', () => ({ default: () => null }));
 vi.mock('../components/tabs/TowerListingTab', () => ({ default: () => null }));
-vi.mock('../components/tabs/UnitListingTab', () => ({
-  default: () => <div data-testid="unit-listing-tab" />,
-}));
+vi.mock('../components/tabs/UnitListingTab', async () => {
+  const { useCondoFocus } = await import('../components/condo/CondoShellContext');
+  return {
+    default: function UnitListingTabStub() {
+      const { focus, onFocusChange } = useCondoFocus();
+      return (
+        <div data-testid="unit-listing-tab">
+          <button type="button" onClick={() => onFocusChange(!focus)}>
+            toggle-focus
+          </button>
+        </div>
+      );
+    },
+  };
+});
 // The stub has the one control the real tab owns that the shell cares about: expand table.
 vi.mock('../components/tabs/UnitPriceTab', async () => {
   const { useCondoFocus } = await import('../components/condo/CondoShellContext');
@@ -147,6 +159,15 @@ describe('BlockProjectPage Condo shell', () => {
     await user.click(screen.getByText('toggle-focus'));
     expect(screen.queryByRole('tablist')).toBeNull();
     expect(screen.getByTestId('unit-price-tab')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    expect(screen.getByRole('tablist')).toBeInTheDocument();
+  });
+
+  it('expand table also works on the unit listing tab', async () => {
+    const { user } = renderPage('unit-listing');
+    await user.click(screen.getByText('toggle-focus'));
+    expect(screen.queryByRole('tablist')).toBeNull();
 
     await user.keyboard('{Escape}');
     expect(screen.getByRole('tablist')).toBeInTheDocument();
