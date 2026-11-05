@@ -286,6 +286,9 @@ const MeetingQueuePage = () => {
                 <th className="text-xs text-left font-semibold text-(--palette-gray-600) px-4 py-2.5">
                   {t('columns.appraisalNo')}
                 </th>
+                <th className="text-xs text-left font-semibold text-(--palette-gray-600) px-4 py-2.5">
+                  {t('columns.customerName')}
+                </th>
                 <th className="text-xs text-right font-semibold text-(--palette-gray-600) px-4 py-2.5">
                   {t('columns.appraisalValue')}
                 </th>
@@ -297,7 +300,7 @@ const MeetingQueuePage = () => {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-(--palette-gray-400)">
+                  <td colSpan={5} className="px-4 py-8 text-center text-(--palette-gray-400)">
                     <Icon
                       name="spinner"
                       style="solid"
@@ -307,7 +310,7 @@ const MeetingQueuePage = () => {
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-12 text-center text-(--palette-gray-500)">
+                  <td colSpan={5} className="px-4 py-12 text-center text-(--palette-gray-500)">
                     {t('empty.noQueue')}
                   </td>
                 </tr>
@@ -338,6 +341,9 @@ const MeetingQueuePage = () => {
                         >
                           {label}
                         </Link>
+                      </td>
+                      <td className="px-4 py-3 text-(--palette-ink) font-medium">
+                        {item.customerName ?? <span className="text-(--palette-ink-3)">—</span>}
                       </td>
                       <td className="px-4 py-3 text-(--palette-ink) text-right">
                         {formatCurrency(item.appraisalValue)}

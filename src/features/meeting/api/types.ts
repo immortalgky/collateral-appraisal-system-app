@@ -50,6 +50,7 @@ export interface MeetingQueueItemDto {
   meetingId: string | null;
   status: MeetingQueueItemStatus;
   enqueuedAt: string;
+  customerName: string | null;
 }
 
 /** A snapshot member belonging to a specific meeting. */
