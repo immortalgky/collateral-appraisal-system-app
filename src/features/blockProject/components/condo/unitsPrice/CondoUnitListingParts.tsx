@@ -11,6 +11,7 @@ import { formatLocaleDateTime } from '@/shared/utils/dateUtils';
 import { formatNumber } from '@/shared/utils/formatUtils';
 
 import type { ProjectType, ProjectUnit } from '../../../types';
+import { useCondoFocus } from '../CondoShellContext';
 import { Dash, FilterChip, ToolbarDropdown, WarningNote } from './look';
 import { TOOLBAR, dataRow, dataTable } from './lookClasses';
 
@@ -54,7 +55,7 @@ export function CondoUnitImportRow({
   const { t, i18n } = useTranslation('blockProject');
 
   return (
-    <Card noPadding>
+    <Card noPadding className="shrink-0">
       <div className="grid gap-2.5 p-4">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           {!readOnly && (
@@ -201,6 +202,7 @@ function ChipRow({
  */
 export function CondoUnitFilters({ projectType = 'U', ...p }: FiltersProps) {
   const { t } = useTranslation('blockProject');
+  const { focus, onFocusChange } = useCondoFocus();
   const condo = projectType === 'U';
   const searchPlaceholder = t(
     condo ? 'condoUnitsPrice.listing.searchPlaceholder' : 'lbLists.units.searchPlaceholder',
@@ -263,6 +265,20 @@ export function CondoUnitFilters({ projectType = 'U', ...p }: FiltersProps) {
             {t('unitListing.shownOf', { shown: p.shown, total: p.total })}
           </span>
         )}
+        <Button
+          variant="outline"
+          size="sm"
+          aria-label={t(focus ? 'condoUnitsPrice.dense.collapse' : 'condoUnitsPrice.dense.expand')}
+          title={t(
+            focus ? 'condoUnitsPrice.dense.collapseTitle' : 'condoUnitsPrice.dense.expandTitle',
+          )}
+          onClick={() => onFocusChange(!focus)}
+        >
+          <Icon name={focus ? 'compress' : 'expand'} style="light" />
+          <span className="ml-2">
+            {t(focus ? 'condoUnitsPrice.dense.collapse' : 'condoUnitsPrice.dense.expand')}
+          </span>
+        </Button>
       </div>
 
       {condo ? (

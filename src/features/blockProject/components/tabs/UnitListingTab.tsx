@@ -24,6 +24,7 @@ import {
   MAX_REAPPRAISAL_XLSX_UPLOAD_MB,
   MAX_XLSX_UPLOAD_MB,
 } from '../../utils/xlsxUpload';
+import { useCondoFocus } from '../condo/CondoShellContext';
 import UnitVerificationDialog from '../UnitVerificationDialog';
 import {
   CondoUnitFilters,
@@ -163,6 +164,7 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   const { t } = useTranslation('blockProject');
   const appraisalId = useAppraisalId();
   const readOnly = usePageReadOnly();
+  const { focus } = useCondoFocus();
   const { appraisal } = useAppraisalContext();
   const isReappraisal = appraisal?.appraisalType === 'ReAppraisal';
 
@@ -448,25 +450,27 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto">
-      <CondoUnitImportRow
-        readOnly={readOnly}
-        isReappraisal={isReappraisal}
-        uploadBlocked={uploadBlocked}
-        isUploadBusy={isUploadBusy}
-        uploadInput={uploadInput}
-        onChooseFile={() => uploadInputRef.current?.click()}
-        latest={
-          latestUpload && {
-            fileName: latestUpload.fileName,
-            outcome: describeUpload(latestUpload),
-            uploadedAt: latestUpload.uploadedAt,
+      {!focus && (
+        <CondoUnitImportRow
+          readOnly={readOnly}
+          isReappraisal={isReappraisal}
+          uploadBlocked={uploadBlocked}
+          isUploadBusy={isUploadBusy}
+          uploadInput={uploadInput}
+          onChooseFile={() => uploadInputRef.current?.click()}
+          latest={
+            latestUpload && {
+              fileName: latestUpload.fileName,
+              outcome: describeUpload(latestUpload),
+              uploadedAt: latestUpload.uploadedAt,
+            }
           }
-        }
-        uploadCount={uploads.length}
-        historyOpen={historyOpen}
-        onToggleHistory={() => setHistoryOpen(v => !v)}
-        history={<UploadHistoryList uploads={uploads} isLoading={uploadsLoading} />}
-      />
+          uploadCount={uploads.length}
+          historyOpen={historyOpen}
+          onToggleHistory={() => setHistoryOpen(v => !v)}
+          history={<UploadHistoryList uploads={uploads} isLoading={uploadsLoading} />}
+        />
+      )}
 
       {/* The list-page table box (DESIGN.md section 8). */}
       <div className="flex min-h-[24rem] flex-1 flex-col overflow-hidden rounded-lg border border-(--palette-line) bg-(--palette-surface)">

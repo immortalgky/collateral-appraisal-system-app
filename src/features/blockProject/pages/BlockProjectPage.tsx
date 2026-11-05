@@ -138,7 +138,7 @@ export default function BlockProjectPage({ projectType: routeType }: BlockProjec
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabParam, projectType, setSearchParams]);
 
-  // Condo "expand table": local UI state, only meaningful on the unit-price tab and dropped when
+  // Condo "expand table": local UI state, only meaningful on the unit-price and unit-listing tabs and dropped when
   // the user leaves it. Esc restores it unless a dialog or drawer is open (it owns Esc).
   const [focusOn, setFocusOn] = useState(false);
 
@@ -147,7 +147,7 @@ export default function BlockProjectPage({ projectType: routeType }: BlockProjec
     setSearchParams({ tab: tabId }, { replace: true });
   };
 
-  const focus = focusOn && activeTab === 'unit-price';
+  const focus = focusOn && (activeTab === 'unit-price' || activeTab === 'unit-listing');
   useEffect(() => {
     if (!focus) return;
     const onKeyDown = (e: KeyboardEvent) => {
