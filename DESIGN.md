@@ -459,19 +459,19 @@ parentheses; at 1920px the root is 15px and everything scales with it (section 2
 
 ### 17.2 Tokens (add to `theme.css`; use the utility, never the literal)
 
-| Token                                 | Value                                                                               | Utility                | Used for                                         |
-| ------------------------------------- | ----------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------ |
-| `--spacing-ctl`                       | 2.5714rem (36)                                                                      | `h-ctl`                | Standard control height                          |
-| `--spacing-ctl-c`                     | 2.2857rem (32)                                                                      | `h-ctl-c`              | Compact control height, Standard chip height     |
-| (spacing scale)                       | 2rem (28)                                                                           | `h-8`                  | Compact table-cell input, Standard toggle option |
-| `--spacing-chip`                      | 2.2857rem (32)                                                                      | `h-chip`               | Standard choice chip                             |
-| `--spacing-chip-c`                    | 1.8571rem (26)                                                                      | `h-chip-c`             | Compact choice chip and toggle option            |
-| `--radius-ctl`                        | 0.5714rem (8)                                                                       | `rounded-ctl`          | Standard controls and buttons                    |
-| `--radius-ctl-c`                      | 0.4643rem (6.5)                                                                     | `rounded-ctl-c`        | Compact controls and buttons                     |
-| `--radius-section`                    | 0.8571rem (12)                                                                      | `rounded-section`      | Standard section card, header card               |
-| `--spacing-rail` / `--spacing-rail-c` | 17.7143rem (248) / 14.5714rem (204)                                                 | `w-rail` / `w-rail-c`  | Right rail, Standard / Compact                   |
-| `--form-input-bg`                     | light `--color-base-100`; dark `#151a21` (recessed: darker than the `#1c2129` card) | `bg-(--form-input-bg)` | Control and unselected chip fill                 |
-| `--app-canvas`                        | light `--color-base-100`; dark `#13161c`                                            | `bg-(--app-canvas)`    | Page behind the cards (layout roots, `body`)     |
+| Token                                 | Value                                                                               | Utility                                                                | Used for                                                      |
+| ------------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `--spacing-ctl`                       | 2.5714rem (36)                                                                      | `min-h-ctl` text inputs; `h-ctl` buttons, selects, triggers            | Standard control height: text input (button, select)          |
+| `--spacing-ctl-c`                     | 2.2857rem (32)                                                                      | `min-h-ctl-c` text inputs; `h-ctl-c` buttons, selects, triggers, chips | Compact control height (button, select), Standard chip height |
+| (spacing scale)                       | 2rem (28)                                                                           | `min-h-8` text inputs; `h-8` buttons, toggle options                   | Compact table-cell input, Standard toggle option              |
+| `--spacing-chip`                      | 2.2857rem (32)                                                                      | `h-chip`                                                               | Standard choice chip                                          |
+| `--spacing-chip-c`                    | 1.8571rem (26)                                                                      | `h-chip-c`                                                             | Compact choice chip and toggle option                         |
+| `--radius-ctl`                        | 0.5714rem (8)                                                                       | `rounded-ctl`                                                          | Standard controls and buttons                                 |
+| `--radius-ctl-c`                      | 0.4643rem (6.5)                                                                     | `rounded-ctl-c`                                                        | Compact controls and buttons                                  |
+| `--radius-section`                    | 0.8571rem (12)                                                                      | `rounded-section`                                                      | Standard section card, header card                            |
+| `--spacing-rail` / `--spacing-rail-c` | 17.7143rem (248) / 14.5714rem (204)                                                 | `w-rail` / `w-rail-c`                                                  | Right rail, Standard / Compact                                |
+| `--form-input-bg`                     | light `--color-base-100`; dark `#151a21` (recessed: darker than the `#1c2129` card) | `bg-(--form-input-bg)`                                                 | Control and unselected chip fill                              |
+| `--app-canvas`                        | light `--color-base-100`; dark `#13161c`                                            | `bg-(--app-canvas)`                                                    | Page behind the cards (layout roots, `body`)                  |
 
 Neutral colours in forms: surface `--palette-surface`, tinted surface (label column, table head, read-only
 fill) `--palette-surface-2`, band and toggle track `--palette-surface-3`, hairline `--palette-line-soft`,
@@ -484,16 +484,33 @@ Standard and Compact share these colours; **they differ in geometry only**.
 One box for `Input`, `NumberInput`, `Dropdown` trigger, `DatePickerInput`, `parameter-search` and
 `location-selector` fields. `Textarea` is the same box taller.
 
-| Property      | Standard                                                                                                 | Compact                                                      |
-| ------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| Height        | `h-ctl` 2.5714rem (36)                                                                                   | `h-ctl-c` 2.2857rem (32); table cell input `h-8` 2rem (28)   |
-| Padding       | `px-[0.8571rem]` (12), no vertical padding                                                               | `px-[0.7143rem]` (10); table cell input `px-[0.5714rem]` (8) |
-| Radius        | `rounded-ctl` (8)                                                                                        | `rounded-ctl-c` (6.5)                                        |
-| Border / fill | `border border-(--palette-input-edge) bg-(--form-input-bg)`; hover `border-(--palette-input-edge-hover)` | same                                                         |
-| Text          | `text-sm leading-normal` (13 / 1.5) `text-(--palette-ink)`; placeholder `text-(--palette-ink-2)`         | same                                                         |
+| Property      | Standard                                                                                                 | Compact                                                                                                                             |
+| ------------- | -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Height        | text input `min-h-ctl` 2.5714rem (36); trigger, select, read-only box `h-ctl`                            | text input `min-h-ctl-c` 2.2857rem (32), cell `min-h-8` 2rem (28); trigger, select, read-only box `h-ctl-c` / `h-8` (`fixed: true`) |
+| Padding       | `px-[0.8571rem]` (12), no vertical padding                                                               | `px-[0.7143rem]` (10); table cell input `px-[0.5714rem]` (8)                                                                        |
+| Radius        | `rounded-ctl` (8)                                                                                        | `rounded-ctl-c` (6.5)                                                                                                               |
+| Border / fill | `border border-(--palette-input-edge) bg-(--form-input-bg)`; hover `border-(--palette-input-edge-hover)` | same                                                                                                                                |
+| Text          | `text-sm leading-normal` (13 / 1.5) `text-(--palette-ink)`; placeholder `text-(--palette-ink-2)`         | same                                                                                                                                |
 
-- **Vertical centring** comes from the fixed height, not padding: native inputs and selects keep `py-0`; a
+- **Vertical centring** comes from the height, not padding: native inputs and selects keep `py-0`; a
   custom trigger is `flex items-center`. Never size a control with `py-*`. Never `overflow-hidden` on the box.
+- 🔒 **Height class.** A native text `<input>` takes its height as a `min-h-*` of the value above, never
+  `h-*` (`controlFrame`): Chromium clips the top of Thai tone marks (ที่ ชั้น) in an input with a fixed height and no
+  vertical padding, and no line-height fixes it; `height:auto` plus the same `min-height` renders the identical
+  box unclipped. A borderless input inside a wrapper box stretches (`self-stretch`), it does not take `h-full`.
+  The height equals the token as long as the input uses `text-sm` and no vertical padding.
+  - **Fixed `h-*` (`controlFrame(layout, { fixed: true })`)** for what is not a text input: a button trigger
+    (Dropdown), a read-only `<div>`, and a native `<select>` (daisyUI sizes it, and `min-h-*` alone grows it to 36
+    in Compact).
+  - **The one documented exception** to the `min-h-*` rule, fixed-height text inputs that still clip Thai: the
+    `dense` 21px inputs of the pricing grids (Input, NumberInput, TextInput, `RHFInputCell` in a `DenseProvider`,
+    among them the green appraisal-price box in `CostBuildingPanel`) and the raw `h-[21px]` input in
+    `LandBuildingSummaryTab`. They hold numbers, not Thai text, and `min-h` would grow them (a 12px line box at 1.8
+    plus border is more than 21px). Follow-up, outside the form system.
+  - **Known gap, daisyUI raw inputs:** a raw `<input class="input input-bordered input-xs|sm">` keeps a fixed height
+    because daisyUI sets `height: var(--size)`, so it can still clip Thai. 20 files, left as they are: 18 workflow
+    builder panels (`workflowBuilder/components/panels/*Form.tsx`, such as `JoinForm` and `TransitionForm`) plus
+    `WorkflowToolbar`, and `appraisal/components/LandDetailTable.tsx`. Move them to `Input` / `min-h-*` when touched.
 - **Focus** (one style, every text control, both layouts): `focus:outline-none focus:border-(--focus-edge)
 focus:ring-[3px] focus:ring-(color:--focus-ring)` (`FOCUS` in `controlStyles.ts`; the variables carry the dark
   values, so no `dark:`). The old grey ring on `Dropdown` and `Textarea` is removed. In error state the ring is
@@ -639,7 +656,7 @@ kind (`input | derived | text | action`), and its place in card mode. It replace
 | Table                     | `w-full border-separate border-spacing-0 text-sm tabular-nums`; **no outer box**, it sits in the section body                                                       | `w-full border-collapse text-sm tabular-nums`, full-bleed in the sheet                                                           |
 | Header cell               | `text-xs font-medium text-(--palette-ink)`, `px-[0.5714rem] py-[0.5714rem]`, only `border-b border-(--palette-input-edge)`, no fill; first cell `pl-0`, last `pr-0` | `h-8` (28) `px-[0.5714rem] bg-(--palette-surface-2) text-xs font-medium text-(--palette-ink-2) border-b border-(--palette-line)` |
 | Group header (two levels) | group cell centred `font-semibold` with `border-b border-(--palette-line-strong)`; sub-headers below                                                                | same on the tinted head                                                                                                          |
-| Body cell                 | `px-[0.5714rem] py-[0.5714rem] border-b border-(--palette-line-soft)`; the cell input is the **Standard control** (36), so an edit row is 3.7143rem (52)            | `h-ctl` (36) row, `px-[0.5714rem] py-[0.1429rem] border-b border-(--palette-line-soft)`; the cell input is 28px (`h-8`)          |
+| Body cell                 | `px-[0.5714rem] py-[0.5714rem] border-b border-(--palette-line-soft)`; the cell input is the **Standard control** (36), so an edit row is 3.7143rem (52)            | `h-ctl` (36) row, `px-[0.5714rem] py-[0.1429rem] border-b border-(--palette-line-soft)`; the cell input is 28px (`min-h-8`)      |
 | Read-only row             | same padding, plain text, no input                                                                                                                                  | same                                                                                                                             |
 | Numbers                   | header and cells `text-right tabular-nums`, 2 decimals unless the field says otherwise, unit in the header "(ตร.ม.)"                                                | same                                                                                                                             |
 | Empty value               | `—` in `text-(--palette-ink-3)`                                                                                                                                     | same                                                                                                                             |
@@ -838,13 +855,13 @@ Stacked Thai marks (ชั้น, ญี่ปุ่น, ปิ่น, ฟ้า
   toggle options, buttons, labels and cells. No `leading-tight`, `leading-none` or `leading-[1.x]`.
   **Exception: a native `<input>` is 1.8.** `index.css` ("Thai in text inputs") sets that, unlayered, because
   the browser clips an input's text to its line box (measured: 1.5 shows 95.5% of the ink, 1.8 all of it).
-  The fixed height (17.3) keeps the text centred, so the box does not change; do not add `leading-normal`
+  The `min-h-*` (17.3) keeps the text centred, so the box does not change; do not add `leading-normal`
   to an `<input>` (it is inert). Triggers, textareas, chips and buttons use 1.5.
 - **Minimum box heights** (measured at 3× zoom with 13px Roboto + Sarabun, no clipping at any of these):
   text control 2.5714rem (36) Standard / 2.2857rem (32) Compact / 2rem (28) table cell input; choice chip and
   toggle option 1.8571rem (26) Compact / 2.2857rem (32) and 2rem (28) Standard; tab row 2.4286rem (34) minimum;
   section band 2.4286rem (34); Button `sm` Compact 1.8571rem (26). **No control goes below these.**
-- Height is set with `h-*`; vertical padding never sizes a control (17.3). No `overflow-hidden` on a control
+- A native text `<input>` is sized with `min-h-*`, not `h-*` (a fixed height clips Thai tone marks in Chromium, whatever the line-height; 17.3); buttons, chips, toggles and selects keep their explicit `h-*`. The `dense` inputs and the `LandBuildingSummaryTab` 21px input are the documented fixed-height exception (17.3); they hold numbers and still clip Thai. Vertical padding never sizes a control (17.3). No `overflow-hidden` on a control
   or a chip; use `truncate` (section 4) when a single line must be cut.
 - The self-hosted Sarabun has taller marks than the fallback used for the measurement. The QA phase repeats the
   check in the real app at 1440 and 1920 with the strings above at every size in this list.

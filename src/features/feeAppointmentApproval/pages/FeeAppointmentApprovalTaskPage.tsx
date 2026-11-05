@@ -1,4 +1,3 @@
-import '@/features/feeAppointmentApproval/i18n';
 import { taskListUrl } from '@features/task/utils/taskReturn';
 import type { ReactNode } from 'react';
 import { useState } from 'react';

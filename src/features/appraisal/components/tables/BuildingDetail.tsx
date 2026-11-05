@@ -193,7 +193,7 @@ function PeriodsTrigger({
       title={title}
       className={clsx(
         'flex w-full items-center justify-end gap-1.5 tabular-nums',
-        controlGeometry(layout, true),
+        controlGeometry(layout, { cell: true, fixed: true }),
         controlSkin({}),
       )}
     >

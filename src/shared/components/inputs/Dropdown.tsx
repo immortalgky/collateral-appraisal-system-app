@@ -317,12 +317,16 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
             aria-invalid={error ? true : undefined}
             className={clsx(
               'relative flex items-center w-full text-left leading-normal',
-              // The same box as a text control (17.3): fixed height, so the text is centred by the
-              // flex row and never by padding. `compact` is the toolbar / pagination size outside
+              // The same box as a text control (17.3), a button, so it keeps the fixed height: the text
+              // is centred by the flex row and never by padding. `compact` is the toolbar / pagination size outside
               // forms and keeps sizing itself from its content.
               compact
                 ? 'rounded-lg px-2 py-1 pr-7'
-                : clsx(controlFrame(layout, cell), controlPad(layout, cell, 'l'), 'pr-[2.2857rem]'),
+                : clsx(
+                    controlFrame(layout, { cell, fixed: true }),
+                    controlPad(layout, { cell, side: 'l' }),
+                    'pr-[2.2857rem]',
+                  ),
               controlSkin({ error: !!error, disabled, trigger: true, small: compact }),
             )}
           >
@@ -402,7 +406,7 @@ const OtherInput = ({
       <div
         className={clsx(
           'flex items-center w-full',
-          compact ? 'rounded-lg' : controlFrame(layout, cell),
+          compact ? 'rounded-lg' : controlFrame(layout, { cell }),
           controlSkin({ error: !!error, disabled, within: true, small: compact }),
         )}
       >
@@ -414,7 +418,7 @@ const OtherInput = ({
         >
           {otherLabel}
         </span>
-        <div className="relative flex-1 min-w-0 h-full">
+        <div className="relative flex flex-1 min-w-0 self-stretch">
           <input
             type="text"
             value={value}
@@ -425,8 +429,8 @@ const OtherInput = ({
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
             className={clsx(
-              'block w-full h-full bg-transparent border-0 focus:outline-none placeholder:text-(--palette-ink-2) disabled:cursor-not-allowed',
-              compact ? 'pl-2 pr-7 py-1' : clsx(controlPad(layout, cell, 'l'), 'pr-9'),
+              'min-w-0 flex-1 bg-transparent border-0 focus:outline-none placeholder:text-(--palette-ink-2) disabled:cursor-not-allowed',
+              compact ? 'pl-2 pr-7 py-1' : clsx(controlPad(layout, { cell, side: 'l' }), 'pr-9'),
             )}
           />
           {!disabled && (

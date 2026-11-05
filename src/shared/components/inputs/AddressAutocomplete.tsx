@@ -115,7 +115,7 @@ const AddressAutocomplete = ({
               // The form-system box (17.3); the right inset holds the clear button and chevron.
               'block w-full pr-16',
               controlFrame(layout),
-              controlPad(layout, false, 'l'),
+              controlPad(layout, { side: 'l' }),
               controlSkin({ error: !!error, disabled: isDisabled }),
             )}
             aria-invalid={error ? true : undefined}

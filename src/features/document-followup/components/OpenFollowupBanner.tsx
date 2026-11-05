@@ -1,4 +1,3 @@
-import '@/features/document-followup/i18n';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';

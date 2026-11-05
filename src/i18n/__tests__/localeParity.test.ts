@@ -10,8 +10,7 @@ import { fileURLToPath } from 'node:url';
  * - `en` is the source of truth.
  * - `th` is production — every namespace MUST have a matching th file.
  * - `zh` may legitimately fall back to English for a few namespaces that have
- *   no zh file yet (registered as en-fallback in `src/i18n/index.ts`); those are
- *   skipped here. When a zh file DOES exist, its keys must match en exactly.
+ *   no zh file yet (i18next falls back to en per key); those are skipped here. When a zh file DOES exist, its keys must match en exactly.
  */
 
 const localesDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'locales');
@@ -25,22 +24,15 @@ const ZH_ENGLISH_FALLBACK = new Set([
   'feeAppointmentApproval',
   'feeApprovalConfig',
   'evaluationConfig',
-  // `oauthAdmin` has no zh file and no th file either; src/i18n/index.ts registers
-  // English for both. Remove this entry when a real zh/oauthAdmin.json lands —
-  // membership here skips the key-parity check outright, so leaving it would keep
-  // a shipped zh file unchecked forever. (The th case above has no opt-out on
-  // purpose and stays red until th/oauthAdmin.json exists.)
+  // Remove this entry when a real zh/oauthAdmin.json lands — membership here skips
+  // the key-parity check outright, so leaving it would keep a shipped zh file
+  // unchecked forever.
   'oauthAdmin',
   'hangfire',
-  // Registered as en-fallback in src/i18n/index.ts, as `hangfire` and `oauthAdmin` above are.
-  // (`feeAppointmentApproval`, `feeApprovalConfig` and `evaluationConfig` come from their own
-  // feature modules, like `feeStructureMaintenance` below.)
   'addressMaster',
   'companyRoundRobinConfig',
   'jobSchedules',
   'workflowAssignmentConfig',
-  // Registered by its own feature module instead: features/feeStructureMaintenance/i18n.ts
-  // passes the en bundle for zh.
   'feeStructureMaintenance',
 ]);
 
@@ -66,8 +58,7 @@ describe('i18n locale parity', () => {
   // Membership in ZH_ENGLISH_FALLBACK skips the key-parity check for that
   // namespace entirely, and nothing otherwise forces an entry out once a real zh
   // file lands — so a translator could ship `zh/<ns>.json` with drifted keys and
-  // this suite would stay green while zh users saw raw keys. Self-retiring, the
-  // same way the guard in src/i18n/index.ts is.
+  // this suite would stay green while zh users saw raw keys. Self-retiring.
   it.each([...ZH_ENGLISH_FALLBACK])('zh fallback "%s" still has no zh file', (ns: string) => {
     expect(existsSync(join(localesDir, 'zh', `${ns}.json`))).toBe(false);
   });
@@ -76,7 +67,10 @@ describe('i18n locale parity', () => {
     const en = keySet('en', ns);
     expect(existsSync(join(localesDir, 'th', `${ns}.json`))).toBe(true);
     const th = keySet('th', ns);
-    expect({ missingInTh: [...en].filter(k => !th.has(k)), extraInTh: [...th].filter(k => !en.has(k)) }).toEqual({
+    expect({
+      missingInTh: [...en].filter(k => !th.has(k)),
+      extraInTh: [...th].filter(k => !en.has(k)),
+    }).toEqual({
       missingInTh: [],
       extraInTh: [],
     });
@@ -88,7 +82,10 @@ describe('i18n locale parity', () => {
     expect(existsSync(zhPath)).toBe(true);
     const en = keySet('en', ns);
     const zh = keySet('zh', ns);
-    expect({ missingInZh: [...en].filter(k => !zh.has(k)), extraInZh: [...zh].filter(k => !en.has(k)) }).toEqual({
+    expect({
+      missingInZh: [...en].filter(k => !zh.has(k)),
+      extraInZh: [...zh].filter(k => !en.has(k)),
+    }).toEqual({
       missingInZh: [],
       extraInZh: [],
     });

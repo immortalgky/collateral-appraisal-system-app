@@ -67,7 +67,7 @@ const LiftoffOverlay = () => {
   };
   return (
     <ErrorBoundary key={seq} fallback={<LeaveOnMount leave={leave} />}>
-      {/* useTranslation may suspend while a lazily loaded namespace arrives. */}
+      {/* Translations are bundled, so nothing here suspends today; kept as a harmless boundary. */}
       <Suspense fallback={null}>
         <ActivitySubmitLiftoff {...card} onDone={leave} />
       </Suspense>

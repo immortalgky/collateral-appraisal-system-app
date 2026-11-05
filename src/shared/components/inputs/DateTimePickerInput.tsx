@@ -349,7 +349,7 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
             className={clsx(
               'block',
               controlFrame(layout),
-              controlPad(layout, false, 'l'),
+              controlPad(layout, { side: 'l' }),
               // The calendar button sits over the right edge, and "dd/mm/yyyy hh:mm" is long enough
               // to run under it in a narrow column.
               CALENDAR_BUTTON_PADDING,

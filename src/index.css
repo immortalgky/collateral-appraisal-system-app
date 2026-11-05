@@ -345,14 +345,17 @@
 /*
  * Thai in text inputs.
  *
- * The browser clips an input's text to its line box (the inner editor is exactly `line-height`
- * tall, and neither `overflow` on the input nor its padding gives it more room). At 1.5 the stacked
- * Thai marks (ชั้น ที่ กี้) lose their tops and the lower vowels (ปู่ ฏุ) their feet: measured on
- * "ชั้น ที่ดิ๊น ปู่ ฏุ๊" at 13px, 1.5 shows 95.5% of the ink, 1.7 98.6% and 1.8 all of it.
- * So single-line inputs get 1.8, and the vertical padding that sets their height gives the
- * difference back (--cas-lead-trim) so a 35.5px input stays 35.5px. An input with a fixed height
- * (the form skins, `Input dense`) needs no padding change, only the line-height.
- * Textareas wrap on their own lines and are not clipped at the first line, so they keep 1.5.
+ * Two separate facts. (1) A native input with a fixed `height` clips the tops of stacked Thai marks
+ * (ชั้น ที่ กี้) whatever the line-height, so form inputs use `min-height` and `height:auto`
+ * (DESIGN.md 17.3, `controlFrame`). (2) The inner editor is exactly `line-height` tall and neither
+ * `overflow` nor padding gives it room: measured on "ชั้น ที่ดิ๊น ปู่ ฏุ๊" at 13px, 1.5 shows 95.5% of
+ * the ink, 1.7 98.6% and 1.8 all of it. So single-line inputs get 1.8 (do not lower it), and the
+ * vertical padding of padding-sized inputs gives the difference back (--cas-lead-trim) so their
+ * height is unchanged. Known gaps, still fixed-height and still clipping: the `dense` 21px inputs
+ * (Input, NumberInput, TextInput; pricing grids) and the raw `h-[21px]` input in
+ * `LandBuildingSummaryTab`; `min-height` would grow them. Also the daisyUI raw `input input-bordered
+ * input-xs|sm` inputs (height: var(--size)): 18 workflow-builder panels, `WorkflowToolbar` and
+ * `LandDetailTable`. Textareas keep 1.5.
  */
 input:not(
   [type='checkbox'],
