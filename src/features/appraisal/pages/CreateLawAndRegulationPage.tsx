@@ -35,7 +35,7 @@ import {
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useAuthStore } from '@features/auth/store';
 
-const LAW_HEADER_GROUP = 'Header';
+const LAW_HEADER_GROUP = 'LawRegulationHeader';
 
 interface LocalImage {
   id: string | null;
@@ -149,7 +149,7 @@ const CreateLawAndRegulationPage = () => {
   // Structural "Property Information → Law & Regulation" parents come from the URL
   // (handled in the layout). Only push the dynamic leaf (header label) here.
   const editingItem = isEditMode ? allItems.find(i => i.id === itemId) : null;
-  const headerLabel = useParameterDescription('Header', editingItem?.headerCode);
+  const headerLabel = useParameterDescription(LAW_HEADER_GROUP, editingItem?.headerCode);
   const lawLeafLabel = isEditMode ? headerLabel || '...' : null;
   useBreadcrumbExtras(
     lawLeafLabel ? [{ label: lawLeafLabel, href: location.pathname, icon: 'gavel' }] : [],
