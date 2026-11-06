@@ -24,6 +24,7 @@ import { TaskListHeader } from '../components/list/TaskListHeader';
 import { TaskListToolbar, type ViewMode } from '../components/list/TaskListToolbar';
 import { TaskLoadError } from '../components/list/TaskLoadError';
 import { TaskTable, type TaskRowMenuItem } from '../components/list/TaskTable';
+import { TaskTabs } from '../components/list/TaskTabs';
 import {
   FILTER_PANEL_MIN_WIDTH,
   GROUP_BY_VALUES,
@@ -291,13 +292,7 @@ function TaskListingPage() {
 
   return (
     <div ref={setRootRef} className="flex h-full min-h-0 min-w-0 flex-col gap-4">
-      <TaskListHeader
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        total={isPool ? poolBadge : myBadge}
-        myCount={myBadge}
-        poolCount={poolBadge}
-      />
+      <TaskListHeader activeTab={activeTab} />
 
       <div className="flex min-h-0 flex-1 gap-4">
         {panelOpen && (
@@ -316,6 +311,12 @@ function TaskListingPage() {
           aria-label={t('task:page.listLabel')}
           className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-(--palette-line-soft) bg-(--palette-surface) shadow-sm"
         >
+          <TaskTabs
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            counts={{ personal: myBadge, pool: poolBadge }}
+          />
+
           <TaskListToolbar
             searchTerm={curSearch}
             onSearchChange={setCurSearch}

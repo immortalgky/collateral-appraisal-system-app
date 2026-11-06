@@ -305,12 +305,28 @@ describe('TaskListingPage', () => {
     });
     render(<TaskListingPage />, { initialEntries: ['/tasks'] });
     expect(screen.getByRole('heading', { name: 'All Tasks' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Pool/ })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /Pool/ })).toBeInTheDocument();
     expect(screen.getByText('Failed to load tasks')).toBeInTheDocument();
     expect(screen.getByText('boom')).toBeInTheDocument();
     // no data is no count: not a 0
-    const count = screen.getByRole('button', { name: /My Tasks/ });
+    const count = screen.getByRole('tab', { name: /My Tasks/ });
     expect(count).not.toHaveTextContent(/\d/);
+  });
+
+  it('names the My / Pool switch as a tab list and marks the open tab as selected', async () => {
+    contentWidth(1100);
+    const { user } = render(<TaskListingPage />, { initialEntries: ['/tasks'] });
+    const tabs = within(screen.getByRole('tablist', { name: 'Task view' }));
+    const my = tabs.getByRole('tab', { name: /My Tasks/ });
+    const pool = tabs.getByRole('tab', { name: /Pool/ });
+    expect(my).toHaveAttribute('aria-selected', 'true');
+    expect(pool).toHaveAttribute('aria-selected', 'false');
+
+    await user.click(pool);
+    // the same buttons, updated: a tab that remounts on every render would lose keyboard focus
+    expect(pool).toBeInTheDocument();
+    expect(pool).toHaveAttribute('aria-selected', 'true');
+    expect(my).toHaveAttribute('aria-selected', 'false');
   });
 
   it('brings the panel back after an error view (the page box is observed whenever it mounts)', () => {
@@ -385,7 +401,7 @@ describe('TaskListingPage', () => {
       isError: false,
     });
     render(<TaskListingPage />, { initialEntries: ['/tasks'] });
-    expect(screen.getByRole('button', { name: /My Tasks/ })).toHaveTextContent('60');
+    expect(screen.getByRole('tab', { name: /My Tasks/ })).toHaveTextContent('60');
     expect(screen.getByText('69000001')).toBeInTheDocument();
     expect(screen.getByText('69000001').closest('div[aria-busy]')).toHaveAttribute(
       'aria-busy',
@@ -440,12 +456,12 @@ describe('TaskListingPage', () => {
 
       // loading again, then leaving the tab: the last thing it reported is "not loading"
       pool.startLoading = true;
-      await user.click(screen.getByRole('button', { name: /My Tasks/ }));
+      await user.click(screen.getByRole('tab', { name: /My Tasks/ }));
       expect(screen.queryByText('pool list')).toBeNull();
       expect(pool.reports.at(-1)).toBe(false);
-      await user.click(screen.getByRole('button', { name: /Pool/ }));
+      await user.click(screen.getByRole('tab', { name: /Pool/ }));
       expect(spinner()).not.toBeNull();
-      await user.click(screen.getByRole('button', { name: /My Tasks/ }));
+      await user.click(screen.getByRole('tab', { name: /My Tasks/ }));
       expect(pool.reports.at(-1)).toBe(false);
     } finally {
       pool.startLoading = false;
