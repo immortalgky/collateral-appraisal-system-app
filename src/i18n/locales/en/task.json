@@ -102,7 +102,7 @@
     }
   },
   "columns": {
-    "appraisalNumber": "Appraisal Number",
+    "appraisalNumber": "Customer / Appraisal Number",
     "lockState": "Pickup",
     "requestNumber": "Request Number",
     "channel": "Channel",

@@ -15,7 +15,7 @@ import {
 } from '@/shared/components/columnLayout';
 import { bucketForSlaStatus } from '@features/common/monitoring/components/SlaCells';
 import type { Task } from '../../types';
-import { columnDefs, Dash, type ColumnKey } from '../../config/columnDefs';
+import { avatarColor, columnDefs, Dash, initials, type ColumnKey } from '../../config/columnDefs';
 import { ActivityTile } from './ActivityTile';
 import {
   CELL_SHADOW,
@@ -119,34 +119,55 @@ function TaskTypeCell({ task }: { task: Task }) {
   );
 }
 
-/** Number over customer: the number is the row's identity, the customer is who it is for. */
+function PersonTile({ name }: { name: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={clsx(
+        'inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-xs font-bold',
+        name ? avatarColor(name) : 'bg-(--palette-surface-3)',
+      )}
+    >
+      {initials(name)}
+    </span>
+  );
+}
+
+/**
+ * Customer over number: the tile and the name say who the task is for, the number below is the
+ * row's identity. The customer part is left out while the customer name column shows it.
+ */
 function NumberCell({
   task,
   numberCell,
   showCustomer,
 }: Pick<TaskTableProps, 'numberCell'> & { task: Task; showCustomer: boolean }) {
+  const customerName = task.customerName?.trim() ?? '';
   return (
-    <div className="min-w-0">
-      <div className="flex items-center gap-1.5">
-        {numberCell ? (
-          numberCell(task)
-        ) : task.appraisalNumber ? (
-          <Link
-            to={`/tasks/${task.id}/opening`}
-            onClick={e => e.stopPropagation()}
-            className="truncate font-medium text-primary hover:underline"
-          >
-            {task.appraisalNumber}
-          </Link>
-        ) : (
-          <Dash />
+    <div className="flex min-w-0 items-center gap-3">
+      {showCustomer && <PersonTile name={customerName} />}
+      <div className="flex min-w-0 flex-col">
+        {showCustomer && (
+          <span className="truncate font-medium text-gray-800" title={customerName || undefined}>
+            {customerName || <Dash />}
+          </span>
         )}
+        <div className="flex min-w-0 items-center gap-1.5">
+          {numberCell ? (
+            numberCell(task)
+          ) : task.appraisalNumber ? (
+            <Link
+              to={`/tasks/${task.id}/opening`}
+              onClick={e => e.stopPropagation()}
+              className="truncate font-medium text-primary hover:underline"
+            >
+              {task.appraisalNumber}
+            </Link>
+          ) : (
+            <Dash />
+          )}
+        </div>
       </div>
-      {showCustomer && (
-        <span className="block truncate font-medium text-gray-800" title={task.customerName ?? ''}>
-          {task.customerName?.trim() || <Dash />}
-        </span>
-      )}
     </div>
   );
 }

@@ -151,10 +151,12 @@ describe('TaskTable', () => {
     }
   });
 
-  it('shows the customer under the number only while the customer name column is not showing it', () => {
+  it('shows the customer above the number only while the customer name column is not showing it', () => {
     setup({ visibleColumns: ['appraisalNumber', 'customerName'] });
     const cells = within(row('69000001')).getAllByRole('cell');
+    // the number alone: no name, no tile, no gap left where they would be
     expect(cells[0]).toHaveTextContent(/^69000001$/);
+    expect(cells[0].querySelector('[aria-hidden="true"]')).toBeNull();
     expect(cells[1]).toHaveTextContent('Somchai Jaidee');
   });
 
@@ -165,10 +167,24 @@ describe('TaskTable', () => {
     expect(dash).toHaveClass('text-(--palette-gray-400)');
   });
 
-  it('puts the customer under the appraisal number', () => {
+  it('puts the customer above the appraisal number, after a tile with their initials', () => {
     setup({ tasks: [task({ customerName: 'Somchai Jaidee' })] });
     const cell = within(row('69000001')).getAllByRole('cell')[0];
-    expect(cell).toHaveTextContent('69000001Somchai Jaidee');
+    expect(cell).toHaveTextContent('SJSomchai Jaidee69000001');
+    // the tile only decorates the name beside it: a screen reader should not read "SJ"
+    expect(within(cell).getByText('SJ')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('treats a blank customer name as none: one dash, and a blank tile that keeps the rows aligned', () => {
+    for (const customerName of [null, '', '   ']) {
+      const { unmount } = setup({ tasks: [task({ customerName })] });
+      const cell = within(row('69000001')).getAllByRole('cell')[0];
+      expect(within(cell).getAllByText('—')).toHaveLength(1);
+      const tile = cell.querySelector('[aria-hidden="true"]');
+      expect(tile).toHaveClass('size-10');
+      expect(tile).toBeEmptyDOMElement();
+      unmount();
+    }
   });
 
   it('opens a task on a click and on Enter on the row, not on Enter inside it', () => {
@@ -267,7 +283,7 @@ describe('TaskTable', () => {
   it('shows the gray dash, never the request number, for a task with no appraisal number', () => {
     setup({ tasks: [task({ appraisalNumber: null, requestNumber: 'REQ-105583-2569' })] });
     const cell = within(screen.getAllByRole('row')[1]).getAllByRole('cell')[0];
-    expect(cell).toHaveTextContent(/^—Somchai Jaidee$/);
+    expect(cell).toHaveTextContent(/^SJSomchai Jaidee—$/);
     // (the request number column, where there is one, still shows it)
     expect(cell).not.toHaveTextContent('REQ-105583-2569');
     expect(within(cell).queryByRole('link')).toBeNull();
@@ -369,7 +385,7 @@ describe('TaskTable', () => {
 
   it('shows an em dash for what is empty and the empty state when there are no rows', () => {
     const { rerender } = setup({ tasks: [task({ customerName: null })] });
-    expect(within(row('69000001')).getAllByRole('cell')[0]).toHaveTextContent('69000001—');
+    expect(within(row('69000001')).getAllByRole('cell')[0]).toHaveTextContent(/^—69000001$/);
     rerender(
       <TaskTable
         tasks={[]}

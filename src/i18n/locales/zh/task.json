@@ -102,7 +102,7 @@
     }
   },
   "columns": {
-    "appraisalNumber": "评估编号",
+    "appraisalNumber": "客户 / 评估编号",
     "lockState": "领取状态",
     "requestNumber": "申请编号",
     "channel": "渠道",
