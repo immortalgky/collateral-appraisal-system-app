@@ -19,7 +19,7 @@ import DataErrorState from '@/shared/components/DataErrorState';
  * The parameter group the create/edit form picks headers from. The tab used to resolve labels
  * against 'LAW_HEADER', a group that does not exist, so every row showed a bare code.
  */
-const LAW_HEADER_GROUP = 'Header';
+const LAW_HEADER_GROUP = 'LawRegulationHeader';
 
 /** Thumbnails shown per item before the rest fold into "+N". */
 const MAX_THUMBS = 3;
