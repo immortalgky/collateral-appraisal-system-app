@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 const FIELD_LABEL_KEYS = {
   propertyName: 'propertyInfo.machineryInfo.fields.propertyName',
   machineType: 'propertyInfo.machineryInfo.fields.machineType',
+  machineTypeOther: 'propertyInfo.machineryInfo.fields.machineTypeOther',
   brand: 'propertyInfo.machineryInfo.fields.brand',
   model: 'propertyInfo.machineryInfo.fields.model',
   series: 'propertyInfo.machineryInfo.fields.series',
@@ -126,6 +127,7 @@ const GROUPS = [
     fields: [
       'propertyName',
       ['machineType', 'col-span-12'],
+      'machineTypeOther',
       ['brand', 'col-span-6'],
       ['model', 'col-span-3'],
       ['series', 'col-span-3'],

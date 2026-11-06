@@ -14,7 +14,13 @@ import { useEnrichedPropertyGroups } from '../hooks/useEnrichedPropertyGroups';
 import type { PropertyGroup, PropertyItem } from '../types';
 import { formatAreaNumber, toRaiNganWa } from '../utils/areaFormat';
 import { resolveTypeCode } from '../utils/propertyTypeConfig';
-import { MACHINE_TYPES, PlaceValue, brandModel } from './PropertyCardContent';
+import {
+  AssetTypeValue,
+  MACHINE_TYPES,
+  PlaceValue,
+  brandModel,
+  isVehicleOrVessel,
+} from './PropertyCardContent';
 import { PropertyTypeChip } from './PropertyTypeChip';
 import { EditorHeader } from './EditorHeader';
 import type { EditorTab } from './EditorTabBar';
@@ -188,6 +194,18 @@ const PropertyFacts = ({ item }: { item: PropertyItem }) => {
     const identity = brandModel(item);
     if (identity) facts.push(identity);
     if (item.registrationNumber) facts.push(item.registrationNumber);
+  } else if (isVehicleOrVessel(item.type)) {
+    if (item.vehicleType || item.vesselType) facts.push(<AssetTypeValue property={item} />);
+    const identity = brandModel(item);
+    if (identity) facts.push(identity);
+    if (item.registrationNumber) facts.push(item.registrationNumber);
+    if (item.yearOfManufacture)
+      facts.push(
+        <span className="tabular-nums">
+          {t('properties.facts.madeIn', { n: item.yearOfManufacture })}
+        </span>,
+      );
+    facts.push(<PlaceValue property={item} />);
   } else if (CONDO_CODES.has(resolveTypeCode(item.type) ?? '')) {
     // A unit is told apart by its project, floor and room, as in the property cards; the deed
     // number of a condo is free text and no help here.

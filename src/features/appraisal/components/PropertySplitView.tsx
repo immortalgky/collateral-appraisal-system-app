@@ -14,7 +14,16 @@ import { GroupPricingButton } from './GroupPricingButton';
 import { GroupActionsMenu } from './GroupActionsMenu';
 import { useGroupRename } from '../hooks/useGroupRename';
 import type { MachinerySummaryStatus } from '../hooks/useMachinerySummaryStatus';
-import { BUILDING_TYPES, MACHINE_TYPES, PlaceValue, PropertyFlag } from './PropertyCardContent';
+import {
+  AssetTypeValue,
+  BUILDING_TYPES,
+  brandModel,
+  isVehicleOrVessel,
+  MACHINE_TYPES,
+  PlaceValue,
+  PropertyFlag,
+  VESSEL_TYPES,
+} from './PropertyCardContent';
 import { usePropertyBasePath } from '../hooks/usePropertyBasePath';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { getRouteSegment as getRouteSegmentFromConfig } from '../utils/propertyTypeConfig';
@@ -565,6 +574,63 @@ export const PropertySplitView = ({
                       ? property.location
                       : t('properties.notSet'),
                     !property.location || property.location === '-',
+                  )}
+                </>
+              ) : isVehicleOrVessel(property.type) ? (
+                <>
+                  {field(
+                    t('properties.table.type'),
+                    <AssetTypeValue property={property} />,
+                    !(property.vehicleType || property.vesselType),
+                  )}
+                  {field(
+                    t(
+                      VESSEL_TYPES.has(property.type)
+                        ? 'propertyInfo.vesselInfo.fields.model'
+                        : 'properties.stackColumns.brandModel',
+                    ),
+                    brandModel(property) || '—',
+                    !brandModel(property),
+                  )}
+                  {VESSEL_TYPES.has(property.type)
+                    ? field(
+                        t('properties.splitView.grossTonnage'),
+                        property.grossTonnage ? (
+                          <span className="tabular-nums">
+                            {formatAreaNumber(property.grossTonnage)}
+                          </span>
+                        ) : (
+                          '—'
+                        ),
+                        !property.grossTonnage,
+                      )
+                    : field(
+                        t('properties.stackColumns.registrationNumber'),
+                        property.registrationNumber || '—',
+                        !property.registrationNumber,
+                      )}
+                  {field(
+                    t('properties.splitView.yearOfManufacture'),
+                    property.yearOfManufacture ? (
+                      <span className="tabular-nums">{property.yearOfManufacture}</span>
+                    ) : (
+                      '—'
+                    ),
+                    !property.yearOfManufacture,
+                  )}
+                  {field(
+                    t('properties.table.location'),
+                    property.location && property.location !== '-'
+                      ? property.location
+                      : t('properties.notSet'),
+                    !property.location || property.location === '-',
+                  )}
+                  {field(
+                    t('properties.table.image'),
+                    property.photos && property.photos.length > 0
+                      ? t('properties.splitView.photoCount', { n: property.photos.length })
+                      : t('properties.splitView.noPhotos'),
+                    !property.photos || property.photos.length === 0,
                   )}
                 </>
               ) : (
