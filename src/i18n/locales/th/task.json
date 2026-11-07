@@ -7,6 +7,7 @@
     "tabMy": "งานของฉัน",
     "tabPool": "Pool",
     "listLabel": "รายการงาน",
+    "shownCount_one": "{{count}} รายการ",
     "shownCount_other": "{{count}} รายการ"
   },
   "search": {

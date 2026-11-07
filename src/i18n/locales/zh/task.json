@@ -7,6 +7,7 @@
     "tabMy": "我的任务",
     "tabPool": "任务池",
     "listLabel": "任务列表",
+    "shownCount_one": "{{count}} 项",
     "shownCount_other": "{{count}} 项"
   },
   "search": {
