@@ -22,6 +22,7 @@ import { FILTER_GROUPS } from './tabConfigs';
 import FilterValuePanel from './FilterValuePanel';
 import { pickVisible } from './chipOverflow';
 import { hasValue, isFieldActive, useChipSummary } from './filterOptions';
+import { FilterPinPicker, type FilterPinControls } from './FilterPinPicker';
 
 interface FilterChipBarProps {
   filters: FilterField[];
@@ -62,10 +63,22 @@ interface FilterChipBarProps {
    * non-wrapping flex item that gets its width from the row (`flex-1 min-w-0`), not from the chips.
    */
   singleLine?: boolean;
+  /**
+   * Opt-in: the user chooses the pinned filters. The "add filter" menu then lists the pinned ones
+   * (in `pinned` order, reorderable) above every other filter, each with a pin button, and is
+   * always offered. The screen stores the choice and passes it back as `pinned`. Omitted, the menu
+   * only offers the filters not in the bar, as before.
+   */
+  pinControls?: FilterPinControls;
+  /** Offer "Add filter". Off when the filters are picked elsewhere (a filter panel beside it). */
+  canAdd?: boolean;
 }
 
 const PANEL_CLASS =
   'z-50 mt-1.5 rounded-xl border border-(--palette-line) bg-(--palette-surface) p-3 shadow-lg max-h-none! overflow-visible!';
+
+const SET_CHIP_CLASS =
+  'inline-flex items-center gap-1.5 rounded-full bg-primary/10 py-1 pl-3 pr-1.5 text-xs font-medium text-(--palette-primary-text)';
 
 /** Clearing a range means clearing the two keys it writes, not its own. */
 const clearField = (field: FilterField, onRemove: (key: string) => void) => {
@@ -189,7 +202,7 @@ function FilterChip({
   // have no control of their own — they get a chip that says what is filtered and can be removed.
   const chipBody = (
     <>
-      <span className="font-medium text-(--palette-gray-400)">{field.label}:</span>
+      <span>{field.label} :</span>
       <span className="truncate max-w-52">{summary}</span>
     </>
   );
@@ -200,7 +213,7 @@ function FilterChip({
       onClick={() => clearField(field, onRemove)}
       aria-label={t('appraisal:list.removeFilter') + ': ' + field.label}
       style={NO_OUTLINE}
-      className={`rounded p-0.5 opacity-60 hover:bg-(--palette-line) hover:opacity-100 ${
+      className={`rounded-full p-0.5 opacity-70 hover:bg-primary/15 hover:opacity-100 ${
         showRing ? KEYBOARD_RING_PLAIN : ''
       }`}
     >
@@ -210,7 +223,7 @@ function FilterChip({
 
   if (field.hidden && !unset) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-lg border border-(--palette-line) bg-(--palette-surface-3) px-2.5 py-1 text-xs text-(--palette-ink)">
+      <span className={SET_CHIP_CLASS}>
         {chipBody}
         {remove}
       </span>
@@ -222,19 +235,19 @@ function FilterChip({
       {({ open }) => (
         <>
           <span
-            className={`inline-flex items-center gap-1.5 rounded-lg border border-(--palette-line) py-1 text-xs transition-colors hover:border-(--palette-line-strong) ${
+            className={
               unset
-                ? 'bg-(--palette-surface) px-2.5 text-(--palette-gray-600) hover:text-(--palette-ink)'
-                : 'bg-(--palette-surface-3) pl-2.5 pr-1 text-(--palette-ink)'
-            }`}
+                ? 'inline-flex items-center gap-1.5 rounded-lg bg-(--palette-surface) px-2.5 py-1 text-xs text-(--palette-gray-600) transition-colors hover:text-(--palette-ink)'
+                : SET_CHIP_CLASS
+            }
           >
             <PopoverButton
               ref={buttonRef}
               style={NO_OUTLINE}
-              className={`inline-flex items-center gap-1.5 rounded ${showRing ? KEYBOARD_RING : ''}`}
+              className={`inline-flex items-center gap-1.5 rounded cursor-pointer ${showRing ? KEYBOARD_RING : ''}`}
             >
               {unset ? field.label : chipBody}
-              <Icon style="solid" name="chevron-down" className="size-2.5 opacity-60" />
+              {unset && <Icon style="solid" name="chevron-down" className="size-2.5 opacity-60" />}
             </PopoverButton>
             {!unset && remove}
           </span>
@@ -337,6 +350,8 @@ function FilterChipBar({
   onOneLineWidth,
   availableWidth,
   singleLine = false,
+  pinControls,
+  canAdd = true,
 }: FilterChipBarProps) {
   const { t } = useTranslation(['appraisal', 'common']);
   // The field just picked in the "add filter" menu. It is drawn as a chip of its own (empty, like
@@ -394,6 +409,10 @@ function FilterChipBar({
   const chipFields = [...pinnedFields, ...extras];
   const available = filters.filter(
     f => !f.hidden && !isPinned(f) && !isFieldActive(values, f) && f.key !== pendingKey,
+  );
+  // Pin mode: every filter that is not pinned, set or not, in the menu's group order
+  const unpinned = FILTER_GROUPS.flatMap(group =>
+    filters.filter(f => !f.hidden && !isPinned(f) && f.group === group),
   );
 
   // pinned '#' added: the one string says which chips there are and in what groups
@@ -707,7 +726,7 @@ function FilterChipBar({
       </div>
 
       <div ref={tailEl} className="flex shrink-0 items-center gap-2">
-        {available.length > 0 && (
+        {canAdd && (available.length > 0 || pinControls) && (
           <Popover className="relative">
             <PopoverButton
               ref={addButtonRef}
@@ -720,37 +739,53 @@ function FilterChipBar({
               {t('appraisal:list.filters.add')}
             </PopoverButton>
             <PopoverPanel anchor="bottom start" className={PANEL_CLASS}>
-              {({ close }) => (
-                <div className="w-56 max-h-72 overflow-y-auto -mx-1">
-                  {FILTER_GROUPS.map((group: FilterGroup) => {
-                    const fields = available.filter(f => f.group === group);
-                    if (fields.length === 0) return null;
-                    return (
-                      <div key={group}>
-                        <p className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-(--palette-gray-400)">
-                          {t(`appraisal:list.filters.groups.${group}`)}
-                        </p>
-                        {fields.map(field => (
-                          <button
-                            key={field.key}
-                            type="button"
-                            onClick={() => {
-                              // Hand over to the field's own chip: close this menu, which is about
-                              // to move, and let the new chip open its panel.
-                              setPendingKey(field.key);
-                              setForcedKey(field.key);
-                              close();
-                            }}
-                            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-(--palette-ink) hover:bg-(--palette-surface-2)"
-                          >
-                            {field.label}
-                          </button>
-                        ))}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              {({ close }) =>
+                pinControls ? (
+                  <>
+                    <FilterPinPicker
+                      {...pinControls}
+                      pinned={pinnedFields.filter(f => !f.hidden)}
+                      others={unpinned}
+                      values={values}
+                      onChange={onChange}
+                      onRemove={onRemove}
+                      showRing={!pointerMode}
+                    />
+                    {/* Values are picked in this menu too: a filter left empty is dropped as it closes */}
+                    <PopoverLifecycle open onClosed={dropEmptyAdded} />
+                  </>
+                ) : (
+                  <div className="w-56 max-h-72 overflow-y-auto -mx-1">
+                    {FILTER_GROUPS.map((group: FilterGroup) => {
+                      const fields = available.filter(f => f.group === group);
+                      if (fields.length === 0) return null;
+                      return (
+                        <div key={group}>
+                          <p className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-(--palette-gray-400)">
+                            {t(`appraisal:list.filters.groups.${group}`)}
+                          </p>
+                          {fields.map(field => (
+                            <button
+                              key={field.key}
+                              type="button"
+                              onClick={() => {
+                                // Hand over to the field's own chip: close this menu, which is about
+                                // to move, and let the new chip open its panel.
+                                setPendingKey(field.key);
+                                setForcedKey(field.key);
+                                close();
+                              }}
+                              className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-(--palette-ink) hover:bg-(--palette-surface-2)"
+                            >
+                              {field.label}
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )
+              }
             </PopoverPanel>
           </Popover>
         )}

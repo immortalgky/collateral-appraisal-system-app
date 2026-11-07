@@ -6,7 +6,8 @@
     "tabsLabel": "任务视图",
     "tabMy": "我的任务",
     "tabPool": "任务池",
-    "listLabel": "任务列表"
+    "listLabel": "任务列表",
+    "shownCount_other": "{{count}} 项"
   },
   "search": {
     "placeholder": "搜索评估编号或客户名称…"
@@ -80,7 +81,6 @@
     "hide": "关闭筛选面板",
     "showTitle": "显示左侧筛选面板",
     "hideTitle": "隐藏筛选面板，改用标签",
-    "summary": "正在筛选：",
     "selectedCount_one": "已选 {{count}} 项",
     "selectedCount_other": "已选 {{count}} 项",
     "inUse": "使用中",

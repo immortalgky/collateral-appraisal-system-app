@@ -14,11 +14,11 @@ import { useGetTaskCounts, useGetTasks, useTaskGroupCounts } from '../api';
 import type { GroupByField, Task, TaskFilterParams } from '../types';
 import { LIST_CONFIG, POOL_LIST_CONFIG, TASK_COLUMN_LAYOUT_VERSION } from '../config/columnDefs';
 import { useTaskListPaging } from '../hooks/useTaskListPaging';
+import { useTaskFilterPins } from '../hooks/useTaskFilterPins';
 import { useTaskListUrlState } from '../hooks/useTaskListUrlState';
 import { TaskKanbanBoard } from '../components/TaskKanbanBoard';
 import { TaskEmptyState } from '../components/list/TaskEmptyState';
 import { TaskFilterPanel } from '../components/list/TaskFilterPanel';
-import { TaskFilterSummary } from '../components/list/TaskFilterSummary';
 import { TaskLegend } from '../components/list/TaskLegend';
 import { TaskListHeader } from '../components/list/TaskListHeader';
 import { TaskListToolbar, type ViewMode } from '../components/list/TaskListToolbar';
@@ -29,7 +29,6 @@ import {
   FILTER_PANEL_MIN_WIDTH,
   GROUP_BY_VALUES,
   makeTaskFilters,
-  PINNED_TASK_FILTERS,
 } from '../components/list/taskFilters';
 import { useScaledWidths } from '../components/list/useRootFontScale';
 import { useTaskColumnLabels } from '../components/list/useTaskColumnLabels';
@@ -137,6 +136,10 @@ function TaskListingPage() {
 
   const allFields = useMemo(() => makeTaskFilters(t), [t]);
   const inputFields = useMemo(() => allFields.filter(f => !f.hidden), [allFields]);
+  const filterPins = useTaskFilterPins(
+    activeTab,
+    inputFields.map(f => f.key),
+  );
   const activeFields = allFields.filter(f => hasValue(values, f));
   const hasFilters = activeFields.length > 0 || !!curSearch;
 
@@ -195,21 +198,20 @@ function TaskListingPage() {
   const [poolTotalCount, setPoolTotalCount] = useState<number | null>(null);
   const [poolLoading, setPoolLoading] = useState(false);
   const { data: taskCounts } = useGetTaskCounts();
-  const poolBaseline = poolFilters.activityId
-    ? poolFilters.activityId
-        .split(',')
-        .reduce((sum, id) => sum + (taskCounts?.get(id)?.poolCount ?? 0), 0)
-    : taskCounts
-      ? Array.from(taskCounts.values()).reduce((sum, v) => sum + v.poolCount, 0)
-      : 0;
-  // On the Pool tab's table: its own total, hidden until it is known (like My's). Anywhere else
-  // (the board, or the other tab) the per-activity counts.
-  const poolBadge = isPool && poolViewMode === 'list' ? poolTotalCount : poolBaseline;
-  // With My not queried (Pool tab, or the board), its total is the unfiltered one the counts give
-  const myBadge = myListShown
-    ? (listData?.count ?? null)
-    : taskCounts
-      ? Array.from(taskCounts.values()).reduce((sum, v) => sum + v.myCount, 0)
+  // The tabs carry each tab's whole count, filters aside; null until the counts are known
+  const counts = taskCounts ? Array.from(taskCounts.values()) : null;
+  const tabCounts = {
+    personal: counts?.reduce((sum, v) => sum + v.myCount, 0) ?? null,
+    pool: counts?.reduce((sum, v) => sum + v.poolCount, 0) ?? null,
+  };
+  // What the table shows under the search and filters: known only for the table on show (the
+  // board is not counted as a whole), hidden until it is
+  const shownCount = isPool
+    ? poolViewMode === 'list'
+      ? poolTotalCount
+      : null
+    : myListShown
+      ? (listData?.count ?? null)
       : null;
 
   // Tasks per task type, for the panel: under the search and the other filters (not the task type
@@ -311,11 +313,7 @@ function TaskListingPage() {
           aria-label={t('task:page.listLabel')}
           className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-(--palette-line-soft) bg-(--palette-surface) shadow-sm"
         >
-          <TaskTabs
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            counts={{ personal: myBadge, pool: poolBadge }}
-          />
+          <TaskTabs activeTab={activeTab} onTabChange={setActiveTab} counts={tabCounts} />
 
           <TaskListToolbar
             searchTerm={curSearch}
@@ -330,7 +328,8 @@ function TaskListingPage() {
             onFilterChange={handleFilterChange}
             onFilterRemove={handleFilterRemove}
             onFilterClear={handleClearAll}
-            pinnedFilters={PINNED_TASK_FILTERS[activeTab]}
+            pinnedFilters={filterPins.pinned}
+            filterPinControls={filterPins.controls}
             showChips={!panelOpen}
             canDock={canDock}
             panelOpen={panelOpen}
@@ -341,16 +340,8 @@ function TaskListingPage() {
             groupBy={groupBy}
             onGroupByChange={isPool ? setPoolGroupBy : setMyGroupBy}
             columnsControl={columnsControl}
+            shownCount={shownCount}
           />
-
-          {panelOpen && activeFields.length > 0 && (
-            <TaskFilterSummary
-              fields={activeFields}
-              values={values}
-              onRemove={handleFilterRemove}
-              onClear={handleClearAll}
-            />
-          )}
 
           {isPool ? (
             <PoolTaskListPage

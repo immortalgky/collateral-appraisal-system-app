@@ -6,7 +6,8 @@
     "tabsLabel": "มุมมองงาน",
     "tabMy": "งานของฉัน",
     "tabPool": "Pool",
-    "listLabel": "รายการงาน"
+    "listLabel": "รายการงาน",
+    "shownCount_other": "{{count}} รายการ"
   },
   "search": {
     "placeholder": "ค้นหาเลขที่ประเมิน หรือชื่อลูกค้า…"
@@ -80,7 +81,6 @@
     "hide": "ปิดแถบตัวกรอง",
     "showTitle": "แสดงแถบตัวกรองด้านซ้าย",
     "hideTitle": "ซ่อนแถบตัวกรอง ใช้ chip แทน",
-    "summary": "กำลังกรอง:",
     "selectedCount_one": "เลือก {{count}} รายการ",
     "selectedCount_other": "เลือก {{count}} รายการ",
     "inUse": "ใช้อยู่",

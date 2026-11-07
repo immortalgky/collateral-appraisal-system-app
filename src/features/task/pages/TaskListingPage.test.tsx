@@ -236,16 +236,19 @@ describe('TaskListingPage', () => {
         expect.anything(),
       ),
     );
-    // and the summary row lists what is filtered
-    const summary = screen.getByText('Filtering:').parentElement!;
-    expect(within(summary).getByText('Pending +1')).toBeInTheDocument();
+    // and what is filtered shows as a chip in the toolbar, with no "add filter" beside the panel
+    expect(
+      screen.getByRole('button', { name: /^Request status : Pending \+1/ }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add filter' })).toBeNull();
 
-    // the panel can be closed: the chips come back, holding the same filter
+    // the panel can be closed: the chips stay, holding the same filter, and the pinned ones return
     await user.click(screen.getByRole('button', { name: 'Close filter panel' }));
     expect(screen.queryByRole('complementary', { name: 'Filters' })).toBeNull();
     expect(
-      screen.getByRole('button', { name: /^Request status: Pending \+1/ }),
+      screen.getByRole('button', { name: /^Request status : Pending \+1/ }),
     ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Task type/ })).toBeInTheDocument();
   });
 
   it('lists only the task types that have tasks (and ticked ones) until asked for the rest', async () => {
@@ -290,9 +293,9 @@ describe('TaskListingPage', () => {
         expect.anything(),
       ),
     );
-    const summary = screen.getByText('Filtering:').parentElement!;
-    expect(within(summary).getByText('Assigned date:')).toBeInTheDocument();
-    expect(within(summary).getByText('Appointment date:')).toBeInTheDocument();
+    // shown as chips in the toolbar while the panel is open
+    expect(screen.getByText('Assigned date :')).toBeInTheDocument();
+    expect(screen.getByText('Appointment date :')).toBeInTheDocument();
   });
 
   it('keeps the header, the switch and the Pool tab when the My query fails: only the table is lost', () => {
@@ -308,9 +311,9 @@ describe('TaskListingPage', () => {
     expect(screen.getByRole('tab', { name: /Pool/ })).toBeInTheDocument();
     expect(screen.getByText('Failed to load tasks')).toBeInTheDocument();
     expect(screen.getByText('boom')).toBeInTheDocument();
-    // no data is no count: not a 0
-    const count = screen.getByRole('tab', { name: /My Tasks/ });
-    expect(count).not.toHaveTextContent(/\d/);
+    // no data is no count of what is shown (not a 0); the tab keeps the whole count
+    expect(screen.queryByText(/^\d+ items?$/)).toBeNull();
+    expect(screen.getByRole('tab', { name: /My Tasks/ })).toHaveTextContent('7');
   });
 
   it('names the My / Pool switch as a tab list and marks the open tab as selected', async () => {
@@ -401,7 +404,9 @@ describe('TaskListingPage', () => {
       isError: false,
     });
     render(<TaskListingPage />, { initialEntries: ['/tasks'] });
-    expect(screen.getByRole('tab', { name: /My Tasks/ })).toHaveTextContent('60');
+    // the filtered count beside the controls; the tab has the whole count, filters aside
+    expect(screen.getByText('60 items')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /My Tasks/ })).toHaveTextContent('7');
     expect(screen.getByText('69000001')).toBeInTheDocument();
     expect(screen.getByText('69000001').closest('div[aria-busy]')).toHaveAttribute(
       'aria-busy',

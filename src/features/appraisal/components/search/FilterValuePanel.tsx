@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useIsFetching } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
@@ -23,6 +23,8 @@ interface FilterValuePanelProps {
   onRemove: (key: string) => void;
   /** Rendered as a back arrow when the panel was reached from a list (the overflow menu). */
   onBack?: () => void;
+  /** Drawn at the right of the header, e.g. the pin menu's pin toggle. */
+  headerAction?: ReactNode;
 }
 
 /**
@@ -34,7 +36,14 @@ interface FilterValuePanelProps {
  * `Record<string,string>`, so the URL whitelist, saved searches and the backend's IN-list filters
  * are untouched.
  */
-function FilterValuePanel({ field, values, onChange, onRemove, onBack }: FilterValuePanelProps) {
+function FilterValuePanel({
+  field,
+  values,
+  onChange,
+  onRemove,
+  onBack,
+  headerAction,
+}: FilterValuePanelProps) {
   const { t } = useTranslation(['appraisal', 'common']);
   const [query, setQuery] = useState('');
   // A remote field asks the server for matches as the user types instead of filtering a list.
@@ -114,15 +123,18 @@ function FilterValuePanel({ field, values, onChange, onRemove, onBack }: FilterV
         </button>
       )}
       <span className="text-sm font-medium text-(--palette-ink)">{field.label}</span>
-      {hasValue && (
-        <button
-          type="button"
-          onClick={clear}
-          className="ml-auto text-xs text-(--palette-gray-500) hover:text-(--palette-ink)"
-        >
-          {t('common:actions.clear')}
-        </button>
-      )}
+      <div className="ml-auto flex items-center gap-2">
+        {hasValue && (
+          <button
+            type="button"
+            onClick={clear}
+            className="text-xs text-(--palette-gray-500) hover:text-(--palette-ink)"
+          >
+            {t('common:actions.clear')}
+          </button>
+        )}
+        {headerAction}
+      </div>
     </div>
   );
 

@@ -6,7 +6,9 @@
     "tabsLabel": "Task view",
     "tabMy": "My Tasks",
     "tabPool": "Pool",
-    "listLabel": "Task list"
+    "listLabel": "Task list",
+    "shownCount_one": "{{count}} item",
+    "shownCount_other": "{{count}} items"
   },
   "search": {
     "placeholder": "Search number or customer…"
@@ -80,7 +82,6 @@
     "hide": "Close filter panel",
     "showTitle": "Show the filter panel on the left",
     "hideTitle": "Hide the filter panel and use chips",
-    "summary": "Filtering:",
     "selectedCount_one": "{{count}} selected",
     "selectedCount_other": "{{count}} selected",
     "inUse": "In use",

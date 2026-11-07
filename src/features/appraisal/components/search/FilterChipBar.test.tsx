@@ -83,19 +83,19 @@ describe('FilterChipBar add-filter hand-off', () => {
 
     // ticking the first value turns it into a set chip — and the same panel stays open under it
     await user.click(screen.getByRole('checkbox', { name: 'New' }));
-    const setChip = chipButton('Job type:');
+    const setChip = chipButton('Job type :');
     expect(setChip).toHaveAttribute('aria-expanded', 'true');
     expect(setChip.getAttribute('aria-controls')).toBe(chip.getAttribute('aria-controls'));
     expect(addButton()).toHaveAttribute('aria-expanded', 'false');
 
     // more values keep the panel with the chip
     await user.click(screen.getByRole('checkbox', { name: 'Re-appraisal' }));
-    expect(chipButton('Job type:')).toHaveAttribute('aria-expanded', 'true');
+    expect(chipButton('Job type :')).toHaveAttribute('aria-expanded', 'true');
 
     // Esc closes the chip's panel; the chip stays because it has values
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('checkbox', { name: 'New' })).toBeNull());
-    expect(chipButton('Job type:')).toBeTruthy();
+    expect(chipButton('Job type :')).toBeTruthy();
   });
 
   it('leaves no chip behind when the picked field is closed without a value', async () => {
@@ -204,7 +204,7 @@ describe('FilterChipBar add-filter hand-off', () => {
       return b;
     });
     await user.click(screen.getByRole('button', { name: L('filters.presets.today') }));
-    const setChip = chipButton('Created:');
+    const setChip = chipButton('Created :');
     expect(setChip).toHaveAttribute('aria-expanded', 'true');
     expect(setChip.getAttribute('aria-controls')).toBe(chip.getAttribute('aria-controls'));
   });
@@ -315,7 +315,7 @@ describe('FilterChipBar overflow', () => {
         if (text.startsWith('More +')) return widths.more;
         // a chip that says "Any" (all its values unticked) is narrow, one with two values wide
         if (text.includes(`:${L('filters.anyValue')}`)) return 10;
-        if (text.includes('SLA status:At risk') && !text.includes('+1')) return widths.slaOne;
+        if (text.includes('SLA status :At risk') && !text.includes('+1')) return widths.slaOne;
         if (text.includes('+1')) return 160;
         return widths.chip;
       },
