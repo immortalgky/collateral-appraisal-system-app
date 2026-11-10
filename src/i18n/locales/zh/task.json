@@ -6,7 +6,9 @@
     "tabsLabel": "任务视图",
     "tabMy": "我的任务",
     "tabPool": "任务池",
-    "listLabel": "任务列表"
+    "listLabel": "任务列表",
+    "shownCount_one": "{{count}} 项",
+    "shownCount_other": "{{count}} 项"
   },
   "search": {
     "placeholder": "搜索评估编号或客户名称…"
@@ -80,7 +82,6 @@
     "hide": "关闭筛选面板",
     "showTitle": "显示左侧筛选面板",
     "hideTitle": "隐藏筛选面板，改用标签",
-    "summary": "正在筛选：",
     "selectedCount_one": "已选 {{count}} 项",
     "selectedCount_other": "已选 {{count}} 项",
     "inUse": "使用中",
@@ -102,7 +103,8 @@
     }
   },
   "columns": {
-    "appraisalNumber": "评估编号",
+    "appraisalNumber": "客户 / 评估编号",
+    "appraisalNumberOnly": "评估编号",
     "lockState": "领取状态",
     "requestNumber": "申请编号",
     "channel": "渠道",

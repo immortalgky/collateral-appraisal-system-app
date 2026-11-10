@@ -2,8 +2,10 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import Input from '@/shared/components/Input';
+import { neutralToolButtonClass } from '@/shared/components/columnLayout';
 import FilterChipBar from '@/features/appraisal/components/search/FilterChipBar';
 import type { FilterField } from '@/features/appraisal/components/search/tabConfigs';
+import type { FilterPinControls } from '@/features/appraisal/components/search/FilterPinPicker';
 import type { GroupByField } from '../../types';
 import { GROUP_BY_VALUES } from './taskFilters';
 import { TOOLBAR_CONTROL_H } from './rowMarks';
@@ -28,7 +30,9 @@ interface TaskListToolbarProps {
   onFilterClear: () => void;
   /** The filters drawn as a chip even when unset; the rest are added from "add filter". */
   pinnedFilters: string[];
-  /** The filters are drawn as chips (no panel beside the table). */
+  /** Lets the user choose and order `pinnedFilters` from the "add filter" menu. */
+  filterPinControls?: FilterPinControls;
+  /** Every filter is offered as a chip (no panel beside the table); otherwise only those in force. */
   showChips: boolean;
 
   /** There is room for the filter panel, so the button that shows and hides it is offered. */
@@ -44,6 +48,8 @@ interface TaskListToolbarProps {
   onGroupByChange: (groupBy: GroupByField) => void;
   /** The column picker (table view only). */
   columnsControl: ReactNode;
+  /** How many tasks the search and filters leave; null hides it (not known yet, or the board). */
+  shownCount: number | null;
 }
 
 /**
@@ -61,6 +67,7 @@ export function TaskListToolbar({
   onFilterRemove,
   onFilterClear,
   pinnedFilters,
+  filterPinControls,
   showChips,
   canDock,
   panelOpen,
@@ -71,31 +78,39 @@ export function TaskListToolbar({
   groupBy,
   onGroupByChange,
   columnsControl,
+  shownCount,
 }: TaskListToolbarProps) {
   const { t } = useTranslation(['task', 'common']);
   const panelTitle = panelOpen ? t('task:panel.hideTitle') : t('task:panel.showTitle');
   return (
     <div className="flex shrink-0 flex-nowrap items-center gap-2.5 border-b border-gray-100 px-4 py-3">
       {canDock && (
-        <button
-          type="button"
-          aria-pressed={panelOpen}
-          title={panelTitle}
-          onClick={onTogglePanel}
-          className={`inline-flex ${TOOLBAR_CONTROL_H} shrink-0 items-center gap-2 rounded-lg border px-3 text-sm font-medium whitespace-nowrap transition-colors ${
-            panelOpen
-              ? 'border-primary bg-primary-50 text-primary-700'
-              : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-          }`}
-        >
-          <Icon style="solid" name="sliders" className="text-xs" />
-          {t('task:panel.toggle')}
-          {activeFilterCount > 0 && (
-            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-semibold text-white tabular-nums">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
+        // Icon only, like the column picker; the count of filters in force sits on its corner. The
+        // wrapper gives the button's h-full the toolbar's control height, as the picker's does.
+        <div className={`flex ${TOOLBAR_CONTROL_H} shrink-0`}>
+          <button
+            type="button"
+            aria-pressed={panelOpen}
+            aria-label={
+              activeFilterCount > 0
+                ? `${t('task:panel.toggle')} (${activeFilterCount})`
+                : t('task:panel.toggle')
+            }
+            title={panelTitle}
+            onClick={onTogglePanel}
+            className={neutralToolButtonClass(panelOpen)}
+          >
+            <Icon style="solid" name="sidebar" className="size-4" />
+            {activeFilterCount > 0 && (
+              <span
+                aria-hidden
+                className="absolute -top-1.5 -right-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-semibold text-white tabular-nums"
+              >
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+        </div>
       )}
 
       <div role="search" className="w-68 shrink-0">
@@ -115,22 +130,27 @@ export function TaskListToolbar({
         />
       </div>
 
-      {showChips ? (
-        <FilterChipBar
-          singleLine
-          className="relative flex min-w-0 flex-1 flex-nowrap items-center gap-2"
-          filters={fields}
-          values={values}
-          pinned={pinnedFilters}
-          onChange={onFilterChange}
-          onRemove={onFilterRemove}
-          onClear={onFilterClear}
-        />
-      ) : (
-        <div className="flex-1" />
-      )}
+      {/* With the filter panel open it picks the filters: the bar only shows the ones in force,
+          in the same place and style, with nothing pinned and no "add filter" */}
+      <FilterChipBar
+        singleLine
+        className="relative flex min-w-0 flex-1 flex-nowrap items-center gap-2"
+        filters={fields}
+        values={values}
+        pinned={showChips ? pinnedFilters : []}
+        pinControls={showChips ? filterPinControls : undefined}
+        canAdd={showChips}
+        onChange={onFilterChange}
+        onRemove={onFilterRemove}
+        onClear={onFilterClear}
+      />
 
       <div className={`flex ${TOOLBAR_CONTROL_H} shrink-0 items-center gap-2`}>
+        {shownCount !== null && (
+          <span className="mr-1 text-xs whitespace-nowrap text-(--palette-gray-500) tabular-nums">
+            {t('task:page.shownCount', { count: shownCount })}
+          </span>
+        )}
         {viewMode === 'grid' ? (
           <label className="flex items-center gap-2 text-xs text-gray-500">
             {t('task:view.groupBy')}

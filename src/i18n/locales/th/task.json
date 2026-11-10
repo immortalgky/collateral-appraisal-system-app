@@ -6,7 +6,9 @@
     "tabsLabel": "มุมมองงาน",
     "tabMy": "งานของฉัน",
     "tabPool": "Pool",
-    "listLabel": "รายการงาน"
+    "listLabel": "รายการงาน",
+    "shownCount_one": "{{count}} รายการ",
+    "shownCount_other": "{{count}} รายการ"
   },
   "search": {
     "placeholder": "ค้นหาเลขที่ประเมิน หรือชื่อลูกค้า…"
@@ -80,7 +82,6 @@
     "hide": "ปิดแถบตัวกรอง",
     "showTitle": "แสดงแถบตัวกรองด้านซ้าย",
     "hideTitle": "ซ่อนแถบตัวกรอง ใช้ chip แทน",
-    "summary": "กำลังกรอง:",
     "selectedCount_one": "เลือก {{count}} รายการ",
     "selectedCount_other": "เลือก {{count}} รายการ",
     "inUse": "ใช้อยู่",
@@ -102,7 +103,8 @@
     }
   },
   "columns": {
-    "appraisalNumber": "เลขที่ประเมิน",
+    "appraisalNumber": "ลูกค้า / เลขที่ประเมิน",
+    "appraisalNumberOnly": "เลขที่ประเมิน",
     "lockState": "การรับงาน",
     "requestNumber": "เลขที่คำขอ",
     "channel": "ช่องทาง",

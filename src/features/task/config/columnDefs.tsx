@@ -278,7 +278,7 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
   appraisalNumber: {
     label: 'Appraisal Number',
     sortField: 'appraisalNumber',
-    width: 190,
+    width: 250,
     render: task => {
       const display = task.appraisalNumber;
       return (
@@ -542,7 +542,7 @@ const POOL_LIST_CONFIG: ActivityColumnConfig = {
  * Only order/visibility/pins use it. Widths keep the plain keys, so a width the user dragged to
  * survives a reset.
  */
-export const TASK_COLUMN_LAYOUT_VERSION = 'b27e41d9';
+export const TASK_COLUMN_LAYOUT_VERSION = 'c3a91f5e';
 
 const INITIATION_CONFIG: ActivityColumnConfig = {
   columns: [...DEFAULT_COLUMNS.filter(c => c !== 'appraisalNumber')],

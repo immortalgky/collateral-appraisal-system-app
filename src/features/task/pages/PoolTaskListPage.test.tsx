@@ -140,6 +140,9 @@ describe('PoolTaskListPage', () => {
     expect(mark).toHaveClass('text-amber-600');
     // an icon, not a pill: no text of its own beside the number
     expect(mark).toHaveTextContent('');
+    // beside the number in one row, not stacked under it
+    expect(mark.parentElement).toBe(screen.getByText('69000001').parentElement);
+    expect(mark.parentElement).not.toHaveClass('flex-col');
     expect(within(screen.getByText('69000002').closest('td')!).queryByRole('img')).toBeNull();
   });
 
@@ -245,7 +248,7 @@ describe('PoolTaskListPage', () => {
     });
     render(<PoolTaskListPage {...props} visibleColumns={['appraisalNumber', 'status']} />);
     const cell = within(screen.getAllByRole('row')[1]).getAllByRole('cell')[0];
-    expect(cell).toHaveTextContent(/^—Somchai Jaidee$/);
+    expect(cell).toHaveTextContent(/^SJSomchai Jaidee—$/);
     expect(cell).not.toHaveTextContent('REQ-');
     expect(within(cell).queryByRole('button')).toBeNull();
   });
