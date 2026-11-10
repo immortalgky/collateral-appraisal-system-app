@@ -41,12 +41,22 @@ export function useTaskFilterPins(tab: ActiveTab, knownKeys: readonly string[]) 
 
   const save = useCallback(
     (chosen: string[] | null) => {
-      // Back on the defaults is no choice at all: drop the entry, so Reset has nothing to undo
       const defaults = PINNED_TASK_FILTERS[tab];
+      let merged = chosen;
+      if (chosen) {
+        // Filters this page cannot pin (e.g. Task Type on an activity page) keep their slot
+        const known = new Set(knownId.split('|'));
+        const rest = [...chosen];
+        const slots = [...new Set(saved[tab] ?? defaults)].map(k =>
+          known.has(k) ? rest.shift() : k,
+        );
+        merged = [...slots.filter((k): k is string => k !== undefined), ...rest];
+      }
+      // Back on the defaults is no choice at all: drop the entry, so Reset has nothing to undo
       const next =
-        chosen && chosen.length === defaults.length && chosen.every((k, i) => k === defaults[i])
+        merged && merged.length === defaults.length && merged.every((k, i) => k === defaults[i])
           ? null
-          : chosen;
+          : merged;
       setSaved(s => ({ ...s, [tab]: next }));
       try {
         if (next === null) localStorage.removeItem(storageKey(tab));
@@ -55,7 +65,7 @@ export function useTaskFilterPins(tab: ActiveTab, knownKeys: readonly string[]) 
         // ignore quota / unavailable-storage errors — in-memory state still updates
       }
     },
-    [tab],
+    [tab, saved, knownId],
   );
 
   const controls: FilterPinControls = {

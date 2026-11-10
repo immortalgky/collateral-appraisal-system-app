@@ -89,7 +89,12 @@ beforeEach(() => {
   useAuthStore.setState({
     user: { username: 'me', roles: ['Admin'], groups: ['IntAdmin'], teams: ['t-1'] } as never,
   });
-  useGetPoolTasks.mockReturnValue({ data: undefined, isLoading: true, isError: false });
+  useGetPoolTasks.mockReturnValue({
+    data: undefined,
+    isLoading: true,
+    isFetching: true,
+    isError: false,
+  });
 });
 
 describe('PoolTaskListPage', () => {
@@ -404,17 +409,17 @@ describe('PoolTaskListPage', () => {
     expect(onCountChange).toHaveBeenLastCalledWith(null);
   });
 
-  it('reports loading while the pool loads, and clears it when the page goes away', () => {
-    const onLoadingChange = vi.fn();
+  it('reports fetching while the pool fetches, and clears it when the page goes away', () => {
+    const onFetchingChange = vi.fn();
     const { unmount } = render(
       <PoolTaskListPage
         {...props}
         visibleColumns={[...props.visibleColumns]}
-        onLoadingChange={onLoadingChange}
+        onFetchingChange={onFetchingChange}
       />,
     );
-    expect(onLoadingChange).toHaveBeenCalledWith(true);
+    expect(onFetchingChange).toHaveBeenCalledWith(true);
     unmount();
-    expect(onLoadingChange).toHaveBeenLastCalledWith(false);
+    expect(onFetchingChange).toHaveBeenLastCalledWith(false);
   });
 });

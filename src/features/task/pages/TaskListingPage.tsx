@@ -12,7 +12,14 @@ import Pagination from '@/shared/components/Pagination';
 import { hasValue } from '@/features/appraisal/components/search/filterOptions';
 import { useGetTaskCounts, useGetTasks, useTaskGroupCounts } from '../api';
 import type { GroupByField, Task, TaskFilterParams } from '../types';
-import { LIST_CONFIG, POOL_LIST_CONFIG, TASK_COLUMN_LAYOUT_VERSION } from '../config/columnDefs';
+import {
+  getActivityColumnConfig,
+  LIST_CONFIG,
+  POOL_LIST_CONFIG,
+  TASK_COLUMN_LAYOUT_VERSION,
+  type ActivityColumnConfig,
+} from '../config/columnDefs';
+import type { ActivityConfig } from '../config/activityConfig';
 import { useTaskListPaging } from '../hooks/useTaskListPaging';
 import { useTaskFilterPins } from '../hooks/useTaskFilterPins';
 import { useTaskListUrlState } from '../hooks/useTaskListUrlState';
@@ -67,7 +74,24 @@ function readStoredPanelHidden(): boolean {
   }
 }
 
-function TaskListingPage() {
+/** The My layout of one activity page: its own column set, in the list page's pinnable shape. */
+function activityListConfig(activityId: string): ActivityColumnConfig {
+  const base = getActivityColumnConfig(activityId);
+  return {
+    ...base,
+    pinnable: true,
+    // The customer sits under the number, when the activity has a number column
+    defaultHidden: base.columns.includes('appraisalNumber') ? ['customerName'] : undefined,
+  };
+}
+
+interface TaskListingPageProps {
+  /** Set on an activity's page: every list is scoped to that task type, which the page fixes. */
+  activity?: ActivityConfig;
+}
+
+function TaskListingPage({ activity }: TaskListingPageProps = {}) {
+  const activityId = activity?.activityId;
   const navigate = useNavigate();
   const { t } = useTranslation(['task', 'appraisal', 'common']);
 
@@ -84,15 +108,20 @@ function TaskListingPage() {
     debouncedPoolSearch,
     poolFilters,
     setPoolFilters,
-  } = useTaskListUrlState();
+  } = useTaskListUrlState(activityId);
   const isPool = activeTab === 'pool';
 
   // ── Column layout: each tab keeps its own ────────────────────────────────────
   // Order, visibility and pins are versioned (see TASK_COLUMN_LAYOUT_VERSION); widths are not.
-  const widthConfig = useScaledWidths(LIST_CONFIG);
+  const myConfig = useMemo(
+    () => (activityId ? activityListConfig(activityId) : LIST_CONFIG),
+    [activityId],
+  );
+  const myKey = `task-columns-${activityId ?? 'all'}`;
+  const widthConfig = useScaledWidths(myConfig);
   const poolWidthConfig = useScaledWidths(POOL_LIST_CONFIG);
-  const myCols = useColumnVisibility(`task-columns-all@${TASK_COLUMN_LAYOUT_VERSION}`, LIST_CONFIG);
-  const myWidths = useColumnWidths('task-columns-all', widthConfig);
+  const myCols = useColumnVisibility(`${myKey}@${TASK_COLUMN_LAYOUT_VERSION}`, myConfig);
+  const myWidths = useColumnWidths(myKey, widthConfig);
   const poolCols = useColumnVisibility(
     `task-columns-pool@${TASK_COLUMN_LAYOUT_VERSION}`,
     POOL_LIST_CONFIG,
@@ -134,7 +163,11 @@ function TaskListingPage() {
   const setCurFilters = isPool ? setPoolFilters : setFilters;
   const values = curFilters as Record<string, string>;
 
-  const allFields = useMemo(() => makeTaskFilters(t), [t]);
+  // The task type is the page's own on an activity page, so it is not a filter there
+  const allFields = useMemo(
+    () => makeTaskFilters(t).filter(f => !activityId || f.key !== 'activityId'),
+    [t, activityId],
+  );
   const inputFields = useMemo(() => allFields.filter(f => !f.hidden), [allFields]);
   const filterPins = useTaskFilterPins(
     activeTab,
@@ -180,26 +213,35 @@ function TaskListingPage() {
   // ── My list: queried only while it is the one on show ────────────────────────
   const paging = useTaskListPaging(debouncedSearch, filters);
   const myListShown = !isPool && myViewMode === 'list';
-  const isSearchPending = searchTerm !== debouncedSearch;
 
   const {
     data: listData,
     isLoading: isListLoading,
+    isFetching: isListFetching,
     isPlaceholderData,
     isError,
     error,
   } = useGetTasks(
-    { search: debouncedSearch || undefined, ...paging.queryParams, ...filters },
+    {
+      search: debouncedSearch || undefined,
+      ...paging.queryParams,
+      ...filters,
+      ...(activityId && { activityId }),
+    },
     { enabled: myListShown },
   );
   const listTasks = (listData?.items ?? []) as Task[];
 
   // ── Counts ───────────────────────────────────────────────────────────────────
   const [poolTotalCount, setPoolTotalCount] = useState<number | null>(null);
-  const [poolLoading, setPoolLoading] = useState(false);
+  const [poolFetching, setPoolFetching] = useState(false);
   const { data: taskCounts } = useGetTaskCounts();
   // The tabs carry each tab's whole count, filters aside; null until the counts are known
-  const counts = taskCounts ? Array.from(taskCounts.values()) : null;
+  const counts = taskCounts
+    ? activityId
+      ? [taskCounts.get(activityId) ?? { myCount: 0, poolCount: 0 }]
+      : Array.from(taskCounts.values())
+    : null;
   const tabCounts = {
     personal: counts?.reduce((sum, v) => sum + v.myCount, 0) ?? null,
     pool: counts?.reduce((sum, v) => sum + v.poolCount, 0) ?? null,
@@ -227,7 +269,7 @@ function TaskListingPage() {
       search: (isPool ? debouncedPoolSearch : debouncedSearch) || undefined,
     },
     isPool ? 'pool' : 'me',
-    { enabled: panelOpen && !showsOthersTasks },
+    { enabled: panelOpen && !showsOthersTasks && !activityId },
   );
   const taskTypeCounts = useMemo(
     () => (typeCounts ? new Map(typeCounts.map(c => [c.value, c.count])) : null),
@@ -294,7 +336,11 @@ function TaskListingPage() {
 
   return (
     <div ref={setRootRef} className="flex h-full min-h-0 min-w-0 flex-col gap-4">
-      <TaskListHeader activeTab={activeTab} />
+      <TaskListHeader
+        activeTab={activeTab}
+        title={activity?.title}
+        subtitle={activity?.description}
+      />
 
       <div className="flex min-h-0 flex-1 gap-4">
         {panelOpen && (
@@ -320,8 +366,8 @@ function TaskListingPage() {
             onSearchChange={setCurSearch}
             isSearching={
               isPool
-                ? poolSearch !== debouncedPoolSearch || (poolLoading && !!debouncedPoolSearch)
-                : myListShown && (isSearchPending || (isListLoading && !!debouncedSearch))
+                ? poolFetching && !!debouncedPoolSearch
+                : myListShown && isListFetching && !!debouncedSearch
             }
             fields={allFields}
             values={values}
@@ -346,11 +392,12 @@ function TaskListingPage() {
           {isPool ? (
             <PoolTaskListPage
               bare
+              activityId={activityId}
               externalSearch={debouncedPoolSearch}
               externalFilters={poolFilters}
               onClearFilters={handleClearAll}
               onCountChange={setPoolTotalCount}
-              onLoadingChange={setPoolLoading}
+              onFetchingChange={setPoolFetching}
               visibleColumns={poolCols.visibleColumns}
               pinnedColumns={poolCols.pinnedColumns}
               colWidths={poolWidths.widths}
@@ -362,7 +409,11 @@ function TaskListingPage() {
             <div className="min-h-0 flex-1 p-4">
               <TaskKanbanBoard
                 groupBy={myGroupBy}
-                baseFilters={{ search: debouncedSearch || undefined, ...filters }}
+                baseFilters={{
+                  search: debouncedSearch || undefined,
+                  ...filters,
+                  ...(activityId && { activityId }),
+                }}
               />
             </div>
           ) : isError ? (
