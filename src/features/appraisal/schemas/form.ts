@@ -13,6 +13,8 @@ import {
   allLeaseAgreementFields,
   allMachineryFields,
   allMachinerySummaryFields,
+  allVehicleFields,
+  allVesselFields,
   machineryBookSection1Fields,
   rentalScheduleField,
 } from '../configs/fields';
@@ -404,6 +406,8 @@ export const useLandAndBuildingPMAFormSchema = () => landAndBuildingPMAForm;
 
 export const useCondoPMAFormSchema = () => condoPMAForm;
 export const createMachineryForm = buildFormSchema(allMachineryFields);
+export const createVehicleForm = buildFormSchema(allVehicleFields);
+export const createVesselForm = buildFormSchema(allVesselFields);
 
 export const factorDataDto = z
   .object({
@@ -520,6 +524,8 @@ export type createLandFormType = z.infer<typeof createLandForm>;
 export type createProjectLandFormType = z.infer<typeof createProjectLandForm>;
 export type createLandAndBuildingFormType = z.infer<typeof createLandAndBuildingForm>;
 export type createMachineryFormType = z.infer<typeof createMachineryForm>;
+export type createVehicleFormType = z.infer<typeof createVehicleForm>;
+export type createVesselFormType = z.infer<typeof createVesselForm>;
 export type createLandAndBuildingPMAFormType = z.infer<typeof createLandAndBuildingPMAForm>;
 export type createCondoPMAFormType = z.infer<typeof createCondoPMAForm>;
 export type createMarketComparableFormType = z.infer<typeof createMarketComparableForm>;
@@ -972,6 +978,7 @@ export const createMachineryFormDefault: createMachineryFormType = {
   registrationNumber: '',
   installationStatus: '',
   machineType: '',
+  machineTypeOther: '',
   registrationStatus: false,
   invoiceNumber: '',
   isPriceCertified: true,
@@ -1003,6 +1010,45 @@ export const createMachineryFormDefault: createMachineryFormType = {
   other: '',
   remark: '',
   appraiserOpinion: '',
+};
+
+export const createVehicleFormDefault: createVehicleFormType = {
+  propertyName: '',
+  engineNumber: '',
+  chassisNumber: '',
+  licensePlateNumber: '',
+  registrationNumber: '',
+  registrationDate: null,
+  color: '',
+  colorOther: '',
+  brand: '',
+  model: '',
+  yearOfManufacture: null,
+  vehicleType: '',
+  vehicleTypeOther: '',
+  purchaseDate: null,
+  purchasePrice: null,
+  energyUse: '',
+  energyUseOther: '',
+  location: '',
+};
+
+export const createVesselFormDefault: createVesselFormType = {
+  propertyName: '',
+  model: '',
+  yearOfManufacture: null,
+  vesselType: '',
+  vesselTypeOther: '',
+  capacity: '',
+  numberOfEngines: null,
+  hullNumber: '',
+  registrationNumber: '',
+  purchaseDate: null,
+  purchasePrice: null,
+  grossTonnage: null,
+  netTonnage: null,
+  location: '',
+  conditionUse: '',
 };
 
 export const createLandAndBuildingPMAFormDefault: createLandAndBuildingPMAFormType = {

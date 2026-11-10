@@ -26,6 +26,8 @@ export const typeToRouteSegment: Record<string, string> = {
   U: 'condo',
   LB: 'land-building',
   MAC: 'machinery',
+  VEH: 'vehicle',
+  VES: 'vessel',
   LSL: 'lease-land',
   LSB: 'lease-building',
   LS: 'lease-land-building',
@@ -224,13 +226,13 @@ export const PROPERTY_TYPES = [
   {
     type: 'Vehicle',
     code: 'VEH',
-    route: null,
+    route: 'vehicle',
     description: 'Vehicle asset',
   },
   {
     type: 'Vessel',
     code: 'VES',
-    route: null,
+    route: 'vessel',
     description: 'Marine vessel',
   },
 ] as const;
