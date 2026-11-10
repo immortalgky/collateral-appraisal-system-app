@@ -83,4 +83,38 @@ describe('useTaskFilterPins', () => {
     expect(result.current.pinned).toEqual([]);
     expect(result.current.controls.canReset).toBe(true);
   });
+
+  describe('filters the page cannot pin', () => {
+    const withoutActivity = known.filter(k => k !== 'activityId');
+
+    it('keeps them pinned, in place, when another filter is unpinned', () => {
+      const { result } = setup('personal', withoutActivity);
+      expect(result.current.pinned).toEqual(['status', 'appointment']);
+      act(() => result.current.controls.onTogglePin('status'));
+      expect(result.current.pinned).toEqual(['appointment']);
+
+      expect(JSON.parse(localStorage.getItem('task-filter-pins-personal@1')!)).toEqual([
+        'activityId',
+        'appointment',
+      ]);
+      expect(setup('personal', known).result.current.pinned).toEqual(['activityId', 'appointment']);
+    });
+
+    it('keeps them in place when pins are reordered or added', () => {
+      const { result } = setup('personal', withoutActivity);
+      act(() => result.current.controls.onReorderPins('appointment', 'status'));
+      expect(JSON.parse(localStorage.getItem('task-filter-pins-personal@1')!)).toEqual([
+        'activityId',
+        'appointment',
+        'status',
+      ]);
+      act(() => result.current.controls.onTogglePin('purpose'));
+      expect(setup('personal', known).result.current.pinned).toEqual([
+        'activityId',
+        'appointment',
+        'status',
+        'purpose',
+      ]);
+    });
+  });
 });

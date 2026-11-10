@@ -32,21 +32,21 @@ vi.mock('./PoolTaskListPage', async () => {
   return {
     // as the real page reports it: a layout effect on the loading value, cleared when it goes away
     default: (p: {
-      onLoadingChange?: (l: boolean) => void;
+      onFetchingChange?: (l: boolean) => void;
       visibleColumns?: string[];
       colWidths?: Record<string, number>;
     }) => {
-      const { onLoadingChange } = p;
+      const { onFetchingChange } = p;
       pool.props = p;
       const [loading, setLoading] = useState(pool.startLoading);
       useLayoutEffect(() => {
         pool.reports.push(loading);
-        onLoadingChange?.(loading);
+        onFetchingChange?.(loading);
         return () => {
           pool.reports.push(false);
-          onLoadingChange?.(false);
+          onFetchingChange?.(false);
         };
-      }, [loading, onLoadingChange]);
+      }, [loading, onFetchingChange]);
       return <button onClick={() => setLoading(false)}>pool list</button>;
     },
   };
@@ -416,31 +416,52 @@ describe('TaskListingPage', () => {
     expect(screen.queryByText('No results')).toBeNull();
   });
 
-  it('spins the search only while a search is actually running, not for a kept page', () => {
+  it('spins the search only while the query for the debounced term is fetching', () => {
     contentWidth(1100);
-    // a page change with the search unchanged: the last page's rows are the placeholder
+    // settled: no spinner
     useGetTasks.mockReturnValue({
       data: { items, count: 60 },
       isLoading: false,
-      isPlaceholderData: true,
+      isFetching: false,
       isError: false,
     });
     render(<TaskListingPage />, { initialEntries: ['/tasks?search=abc'] });
     expect(document.querySelector('[role=search] svg.animate-spin')).toBeNull();
     cleanup();
 
-    // first load of the search: the spinner
-    useGetTasks.mockReturnValue({ data: undefined, isLoading: true, isError: false });
+    // a later search keeps the old rows as placeholder but is fetching: the spinner
+    useGetTasks.mockReturnValue({
+      data: { items, count: 60 },
+      isLoading: false,
+      isFetching: true,
+      isPlaceholderData: true,
+      isError: false,
+    });
+    render(<TaskListingPage />, { initialEntries: ['/tasks?search=abc'] });
+    expect(document.querySelector('[role=search] svg.animate-spin')).not.toBeNull();
+    cleanup();
+
+    // fetching with no search term: no spinner
+    render(<TaskListingPage />, { initialEntries: ['/tasks'] });
+    expect(document.querySelector('[role=search] svg.animate-spin')).toBeNull();
+    cleanup();
+
+    useGetTasks.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isFetching: true,
+      isError: false,
+    });
     render(<TaskListingPage />, { initialEntries: ['/tasks?search=abc'] });
     expect(document.querySelector('[role=search] svg.animate-spin')).not.toBeNull();
   });
 
-  it('spins the search on the Pool tab while a typed term is still settling, like My', async () => {
+  it('does not spin the Pool search while a typed term is still settling', async () => {
     contentWidth(1100);
     const { user } = render(<TaskListingPage />, { initialEntries: ['/tasks?tab=pool'] });
     expect(document.querySelector('[role=search] svg.animate-spin')).toBeNull();
     await user.type(screen.getByRole('searchbox'), 'abc');
-    expect(document.querySelector('[role=search] svg.animate-spin')).not.toBeNull();
+    expect(document.querySelector('[role=search] svg.animate-spin')).toBeNull();
   });
 
   it('spins the Pool search while the pool loads for a search term, stops when it finishes, and clears on leaving the tab', async () => {
@@ -471,5 +492,31 @@ describe('TaskListingPage', () => {
     } finally {
       pool.startLoading = false;
     }
+  });
+});
+
+describe('TaskListingPage on an activity page', () => {
+  const activity = {
+    activityId: 'int-appraisal-execution',
+    title: 'Execution',
+    description: 'Run the appraisal',
+    icon: 'x',
+    allowedRoles: [],
+  };
+
+  it('is titled by the activity, scopes the list to it and drops the Task type filter', () => {
+    contentWidth(1100);
+    render(<TaskListingPage activity={activity} />, {
+      initialEntries: ['/tasks?activityId=int-appraisal-execution'],
+    });
+
+    expect(screen.getByRole('heading', { name: 'Execution' })).toBeInTheDocument();
+    expect(screen.getByText('Run the appraisal')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Task type/ })).toBeNull();
+    expect(useGetTasks.mock.calls.at(-1)![0]).toMatchObject({
+      activityId: 'int-appraisal-execution',
+    });
+    // the tab counts are the activity's own
+    expect(screen.getByRole('tab', { name: /7/ })).toBeInTheDocument();
   });
 });

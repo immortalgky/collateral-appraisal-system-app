@@ -67,7 +67,7 @@ interface PoolTaskListPageProps {
   /** "Clear filters" on the empty state. */
   onClearFilters?: () => void;
   /** The pool table's first load or new list is on its way (not a kept page). */
-  onLoadingChange?: (loading: boolean) => void;
+  onFetchingChange?: (fetching: boolean) => void;
   /** The pool's total, or null while it is not known (loading, or the board is showing). */
   onCountChange?: (count: number | null) => void;
   // Column layout and view — supplied by the parent, so the columns picker and the list/board
@@ -92,7 +92,7 @@ function PoolTaskListPage({
   externalFilters = NO_FILTERS,
   onClearFilters,
   onCountChange,
-  onLoadingChange,
+  onFetchingChange,
   visibleColumns,
   pinnedColumns = DEFAULT_PINNED,
   colWidths,
@@ -113,7 +113,7 @@ function PoolTaskListPage({
   const paging = useTaskListPaging(debouncedSearch, filters);
 
   // The table's query is for the table: not run while the board is showing
-  const { data, isLoading, isPlaceholderData, isError, error } = useGetPoolTasks(
+  const { data, isLoading, isFetching, isPlaceholderData, isError, error } = useGetPoolTasks(
     {
       search: debouncedSearch || undefined,
       ...paging.queryParams,
@@ -134,9 +134,9 @@ function PoolTaskListPage({
   // Layout effect: the parent's spinner follows in the same frame, not one painted frame later.
   // The cleanup keeps a stale `true` from outliving the Pool tab.
   useLayoutEffect(() => {
-    onLoadingChange?.(isLoading);
-    return () => onLoadingChange?.(false);
-  }, [isLoading, onLoadingChange]);
+    onFetchingChange?.(isFetching);
+    return () => onFetchingChange?.(false);
+  }, [isFetching, onFetchingChange]);
   const hasFilters = !!debouncedSearch || Object.values(filters).some(Boolean);
 
   const { mutate: lockTask, isPending: isLocking } = useLockTask();

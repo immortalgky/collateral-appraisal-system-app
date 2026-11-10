@@ -6,13 +6,16 @@ import type { ActiveTab } from '../../config/resolveInitialTab';
 interface TaskListHeaderProps {
   /** Picks the subtitle: the My and Pool tabs describe themselves differently. */
   activeTab: ActiveTab;
+  /** An activity page names itself; the default is the All Tasks title and tab subtitle. */
+  title?: string;
+  subtitle?: string;
 }
 
 /**
  * The page header (SectionHeader: title, subtitle) with the quick-access row at the right.
  * The My / Pool tabs sit in the list card below it (TaskTabs).
  */
-export function TaskListHeader({ activeTab }: TaskListHeaderProps) {
+export function TaskListHeader({ activeTab, title, subtitle }: TaskListHeaderProps) {
   const { t } = useTranslation(['task', 'common']);
   return (
     <SectionHeader
@@ -20,8 +23,10 @@ export function TaskListHeader({ activeTab }: TaskListHeaderProps) {
       // SectionHeader reads as an in-card section (text-sm title, divider line); this is still
       // the page header, so keep the text-base title and hide the divider from here.
       className="mb-0! shrink-0 [&_h3]:text-base [&>hr]:hidden"
-      title={t('task:page.title')}
-      subtitle={t(activeTab === 'pool' ? 'task:page.subtitlePool' : 'task:page.subtitleMy')}
+      title={title ?? t('task:page.title')}
+      subtitle={
+        subtitle ?? t(activeTab === 'pool' ? 'task:page.subtitlePool' : 'task:page.subtitleMy')
+      }
       rightIcon={
         // Quick access: label on top, scrolls sideways when there are many
         <div className="flex min-w-0 flex-col">
