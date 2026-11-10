@@ -89,7 +89,6 @@ function TaskListingPage() {
 
   // ── Column layout: each tab keeps its own ────────────────────────────────────
   // Order, visibility and pins are versioned (see TASK_COLUMN_LAYOUT_VERSION); widths are not.
-  const columnLabels = useTaskColumnLabels();
   const widthConfig = useScaledWidths(LIST_CONFIG);
   const poolWidthConfig = useScaledWidths(POOL_LIST_CONFIG);
   const myCols = useColumnVisibility(`task-columns-all@${TASK_COLUMN_LAYOUT_VERSION}`, LIST_CONFIG);
@@ -100,6 +99,7 @@ function TaskListingPage() {
   );
   const poolWidths = useColumnWidths('task-columns-pool', poolWidthConfig);
   const cols = isPool ? poolCols : myCols;
+  const columnLabels = useTaskColumnLabels(!cols.hidden.has('customerName'));
   const colWidths = isPool ? poolWidths : myWidths;
 
   // ── View ─────────────────────────────────────────────────────────────────────

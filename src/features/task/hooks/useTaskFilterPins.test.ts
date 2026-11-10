@@ -32,6 +32,18 @@ describe('useTaskFilterPins', () => {
     expect(again.result.current.pinned).toEqual(result.current.pinned);
   });
 
+  it('is back on the defaults, with nothing to reset, once the pins equal them again', () => {
+    const { result } = setup();
+    act(() => result.current.controls.onTogglePin('status'));
+    expect(result.current.controls.canReset).toBe(true);
+    act(() => result.current.controls.onTogglePin('status'));
+    // status comes back last, so the order differs from the defaults until it is moved home
+    act(() => result.current.controls.onReorderPins('status', PINNED_TASK_FILTERS.personal[2]));
+    expect(result.current.pinned).toEqual(PINNED_TASK_FILTERS.personal);
+    expect(result.current.controls.canReset).toBe(false);
+    expect(localStorage.getItem('task-filter-pins-personal@1')).toBeNull();
+  });
+
   it('keeps each tab to itself', () => {
     const { result, rerender } = setup();
     act(() => result.current.controls.onTogglePin('activityId'));

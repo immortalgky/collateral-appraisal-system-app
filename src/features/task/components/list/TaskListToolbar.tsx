@@ -104,7 +104,7 @@ export function TaskListToolbar({
             {activeFilterCount > 0 && (
               <span
                 aria-hidden
-                className="absolute -top-1.5 -right-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold text-white tabular-nums"
+                className="absolute -top-1.5 -right-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-semibold text-white tabular-nums"
               >
                 {activeFilterCount}
               </span>
@@ -147,7 +147,7 @@ export function TaskListToolbar({
 
       <div className={`flex ${TOOLBAR_CONTROL_H} shrink-0 items-center gap-2`}>
         {shownCount !== null && (
-          <span className="mr-1 text-xs whitespace-nowrap text-gray-500 tabular-nums">
+          <span className="mr-1 text-xs whitespace-nowrap text-(--palette-gray-500) tabular-nums">
             {t('task:page.shownCount', { count: shownCount })}
           </span>
         )}

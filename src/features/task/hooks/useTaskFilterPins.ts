@@ -40,7 +40,13 @@ export function useTaskFilterPins(tab: ActiveTab, knownKeys: readonly string[]) 
   }, [saved, tab, knownId]);
 
   const save = useCallback(
-    (next: string[] | null) => {
+    (chosen: string[] | null) => {
+      // Back on the defaults is no choice at all: drop the entry, so Reset has nothing to undo
+      const defaults = PINNED_TASK_FILTERS[tab];
+      const next =
+        chosen && chosen.length === defaults.length && chosen.every((k, i) => k === defaults[i])
+          ? null
+          : chosen;
       setSaved(s => ({ ...s, [tab]: next }));
       try {
         if (next === null) localStorage.removeItem(storageKey(tab));

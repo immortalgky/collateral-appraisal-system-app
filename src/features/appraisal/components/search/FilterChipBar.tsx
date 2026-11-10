@@ -78,7 +78,7 @@ const PANEL_CLASS =
   'z-50 mt-1.5 rounded-xl border border-(--palette-line) bg-(--palette-surface) p-3 shadow-lg max-h-none! overflow-visible!';
 
 const SET_CHIP_CLASS =
-  'inline-flex items-center gap-1.5 rounded-full bg-primary/10 py-1 pl-3 pr-1.5 text-xs font-medium text-(--palette-primary-text)';
+  'inline-flex items-center gap-1.5 rounded-full bg-(--palette-primary-wash) py-1 pl-3 pr-1.5 text-xs font-medium text-(--palette-primary-text)';
 
 /** Clearing a range means clearing the two keys it writes, not its own. */
 const clearField = (field: FilterField, onRemove: (key: string) => void) => {
@@ -366,6 +366,10 @@ function FilterChipBar({
   const [forcedKey, setForcedKey] = useState<string | null>(null);
   // Which hidden filter the overflow menu has opened, or null for the list.
   const [overflowKey, setOverflowKey] = useState<string | null>(null);
+  // Pin mode: the added chips as they were when the "add filter" menu opened. Values are ticked in
+  // that menu, and a chip appearing before its button would move the menu (and in singleLine fold
+  // chips into "More") while the user is still ticking; the new chips arrive when it closes.
+  const [addFrozen, setAddFrozen] = useState<string[] | null>(null);
   const [hiddenKeys, setHiddenKeys] = useState<string[]>([]);
   // singleLine only: the chip whose value panel is open stays on show (the others make room), and
   // the overflow menu being open is what freezes the layout; a chip panel cannot, because the
@@ -403,9 +407,10 @@ function FilterChipBar({
   const active = filters.filter(f => hasValue(values, f));
   // Not pinned, in the bar because it is set (or has just been picked): one list, so a chip keeps
   // its place — and its Popover — when it goes from picked to set.
-  const extras = filters.filter(
+  const liveExtras = filters.filter(
     f => !isPinned(f) && (isFieldActive(values, f) || f.key === pendingKey),
   );
+  const extras = addFrozen ? liveExtras.filter(f => addFrozen.includes(f.key)) : liveExtras;
   const chipFields = [...pinnedFields, ...extras];
   const available = filters.filter(
     f => !f.hidden && !isPinned(f) && !isFieldActive(values, f) && f.key !== pendingKey,
@@ -543,7 +548,7 @@ function FilterChipBar({
    * is unticked, which would take the panel away from under the cursor.
    */
   const dropEmptyAdded = () => {
-    chipFields.forEach(f => {
+    [...pinnedFields, ...liveExtras].forEach(f => {
       if (!f.hidden && f.type !== 'date-range' && values[f.key] === '') onRemove(f.key);
     });
   };
@@ -752,7 +757,14 @@ function FilterChipBar({
                       showRing={!pointerMode}
                     />
                     {/* Values are picked in this menu too: a filter left empty is dropped as it closes */}
-                    <PopoverLifecycle open onClosed={dropEmptyAdded} />
+                    <PopoverLifecycle
+                      open
+                      onOpened={() => setAddFrozen(extras.map(f => f.key))}
+                      onClosed={() => {
+                        setAddFrozen(null);
+                        dropEmptyAdded();
+                      }}
+                    />
                   </>
                 ) : (
                   <div className="w-56 max-h-72 overflow-y-auto -mx-1">
@@ -761,7 +773,7 @@ function FilterChipBar({
                       if (fields.length === 0) return null;
                       return (
                         <div key={group}>
-                          <p className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-(--palette-gray-400)">
+                          <p className="px-2 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider text-(--palette-gray-400)">
                             {t(`appraisal:list.filters.groups.${group}`)}
                           </p>
                           {fields.map(field => (

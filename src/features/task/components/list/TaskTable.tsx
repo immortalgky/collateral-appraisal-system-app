@@ -148,7 +148,10 @@ function NumberCell({
       {showCustomer && <PersonTile name={customerName} />}
       <div className="flex min-w-0 flex-col">
         {showCustomer && (
-          <span className="truncate font-medium text-gray-800" title={customerName || undefined}>
+          <span
+            className="truncate font-medium text-(--palette-ink)"
+            title={customerName || undefined}
+          >
             {customerName || <Dash />}
           </span>
         )}
@@ -249,7 +252,7 @@ export function TaskTable({
   emptyState,
 }: TaskTableProps) {
   const { t } = useTranslation('task');
-  const labels = useTaskColumnLabels();
+  const labels = useTaskColumnLabels(visibleColumns.includes('customerName'));
   const tableRef = useRef<HTMLTableElement>(null);
   const getAutoFitWidth = useColumnAutoFit(tableRef);
   const isEmpty = !isLoading && tasks.length === 0;

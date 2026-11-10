@@ -35,9 +35,18 @@ describe('TaskTabs', () => {
     expect(screen.getByRole('tab', { name: /Pool/ })).not.toHaveTextContent(/\d/);
   });
 
-  it('keeps the trailing content out of the tab list', () => {
-    setup({ trailing: <button type="button">Extra</button> });
-    expect(screen.getByRole('button', { name: 'Extra' })).toBeInTheDocument();
-    expect(within(screen.getByRole('tablist')).queryByRole('button', { name: 'Extra' })).toBeNull();
+  it('moves between tabs with the arrow keys, one tab stop at a time', async () => {
+    const { user, onTabChange } = setup();
+    const my = screen.getByRole('tab', { name: /My Tasks/ });
+    const pool = screen.getByRole('tab', { name: /Pool/ });
+    expect(my).toHaveAttribute('tabindex', '0');
+    expect(pool).toHaveAttribute('tabindex', '-1');
+
+    my.focus();
+    await user.keyboard('{ArrowRight}');
+    expect(onTabChange).toHaveBeenLastCalledWith('pool');
+    expect(pool).toHaveFocus();
+    await user.keyboard('{Home}');
+    expect(onTabChange).toHaveBeenLastCalledWith('personal');
   });
 });

@@ -115,7 +115,7 @@ function RowBody({
             ? 'text-(--palette-primary-text)'
             : // on hover or keyboard focus only: a pin just unpinned by a click keeps the focus
               // (it moved sections) and must not stay drawn on a row the pointer has left
-              'text-(--palette-gray-300) opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:text-(--palette-gray-500)'
+              'text-(--palette-gray-300) opacity-0 [@media(hover:none)]:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 hover:text-(--palette-gray-500)'
         }`}
       >
         <Icon style="solid" name="thumbtack" className="text-xs" />
@@ -194,7 +194,10 @@ export function FilterPinPicker({
     e.preventDefault();
     const at = pinnedKeys.indexOf(key);
     const to = pinnedKeys[e.key === 'ArrowUp' ? at - 1 : at + 1];
-    if (to) onReorderPins(key, to);
+    if (to) {
+      onReorderPins(key, to);
+      focusPin(key);
+    }
   };
 
   const heading = (title: string, hint?: string, divider = false) => (
@@ -202,7 +205,7 @@ export function FilterPinPicker({
       className={`px-2 pt-2 pb-1 ${divider ? 'mt-1 border-t border-(--palette-line-soft)' : ''}`}
     >
       <p className="text-xs font-semibold text-(--palette-ink)">{title}</p>
-      {hint && <p className="text-[11px] text-(--palette-gray-400)">{hint}</p>}
+      {hint && <p className="text-xs text-(--palette-gray-400)">{hint}</p>}
     </div>
   );
 
@@ -228,12 +231,12 @@ export function FilterPinPicker({
                   : 'border-(--palette-line) text-(--palette-gray-600) hover:text-(--palette-ink)'
               }`}
             >
-              <Icon style="solid" name="thumbtack" className="text-[10px]" />
+              <Icon style="solid" name="thumbtack" className="text-xs" />
               {t(isPinned ? 'list.filters.pinnedAction' : 'list.filters.pinAction')}
             </button>
           }
         />
-        <p className="mt-2 border-t border-(--palette-line-soft) pt-2 text-[11px] text-(--palette-gray-400)">
+        <p className="mt-2 border-t border-(--palette-line-soft) pt-2 text-xs text-(--palette-gray-400)">
           {t(isPinned ? 'list.filters.pinnedValueHint' : 'list.filters.unpinnedValueHint')}
         </p>
       </div>
@@ -300,7 +303,7 @@ export function FilterPinPicker({
         >
           {t('list.filters.resetPins')}
         </button>
-        <span className="text-[11px] text-(--palette-gray-400)">{t('list.filters.escClose')}</span>
+        <span className="text-xs text-(--palette-gray-400)">{t('list.filters.escClose')}</span>
       </div>
     </div>
   );

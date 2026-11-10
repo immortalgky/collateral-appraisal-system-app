@@ -104,6 +104,7 @@
   },
   "columns": {
     "appraisalNumber": "ลูกค้า / เลขที่ประเมิน",
+    "appraisalNumberOnly": "เลขที่ประเมิน",
     "lockState": "การรับงาน",
     "requestNumber": "เลขที่คำขอ",
     "channel": "ช่องทาง",
