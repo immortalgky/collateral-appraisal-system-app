@@ -5,12 +5,21 @@
  *   money    → right-aligned, thousands separator, 2 dp
  *   number   → right-aligned, thousands separator
  *   percent  → appends '%'
+ *   scorePct → score / scoreMax × 100 as a whole percent
  *   int      → right-aligned integer
  *   date     → dd/MM/yyyy
  *   datetime → dd/MM/yyyy HH:mm
  *   text     → plain string (default)
  */
-export type ColumnType = 'money' | 'number' | 'percent' | 'int' | 'date' | 'datetime' | 'text';
+export type ColumnType =
+  | 'money'
+  | 'number'
+  | 'percent'
+  | 'scorePct'
+  | 'int'
+  | 'date'
+  | 'datetime'
+  | 'text';
 
 export interface ColumnDef {
   key: string;
@@ -27,6 +36,8 @@ export interface ColumnDef {
   /** Optional sort key sent to the server. Defaults to PascalCase of field. */
   sortKey?: string;
   className?: string;
+  /** the highest attainable score, which maps to 100%. */
+  scoreMax?: number;
 }
 
 // ─── Filter sets ──────────────────────────────────────────────────────────────
@@ -262,11 +273,39 @@ export const OPERATIONAL_REPORTS: ReportConfig[] = [
     filters: ['appraisalNumber', 'approvedFrom', 'approvedTo', 'bankingSegment', 'appraisalCompany', 'evaluationStatus', 'purpose', 'appraisalType'],
     columns: [
       APPRAISAL_NO,
-      { key: 'appraisalCompany', label: 'Company', field: 'appraisalCompany', type: 'text' },
-      { key: 'internalAppraisalStaff', label: 'Internal Staff', field: 'internalAppraisalStaff', type: 'text' },
-      { key: 'approvedDate', label: 'Approved Date', field: 'approvedDate', type: 'date', sortKey: 'ApprovedDate' },
-      { key: 'bankingSegment', label: 'Banking Segment', field: 'bankingSegment', type: 'text' },
-      { key: 'totalScorePct', label: 'Total Score %', field: 'totalScorePct', type: 'percent', className: 'text-right' },
+      {
+        key: 'appraisalCompany',
+        label: 'Company',
+        field: 'appraisalCompany',
+        type: 'text',
+      },
+      {
+        key: 'internalAppraisalStaff',
+        label: 'Internal Staff',
+        field: 'internalAppraisalStaff',
+        type: 'text',
+      },
+      {
+        key: 'approvedDate',
+        label: 'Approved Date',
+        field: 'approvedDate',
+        type: 'date',
+        sortKey: 'ApprovedDate',
+      },
+      {
+        key: 'bankingSegment',
+        label: 'Banking Segment',
+        field: 'bankingSegment',
+        type: 'text',
+      },
+      {
+        key: 'totalScorePct',
+        label: 'Total Score %',
+        field: 'totalScorePct',
+        type: 'scorePct',
+        scoreMax: 5,
+        className: 'text-right',
+      },
       // Scores are abbreviated on screen; fullLabel carries the FSD wording (items 7–15) as a tooltip.
       { key: 'scoreReportQuality', label: 'Report Quality', fullLabel: 'Score of Report book quality', field: 'scoreReportQuality', type: 'int', className: 'text-right' },
       { key: 'scoreDeliveryTime', label: 'Delivery Time (SLA)', fullLabel: 'Score of Delivery time (SLA)', field: 'scoreDeliveryTime', type: 'int', className: 'text-right' },
