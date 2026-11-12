@@ -36,9 +36,9 @@ function defaultFilterValues(
 
 // ─── Value formatter ──────────────────────────────────────────────────────────
 
-function formatCellValue(value: unknown, type: ColumnDef['type']): string {
+function formatCellValue(value: unknown, col: ColumnDef): string {
   if (value == null) return '—';
-  switch (type) {
+  switch (col.type) {
     case 'money':
       return typeof value === 'number'
         ? value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -54,6 +54,10 @@ function formatCellValue(value: unknown, type: ColumnDef['type']): string {
     case 'percent':
       return typeof value === 'number'
         ? `${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}%`
+        : String(value);
+    case 'scorePct':
+      return typeof value === 'number' && col.scoreMax
+        ? `${((value / col.scoreMax) * 100).toFixed(0)}%`
         : String(value);
     case 'date':
       try {
@@ -293,10 +297,10 @@ function OperationalReportPage({ config }: OperationalReportPageProps) {
                     <tr key={rowIdx} className="hover:bg-(--palette-surface-2) transition-colors">
                       {columns.map((col, colIdx) => {
                         const raw = (row as Record<string, unknown>)[col.field];
-                        const formatted = formatCellValue(raw, col.type);
+                        const formatted = formatCellValue(raw, col);
                         const isRight =
                           col.className?.includes('text-right') ||
-                          ['money', 'number', 'int', 'percent'].includes(col.type);
+                          ['money', 'number', 'int', 'percent', 'scorePct'].includes(col.type);
 
                         return (
                           <td
