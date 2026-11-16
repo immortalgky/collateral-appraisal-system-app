@@ -7,9 +7,11 @@ import { PropertyCard } from './PropertyCard';
 import {
   BUILDING_TYPES,
   MACHINE_TYPES,
+  isVehicleOrVessel,
   PropertyFlag,
   STACK_GRID_MACHINE,
   STACK_GRID_PROPERTY,
+  VESSEL_TYPES,
 } from './PropertyCardContent';
 import { formatAreaNumber, toRaiNganWa } from '../utils/areaFormat';
 import { getPropertyIcon } from '../utils/propertyTypeConfig';
@@ -54,7 +56,8 @@ export const PropertyStackSection = ({
 }: PropertyStackSectionProps) => {
   const { t } = useTranslation('appraisal');
   const isMachine = MACHINE_TYPES.has(type);
-  const gridClass = isMachine ? STACK_GRID_MACHINE : STACK_GRID_PROPERTY;
+  const isMovable = isVehicleOrVessel(type);
+  const gridClass = isMachine || isMovable ? STACK_GRID_MACHINE : STACK_GRID_PROPERTY;
 
   // Plain computation, not memoised: it loops over a handful of items, and holding translated
   // text in a memo froze whichever language was loaded at first render — on a reload that is the
@@ -240,6 +243,18 @@ export const PropertyStackSection = ({
             <>
               <span className="truncate">{t('properties.stackColumns.registrationNumber')}</span>
               <span className="truncate">{t('properties.stackColumns.registrationStatus')}</span>
+              <span className="truncate">{t('properties.stackColumns.brandModel')}</span>
+            </>
+          ) : VESSEL_TYPES.has(type) ? (
+            <>
+              <span className="truncate">{t('properties.table.type')}</span>
+              <span className="truncate">{t('propertyInfo.vesselInfo.fields.model')}</span>
+              <span className="truncate text-right">{t('properties.splitView.grossTonnage')}</span>
+            </>
+          ) : isMovable ? (
+            <>
+              <span className="truncate">{t('properties.stackColumns.registrationNumber')}</span>
+              <span className="truncate">{t('properties.table.type')}</span>
               <span className="truncate">{t('properties.stackColumns.brandModel')}</span>
             </>
           ) : (

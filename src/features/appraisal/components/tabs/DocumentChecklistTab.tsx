@@ -21,6 +21,7 @@ import {
 } from '../../utils/checklistDocuments';
 import RequestDocumentsSection from '../RequestDocumentsSection';
 import CollapsibleSection from '../CollapsibleSection';
+import { needsMachinerySummary } from '../PropertyCardContent';
 import ValuationDocumentChecklist from './ValuationDocumentChecklist';
 import AppendixTab from './AppendixTab';
 import ReportPreviewTab from './ReportPreviewTab';
@@ -101,10 +102,10 @@ export const DocumentChecklistTab = ({ embedded = false }: { embedded?: boolean 
   const canRaiseFollowup = !isReadOnly && (actionsData?.canRaiseFollowup ?? false);
   const [tab, selectTab] = useChecklistTab(embedded);
 
-  // Gate the Machinery Book Section 1 form on machinery presence — same signal
+  // Gate the Machinery Book Section 1 form on machinery, vehicles or vessels — same signal
   // PropertyInformationPage uses to gate its Machinery Summary tab.
   const { groups } = useEnrichedPropertyGroups(appraisalId);
-  const hasMachinery = groups.some(g => g.items.some(i => (i.type as string) === 'MAC'));
+  const hasMachinery = groups.some(g => g.items.some(i => needsMachinerySummary(i.type)));
 
   // The tabs' counts. The same queries the tabs use, so nothing is fetched twice.
   const { data: requestDocs } = useGetRequestDocuments(appraisal?.requestId);

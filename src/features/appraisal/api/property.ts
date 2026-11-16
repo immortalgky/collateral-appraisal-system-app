@@ -26,12 +26,22 @@ import type {
   CreateCondoPMAPropertyResponseType,
   CreateLandPMAPropertyRequestType,
   CreateLandPMAPropertyResponseType,
+  UpdateVehiclePropertyRequestType,
+  GetVehiclePropertyResponseType,
+  CreateVehiclePropertyResponseType,
+  CreateVesselPropertyResponseType,
+  GetVesselPropertyResponseType,
+  UpdateVesselPropertyRequestType,
 } from '@shared/schemas/v1';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import { isAxiosError } from 'axios';
 import { propertyGroupKeys } from './propertyGroup';
-import type { createMachineryFormType } from '../schemas/form';
+import type {
+  createMachineryFormType,
+  createVehicleFormType,
+  createVesselFormType,
+} from '../schemas/form';
 
 // ─── Query Keys ──────────────────────────────────────────────────
 
@@ -76,9 +86,7 @@ export const useDeleteProperty = () => {
 
   return useMutation({
     mutationFn: async (params: { appraisalId: string; propertyId: string }) => {
-      const { data } = await axios.delete(
-        `/appraisal/${params.appraisalId}/${params.propertyId}`,
-      );
+      const { data } = await axios.delete(`/appraisal/${params.appraisalId}/${params.propertyId}`);
       return data as boolean;
     },
     onSuccess: (_, variables) => {
@@ -204,6 +212,48 @@ export const useCreateMachineryProperty = () => {
       data: createMachineryFormType;
     }): Promise<CreateMachineryPropertyResponseType> => {
       const url = `/appraisals/${params.appraisalId}/machinery-properties${params.groupId ? `?groupId=${params.groupId}` : ''}`;
+      const { data } = await axios.post(url, params.data);
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.all(variables.appraisalId),
+      });
+    },
+  });
+};
+
+export const useCreateVehicleProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      groupId?: string;
+      data: createVehicleFormType;
+    }): Promise<CreateVehiclePropertyResponseType> => {
+      const url = `/appraisals/${params.appraisalId}/vehicle-properties${params.groupId ? `?groupId=${params.groupId}` : ''}`;
+      const { data } = await axios.post(url, params.data);
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.all(variables.appraisalId),
+      });
+    },
+  });
+};
+
+export const useCreateVesselProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      groupId?: string;
+      data: createVesselFormType;
+    }): Promise<CreateVesselPropertyResponseType> => {
+      const url = `/appraisals/${params.appraisalId}/vessel-properties${params.groupId ? `?groupId=${params.groupId}` : ''}`;
       const { data } = await axios.post(url, params.data);
       return data;
     },
@@ -405,6 +455,42 @@ export const useGetMachineryPropertyById = (appraisalId: string, propertyId?: st
     queryFn: async (): Promise<GetMachineryPropertyResponseType> => {
       const { data } = await axios.get(
         `/appraisals/${appraisalId}/properties/${propertyId}/machinery-detail`,
+      );
+      console.log(data);
+      return data;
+    },
+    retry: (failureCount, error) => {
+      if (isAxiosError(error) && error.response?.status === 404) return false;
+      return failureCount < 3;
+    },
+  });
+};
+
+export const useGetVehiclePropertyById = (appraisalId: string, propertyId?: string) => {
+  return useQuery({
+    queryKey: ['appraisals', appraisalId, 'vehicle-properties', propertyId],
+    enabled: !!appraisalId && !!propertyId,
+    queryFn: async (): Promise<GetVehiclePropertyResponseType> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${propertyId}/vehicle-detail`,
+      );
+      console.log(data);
+      return data;
+    },
+    retry: (failureCount, error) => {
+      if (isAxiosError(error) && error.response?.status === 404) return false;
+      return failureCount < 3;
+    },
+  });
+};
+
+export const useGetVesselPropertyById = (appraisalId: string, propertyId?: string) => {
+  return useQuery({
+    queryKey: ['appraisals', appraisalId, 'vessel-properties', propertyId],
+    enabled: !!appraisalId && !!propertyId,
+    queryFn: async (): Promise<GetVesselPropertyResponseType> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${propertyId}/vessel-detail`,
       );
       console.log(data);
       return data;
@@ -673,6 +759,64 @@ export const useUpdateMachineryProperty = () => {
           'machinery-properties',
           variables.propertyId,
         ],
+      });
+    },
+  });
+};
+
+export const useUpdateVehicleProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      propertyId: string;
+      data: UpdateVehiclePropertyRequestType;
+    }): Promise<any> => {
+      const { data } = await axios.put(
+        `/appraisals/${params.appraisalId}/properties/${params.propertyId}/vehicle-detail`,
+        params.data,
+      );
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.all(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.propertyDetail(variables.appraisalId, variables.propertyId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['appraisals', variables.appraisalId, 'vehicle-properties', variables.propertyId],
+      });
+    },
+  });
+};
+
+export const useUpdateVesselProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      propertyId: string;
+      data: UpdateVesselPropertyRequestType;
+    }): Promise<any> => {
+      const { data } = await axios.put(
+        `/appraisals/${params.appraisalId}/properties/${params.propertyId}/vessel-detail`,
+        params.data,
+      );
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.all(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.propertyDetail(variables.appraisalId, variables.propertyId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['appraisals', variables.appraisalId, 'vessel-properties', variables.propertyId],
       });
     },
   });

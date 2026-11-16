@@ -5,7 +5,7 @@ import {
   useFormContext,
   useWatch,
 } from 'react-hook-form';
-import { useContext, useEffect, useId, useMemo, useRef } from 'react';
+import { type ComponentProps, useContext, useEffect, useId, useMemo, useRef } from 'react';
 import type { z } from 'zod';
 
 import Dropdown from '../inputs/Dropdown';
@@ -201,7 +201,8 @@ function pairOthers(
   const others = new Map<string, OtherSpec>();
   const folded = new Set<string>();
   for (const chip of fields) {
-    if (chip.type !== 'checkbox-group' && chip.type !== 'radio-group') continue;
+    const otherDropdown = chip.type === 'dropdown' && !!chip.otherField;
+    if (chip.type !== 'checkbox-group' && chip.type !== 'radio-group' && !otherDropdown) continue;
     if (chip.type === 'radio-group' && chip.variant === 'card') continue;
     const operator = chip.type === 'checkbox-group' ? 'contains' : 'equals';
     const companion = fields.find(f => {
@@ -673,19 +674,20 @@ function FieldRenderer({
       }
 
       case 'dropdown': {
+        const { otherField: _of, ...dropdownField } = passedField;
         const dropdownProps = {
+          ...fieldProps,
+          ...dropdownField,
           required: isRequired,
           disabled: isDisabled,
+          label: undefined,
+          error: error?.message,
+          filterWatchValues,
         };
-        return (
-          <Dropdown
-            {...fieldProps}
-            {...passedField}
-            {...dropdownProps}
-            label={undefined}
-            error={error?.message}
-            filterWatchValues={filterWatchValues}
-          />
+        return other ? (
+          <DropdownWithOther {...dropdownProps} other={other} />
+        ) : (
+          <Dropdown {...dropdownProps} />
         );
       }
 
@@ -916,6 +918,26 @@ function FieldRenderer({
         renderFieldComponent()
       )}
     </FormFieldShell>
+  );
+}
+
+function DropdownWithOther({
+  other,
+  error,
+  ...props
+}: ComponentProps<typeof Dropdown> & { other: OtherSpec }) {
+  const { control } = useFormContext();
+  const { field, fieldState } = useController({ name: other.name, control });
+  return (
+    <Dropdown
+      {...props}
+      otherField
+      otherTriggerValue={other.is}
+      otherText={field.value ?? ''}
+      onOtherTextChange={field.onChange}
+      otherMaxLength={other.maxLength}
+      error={error ?? fieldState.error?.message}
+    />
   );
 }
 

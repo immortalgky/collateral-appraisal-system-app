@@ -2422,6 +2422,7 @@ const UpdateVesselPropertyRequest = z
     vesselName: z.string().nullable().default(null),
     engineNo: z.string().nullable().default(null),
     registrationNumber: z.string().nullable().default(null),
+    hullNumber: z.string().nullable().default(null),
     registrationDate: z.string().datetime({ offset: true }).nullable().default(null),
     brand: z.string().nullable().default(null),
     model: z.string().nullable().default(null),
@@ -2470,13 +2471,17 @@ const GetVesselPropertyResponse = z
     vesselName: z.string().nullable(),
     engineNo: z.string().nullable(),
     registrationNumber: z.string().nullable(),
+    hullNumber: z.string().nullable(),
     registrationDate: z.string().datetime({ offset: true }).nullable(),
     brand: z.string().nullable(),
     model: z.string().nullable(),
     yearOfManufacture: z.number().int().nullable(),
     placeOfManufacture: z.string().nullable(),
     vesselType: z.string().nullable(),
+    vesselTypeOther: z.string().nullable(),
     classOfVessel: z.string().nullable(),
+    enginePower: z.string().nullable(),
+    numberOfEngines: z.number().nullable(),
     purchaseDate: z.string().datetime({ offset: true }).nullable(),
     purchasePrice: z.number().nullable(),
     engineCapacity: z.string().nullable(),
@@ -2511,6 +2516,7 @@ const UpdateVehiclePropertyRequest = z
     vehicleName: z.string().nullable().default(null),
     engineNo: z.string().nullable().default(null),
     chassisNo: z.string().nullable().default(null),
+    licensePlateNumber: z.string().nullable().default(null),
     registrationNumber: z.string().nullable().default(null),
     brand: z.string().nullable().default(null),
     model: z.string().nullable().default(null),
@@ -2553,6 +2559,7 @@ const GetVehiclePropertyResponse = z
     vehicleName: z.string().nullable(),
     engineNo: z.string().nullable(),
     chassisNo: z.string().nullable(),
+    licensePlateNumber: z.string().nullable(),
     registrationNumber: z.string().nullable(),
     brand: z.string().nullable(),
     model: z.string().nullable(),
@@ -4063,6 +4070,7 @@ const CreateVesselPropertyRequest = z
     vesselName: z.string().nullish().default(null),
     engineNo: z.string().nullish().default(null),
     registrationNumber: z.string().nullish().default(null),
+    hullNumber: z.string().nullish().default(null),
     registrationDate: z.string().datetime({ offset: true }).nullish().default(null),
     description: z.string().nullish().default(null),
     brand: z.string().nullish().default(null),
@@ -4108,6 +4116,7 @@ const CreateVehiclePropertyRequest = z
     vehicleName: z.string().nullish().default(null),
     engineNo: z.string().nullish().default(null),
     chassisNo: z.string().nullish().default(null),
+    licensePlateNumber: z.string().nullish().default(null),
     registrationNumber: z.string().nullish().default(null),
     description: z.string().nullish().default(null),
     brand: z.string().nullish().default(null),
@@ -5545,6 +5554,10 @@ export type CreateCondoPropertyRequestType = z.infer<typeof CreateCondoPropertyR
 export type CreateCondoPropertyResponseType = z.infer<typeof CreateCondoPropertyResponse>;
 export type CreateMachineryPropertyRequestType = z.infer<typeof CreateMachineryPropertyRequest>;
 export type CreateMachineryPropertyResponseType = z.infer<typeof CreateMachineryPropertyResponse>;
+export type CreateVehiclePropertyRequestType = z.infer<typeof CreateVehiclePropertyRequest>;
+export type CreateVehiclePropertyResponseType = z.infer<typeof CreateVehiclePropertyResponse>;
+export type CreateVesselPropertyRequestType = z.infer<typeof CreateVesselPropertyRequest>;
+export type CreateVesselPropertyResponseType = z.infer<typeof CreateVesselPropertyResponse>;
 
 // Property Get types
 export type GetLandPropertyResponseType = z.infer<typeof GetLandPropertyResponse>;

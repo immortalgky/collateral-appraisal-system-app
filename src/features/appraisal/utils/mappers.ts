@@ -10,6 +10,8 @@ import type {
   createProjectLandFormType,
   createLandAndBuildingPMAFormType,
   createMachineryFormType,
+  createVehicleFormType,
+  createVesselFormType,
   machinerySummaryFormType,
 } from '@/features/appraisal/schemas/form';
 import type { MachinerySummaryResponse } from '@/features/appraisal/api/machinerySummary';
@@ -21,6 +23,8 @@ import type {
   GetMachineryPropertyResponseType,
   GetLandPMAPropertyResponseType,
   GetCondoPMAPropertyResponseType,
+  GetVehiclePropertyResponseType,
+  GetVesselPropertyResponseType,
 } from '@shared/schemas/v1';
 import type { CurrentAssignment } from '@features/appraisal/types/administration';
 import { findAddressBySubDistrictCode } from '@/shared/data/thaiAddresses';
@@ -570,6 +574,7 @@ export const mapMachineryPropertyResponseToForm = (
     registrationNumber: response.registrationNumber ?? '',
     installationStatus: response.installationStatus ?? '',
     machineType: response.machineType ?? '',
+    machineTypeOther: response.machineTypeOther ?? '',
     registrationStatus: response.registrationStatus ?? false,
     invoiceNumber: response.invoiceNumber ?? '',
     isPriceCertified: response.isPriceCertified ?? true,
@@ -603,6 +608,49 @@ export const mapMachineryPropertyResponseToForm = (
     appraiserOpinion: response.appraiserOpinion ?? '',
   };
 };
+
+export const mapVehiclePropertyResponseToForm = (
+  response: GetVehiclePropertyResponseType,
+): createVehicleFormType => ({
+  propertyName: response.propertyName?.trim() || response.vehicleName?.trim() || '',
+  engineNo: response.engineNo ?? '',
+  chassisNo: response.chassisNo ?? '',
+  licensePlateNumber: response.licensePlateNumber ?? '',
+  registrationNumber: response.registrationNumber ?? '',
+  registrationDate: response.registrationDate ?? null,
+  color: response.color ?? '',
+  colorOther: response.colorOther ?? '',
+  brand: response.brand ?? '',
+  model: response.model ?? '',
+  yearOfManufacture: response.yearOfManufacture ?? null,
+  vehicleType: response.vehicleType ?? '',
+  vehicleTypeOther: response.vehicleTypeOther ?? '',
+  purchaseDate: response.purchaseDate ?? null,
+  purchasePrice: response.purchasePrice ?? null,
+  energyUse: response.energyUse ?? '',
+  energyUseRemark: response.energyUseRemark ?? '',
+  location: response.location ?? '',
+});
+
+export const mapVesselPropertyResponseToForm = (
+  response: GetVesselPropertyResponseType,
+): createVesselFormType => ({
+  propertyName: response.propertyName?.trim() || response.vesselName?.trim() || '',
+  model: response.model ?? '',
+  yearOfManufacture: response.yearOfManufacture ?? null,
+  vesselType: response.vesselType ?? '',
+  vesselTypeOther: response.vesselTypeOther ?? '',
+  enginePower: response.enginePower ?? '',
+  numberOfEngines: response.numberOfEngines ?? null,
+  hullNumber: response.hullNumber ?? '',
+  registrationNumber: response.registrationNumber ?? '',
+  purchaseDate: response.purchaseDate ?? null,
+  purchasePrice: response.purchasePrice ?? null,
+  grossTonnage: response.grossTonnage ?? null,
+  netTonnage: response.netTonnage ?? null,
+  location: response.location ?? '',
+  conditionUse: response.conditionUse ?? '',
+});
 
 export const mapCondoPMAPropertyResponseToForm = (
   response: GetCondoPMAPropertyResponseType,
