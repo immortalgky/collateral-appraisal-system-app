@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import clsx from 'clsx';
 import { useQueryClient } from '@tanstack/react-query';
 import { useForm, useWatch } from 'react-hook-form';
@@ -162,16 +162,29 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
+export interface UnitPriceCorrection {
+  save: (body: {
+    assumption: unknown;
+    unitPriceFlags: ProjectUnitPriceFlagData[];
+  }) => Promise<void>;
+  importFile: (file: File) => Promise<void>;
+  reasonSlot: ReactNode;
+  head?: ReactNode;
+  /** Whether the assumption form or the unit flags hold unsaved edits. */
+  onDirtyChange?: (isDirty: boolean) => void;
+}
 
 interface UnitPriceTabProps {
   projectType: ProjectType;
+  correction?: UnitPriceCorrection;
 }
 
-export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
+export default function UnitPriceTab({ projectType, correction }: UnitPriceTabProps) {
   const { t } = useTranslation('blockProject');
   const appraisalId = useAppraisalId();
   const queryClient = useQueryClient();
-  const isReadOnly = usePageReadOnly();
+  const pageReadOnly = usePageReadOnly();
+  const isReadOnly = correction ? false : pageReadOnly;
   const condo = isCondo(projectType);
   // L (appraised as land only) has no models: a unit is priced from its land alone, so nothing waits on a
   // model's standard price and there is no model table or fire cover.
@@ -363,10 +376,14 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
     }));
 
     try {
-      if (flags.length > 0) {
-        await saveUnitFlagsAsync({ appraisalId, flags });
+      if (correction) {
+        await correction.save({ assumption: data, unitPriceFlags: flags });
+      } else {
+        if (flags.length > 0) {
+          await saveUnitFlagsAsync({ appraisalId, flags });
+        }
+        await saveAssumptionAsync({ appraisalId, data });
       }
-      await saveAssumptionAsync({ appraisalId, data });
       reset(data);
       // The flags are stored now. Not left to the [unitPricesData] effect: when the refetch returns
       // identical data React Query keeps the same reference and that effect never runs.
@@ -374,8 +391,8 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
 
       if (withCalculate) {
         // After the flag and assumption saves, whose own refetches stamp the prices too.
-        const calculateStartedAt = Date.now();
-        await calculatePricesAsync({ appraisalId });
+        const calculateStartedAt = correction ? startedAt : Date.now();
+        if (!correction) await calculatePricesAsync({ appraisalId });
         setModeOverride('Calculated'); // the new server source, ahead of the refetch
         setWrittenSource('Calculated');
         setWrittenAt(startedAt);
@@ -396,7 +413,7 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
         toast.success(t('toasts.pricing.saveDraftSuccess'));
       }
     } catch (err) {
-      toast.error(errorText(err, t('toasts.pricing.saveFailed')));
+      if (!correction) toast.error(errorText(err, t('toasts.pricing.saveFailed')));
     } finally {
       setSaveIntent(null);
     }
@@ -503,6 +520,12 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
   // Skipped when the answer cannot matter: an edit already makes the grid "unsaved", and the Imported
   // view shows the stored rows themselves.
   const editing = isDirty || flagsDirty;
+
+  // Correction mode: the pane guards leaving with unsaved edits, and only this tab knows of them.
+  const reportDirty = correction?.onDirtyChange;
+  useEffect(() => {
+    reportDirty?.(editing);
+  }, [editing, reportDirty]);
 
   // Shows what is stored until the user edits an assumption or a flag (or looks at the Calculated
   // view over an imported list, where the recompute is what Save would write). A recompute that
@@ -616,16 +639,28 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
   // would put Save Draft in front of an imported price list.
   if (sourceLoading) {
     return (
-      <div className="space-y-3 p-2" role="status" aria-label={t('unitPrice.source.loading')}>
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className="h-10 animate-pulse rounded bg-(--palette-surface-3)" />
-        ))}
-      </div>
+      <>
+        {correction?.head}
+        <div
+          className={clsx('space-y-3', correction ? 'p-3' : 'p-2')}
+          role="status"
+          aria-label={t('unitPrice.source.loading')}
+        >
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="h-10 animate-pulse rounded bg-(--palette-surface-3)" />
+          ))}
+        </div>
+      </>
     );
   }
   // Only with no source data at all: a failed background refetch keeps the tab on screen.
   if (sourceInfo === undefined) {
-    return <DataErrorState variant="inline" onRetry={() => refetchSource()} />;
+    return (
+      <>
+        {correction?.head}
+        <DataErrorState variant="inline" onRetry={() => refetchSource()} />
+      </>
+    );
   }
 
   // What the collapsed assumptions strip keeps on show.
@@ -761,12 +796,22 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
       >
         {/* The scroller is a size container, so the results card and the sticky assumption panel
             can end exactly where the scroll area (and so the action bar below it) begins: 100cqh. */}
-        <div className="flex-1 min-h-0 overflow-y-auto pb-4 [container-type:size]">{body}</div>
+        <div className="flex-1 min-h-0 overflow-y-auto pb-4 [container-type:size]">
+          {correction ? (
+            <>
+              {correction.head}
+              <div className="px-3 pt-3">{body}</div>
+              <div className="px-3 pt-3">{correction.reasonSlot}</div>
+            </>
+          ) : (
+            body
+          )}
+        </div>
 
         {/* Sticky bottom action bar */}
         <ActionBar>
           <ActionBar.Left>
-            <CancelButton />
+            {!correction && <CancelButton />}
             {!isReadOnly && !imported && (
               <>
                 <ActionBar.Divider />
@@ -790,7 +835,7 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
             <ActionBar.Right>
               {/* Over an imported price list only Save is offered: it recalculates and flips the
                   source, whereas a draft would leave the imported prices next to new assumptions. */}
-              {serverSource !== 'Imported' && (
+              {serverSource !== 'Imported' && !correction && (
                 <Button
                   variant="ghost"
                   type="button"
@@ -868,6 +913,7 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
       {uploadOpen && appraisalId && (
         <UnitPriceImportDialog
           appraisalId={appraisalId}
+          importOverride={correction?.importFile}
           onClose={() => setUploadOpen(false)}
           onImported={(result, startedAt) => {
             setModeOverride('Imported');

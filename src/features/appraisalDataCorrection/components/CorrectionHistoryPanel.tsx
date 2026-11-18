@@ -1,4 +1,4 @@
-import { Fragment, useMemo } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
@@ -20,19 +20,23 @@ import {
   filterByKind,
   groupByDay,
   entryKind,
+  isProjectPane,
+  PROJECT_PANES,
   propertyFieldLabel,
   targetOf,
   type HistoryEntryKind,
   type HistoryFilter,
 } from '../utils/correctionHistory';
 
-const FILTERS: HistoryFilter[] = ['all', 'property', 'documents'];
+const FILTERS: HistoryFilter[] = ['all', 'property', 'project', 'documents'];
 
-/** Selected chip colour = the entry labels it filters to (property blue, documents violet). */
+/** Selected chip colour = the entry labels it filters to (property blue, project amber, documents violet). */
 const FILTER_STYLE: Record<HistoryFilter, string> = {
   all: 'bg-primary/10 text-(--palette-primary-text) ring-primary/30',
   property:
     'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 ring-blue-200 dark:ring-blue-500/30',
+  project:
+    'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 ring-amber-200 dark:ring-amber-500/30',
   documents:
     'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 ring-violet-200 dark:ring-violet-500/30',
 };
@@ -42,6 +46,10 @@ const KIND_STYLE: Record<HistoryEntryKind, { dot: string; pill: string }> = {
   property: {
     dot: 'bg-blue-400',
     pill: 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300',
+  },
+  project: {
+    dot: 'bg-amber-400',
+    pill: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300',
   },
   regenerate: {
     dot: 'bg-violet-400',
@@ -97,6 +105,52 @@ export const HistoryFilterChips = ({
   );
 };
 
+const UNIT_PRICE_PAGE = 100;
+
+const UnitPriceChangeList = ({
+  changes,
+}: {
+  changes: { field: string; from?: string | null; to?: string | null }[];
+}) => {
+  const { t } = useTranslation('appraisalDataCorrection');
+  const [shown, setShown] = useState(UNIT_PRICE_PAGE);
+  const visible = changes.slice(0, shown);
+  const remaining = changes.length - visible.length;
+
+  return (
+    <div className="space-y-1">
+      {changes.length > UNIT_PRICE_PAGE && (
+        <p className="text-[11px] text-(--palette-gray-500)">
+          {t('history.changeCount', { count: changes.length })}
+        </p>
+      )}
+      <div className="max-h-72 overflow-auto rounded-md bg-(--palette-surface-2)">
+        <dl className="grid w-max min-w-full grid-cols-[auto_auto] gap-x-3 gap-y-0.5 whitespace-nowrap px-3 py-2 text-xs">
+          {visible.map((change, idx) => (
+            <Fragment key={idx}>
+              <dt className="text-(--palette-gray-500)">{propertyFieldLabel(change.field)}</dt>
+              <dd className="text-(--palette-ink)">
+                <ChangeValues field={change.field} from={change.from} to={change.to} />
+              </dd>
+            </Fragment>
+          ))}
+        </dl>
+        {remaining > 0 && (
+          <div className="sticky left-0 px-3 pb-2">
+            <button
+              type="button"
+              onClick={() => setShown(n => n + UNIT_PRICE_PAGE)}
+              className="rounded text-xs font-semibold text-(--palette-primary-text) hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            >
+              {t('history.showMore', { count: Math.min(remaining, UNIT_PRICE_PAGE), remaining })}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 interface CorrectionHistoryPanelProps {
   appraisalId: string;
   /**
@@ -106,7 +160,8 @@ interface CorrectionHistoryPanelProps {
    * to reconstruct what happened defeats the point of having an audit trail.
    */
   properties: PropertyGroupItemDtoType[];
-  /** Receives a property id or DOCUMENTS_PANE — the rail entry the clicked row belongs to. */
+  projectTabs: ReadonlyMap<string, string>;
+  /** Receives a property id, a project pane or DOCUMENTS_PANE — the rail entry the clicked row belongs to. */
   onSelectTarget: (id: string) => void;
   filter: HistoryFilter;
 }
@@ -114,6 +169,7 @@ interface CorrectionHistoryPanelProps {
 const CorrectionHistoryPanel = ({
   appraisalId,
   properties,
+  projectTabs,
   onSelectTarget,
   filter,
 }: CorrectionHistoryPanelProps) => {
@@ -195,9 +251,7 @@ const CorrectionHistoryPanel = ({
           </h3>
           <ol className="space-y-5">
             {items.map(correction => {
-              // A null property id marks a document / summary-regeneration entry.
               const propertyId = correction.appraisalPropertyId;
-              const isDocument = propertyId == null;
               // A same-day change of a date-only field reads "01/01/2025 → 01/01/2025": left out of the list;
               // the entry keeps its header, reason and time.
               const changes = correction.changes.filter(
@@ -205,11 +259,17 @@ const CorrectionHistoryPanel = ({
               );
               const kind = entryKind(correction);
               const target = targetOf(correction);
+              const isProject = isProjectPane(target);
+              const isDocument = target === DOCUMENTS_PANE;
+              const isUnitPrice = target === PROJECT_PANES.unitPrice;
               const targetLabel = isDocument
                 ? t('history.documents')
-                : propertyNameById.get(propertyId) || t('detail.unnamedProperty');
-              // A property that is no longer on the appraisal has no rail entry to jump to.
-              const canSelect = target === DOCUMENTS_PANE || propertyNameById.has(target);
+                : isProject
+                  ? (projectTabs.get(target) ?? t('history.project'))
+                  : (propertyId && propertyNameById.get(propertyId)) || t('detail.unnamedProperty');
+              // A property, model or tower that is no longer on the appraisal has no rail entry to jump to.
+              const canSelect =
+                isDocument || propertyNameById.has(target) || projectTabs.has(target);
               return (
                 <li key={correction.id} className="grid grid-cols-[10px_minmax(0,1fr)] gap-3">
                   <span
@@ -241,35 +301,38 @@ const CorrectionHistoryPanel = ({
                       )}
                     </div>
 
-                    {changes.length > 0 && (
-                      <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 rounded-md bg-(--palette-surface-2) px-3 py-2 text-xs">
-                        {changes.map((change, idx) => (
-                          <Fragment key={`${correction.id}-${idx}`}>
-                            <dt className="text-(--palette-gray-500)">
-                              {fieldLabel(change.field, isDocument)}
-                            </dt>
-                            <dd className="min-w-0 break-words text-(--palette-ink)">
-                              {isDocument && isActionField(change.field) ? (
-                                // One-off actions, not a value that changed: no struck-through "from".
-                                // The backend writes an English literal for a regeneration; localize it.
-                                change.field === SUMMARY_HISTORY_FIELD ? (
-                                  t('history.regenerationRequested')
+                    {changes.length > 0 &&
+                      (isUnitPrice ? (
+                        <UnitPriceChangeList changes={changes} />
+                      ) : (
+                        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 rounded-md bg-(--palette-surface-2) px-3 py-2 text-xs">
+                          {changes.map((change, idx) => (
+                            <Fragment key={`${correction.id}-${idx}`}>
+                              <dt className="text-(--palette-gray-500)">
+                                {fieldLabel(change.field, isDocument)}
+                              </dt>
+                              <dd className="min-w-0 break-words text-(--palette-ink)">
+                                {isDocument && isActionField(change.field) ? (
+                                  // One-off actions, not a value that changed: no struck-through "from".
+                                  // The backend writes an English literal for a regeneration; localize it.
+                                  change.field === SUMMARY_HISTORY_FIELD ? (
+                                    t('history.regenerationRequested')
+                                  ) : (
+                                    (change.to ?? '—')
+                                  )
                                 ) : (
-                                  (change.to ?? '—')
-                                )
-                              ) : (
-                                <ChangeValues
-                                  field={change.field}
-                                  from={change.from}
-                                  to={change.to}
-                                  empty={isDocument ? t('history.deleted') : '—'}
-                                />
-                              )}
-                            </dd>
-                          </Fragment>
-                        ))}
-                      </dl>
-                    )}
+                                  <ChangeValues
+                                    field={change.field}
+                                    from={change.from}
+                                    to={change.to}
+                                    empty={isDocument ? t('history.deleted') : '—'}
+                                  />
+                                )}
+                              </dd>
+                            </Fragment>
+                          ))}
+                        </dl>
+                      ))}
 
                     {correction.reason && (
                       <p className="text-xs text-(--palette-gray-600)">

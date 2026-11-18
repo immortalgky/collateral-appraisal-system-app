@@ -51,7 +51,8 @@
     "edits_other": "{{count}} edits",
     "unsaved": "Unsaved changes",
     "propertyCount_one": "{{count}} item",
-    "propertyCount_other": "{{count}} items"
+    "propertyCount_other": "{{count}} items",
+    "project": "Project"
   },
   "confirmDialog": {
     "title": "Confirm Data Correction",
@@ -159,7 +160,8 @@
     "filter": {
       "all": "All",
       "property": "Properties",
-      "documents": "Documents"
+      "documents": "Documents",
+      "project": "Project"
     },
     "documents": "Documents",
     "appraisalSummary": "Appraisal summary report",
@@ -172,9 +174,23 @@
       "notify": "Source system notified",
       "attach": "Document attached",
       "replace": "Document replaced",
-      "delete": "Document deleted"
+      "delete": "Document deleted",
+      "project": "Project data corrected"
     },
     "reasonLabel": "Reason:",
-    "deleted": "deleted"
+    "deleted": "deleted",
+    "project": "Project",
+    "changeCount_one": "{{count}} change",
+    "changeCount_other": "{{count}} changes",
+    "showMore": "Show {{count}} more ({{remaining}} left)"
+  },
+  "project": {
+    "backToList": "Back to list",
+    "nothingSaved": "Nothing has been saved for this part of the project, so there is nothing to correct.",
+    "unnamedModel": "Unnamed model",
+    "unnamedTower": "Unnamed tower",
+    "noModels": "This project has no models.",
+    "noTowers": "This project has no towers.",
+    "pickToCorrect": "Pick one to correct"
   }
 }

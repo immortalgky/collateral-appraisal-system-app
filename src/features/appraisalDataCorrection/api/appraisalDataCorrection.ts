@@ -6,6 +6,7 @@ import {
   type QueryClient,
 } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
+import { uploadForm } from '@shared/api/blobTransfer';
 import { appraisalDocumentKeys } from '@/features/appraisal/api/appraisalDocuments';
 import { propertyGroupKeys } from '@/features/appraisal/api/propertyGroup';
 import type {
@@ -185,6 +186,70 @@ export function useCorrectPropertyData() {
         queryKey: appraisalDataCorrectionKeys.properties(variables.appraisalId),
       });
     },
+  });
+}
+
+// ── Project (block) correction ───────────────────────────────
+export type ProjectCorrectionTarget = 'info' | 'land' | 'models' | 'towers' | 'unit-prices';
+
+const invalidateAfterProjectCorrection = (queryClient: QueryClient, appraisalId: string) =>
+  Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: appraisalDataCorrectionKeys.historyAll(appraisalId),
+    }),
+    queryClient.invalidateQueries({ queryKey: ['appraisal', appraisalId, 'project'] }),
+  ]);
+
+/**
+ * PUT …/project/data-correction/{target}[/{targetId}]. `data` is the body the block page's own PUT
+ * takes for that part (for `unit-prices`: `{ assumption, unitPriceFlags }`, then the server
+ * recalculates). The project counterpart of `useCorrectPropertyData`, with the same error codes.
+ */
+export function useCorrectProjectData() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      target: ProjectCorrectionTarget;
+      targetId?: string;
+      reason: string;
+      data: unknown;
+    }): Promise<CorrectPropertyDataResponse> => {
+      const path = params.targetId ? `${params.target}/${params.targetId}` : params.target;
+      const { data } = await axios.put(
+        `/appraisals/${params.appraisalId}/project/data-correction/${path}`,
+        { reason: params.reason, data: params.data },
+      );
+      return data;
+    },
+    onSuccess: (_, variables) =>
+      invalidateAfterProjectCorrection(queryClient, variables.appraisalId),
+  });
+}
+
+/** POST …/project/data-correction/unit-prices/import: the block page's import, with a reason. */
+export function useCorrectProjectUnitPriceImport() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      file: File;
+      reason: string;
+    }): Promise<CorrectPropertyDataResponse> => {
+      const formData = new FormData();
+      formData.append('file', params.file);
+      formData.append('reason', params.reason);
+      const { data } = await uploadForm<CorrectPropertyDataResponse>(
+        `/appraisals/${params.appraisalId}/project/data-correction/unit-prices/import`,
+        formData,
+        { label: params.file.name },
+      );
+      return data;
+    },
+    onSettled: (_data, _error, variables) =>
+      invalidateAfterProjectCorrection(queryClient, variables.appraisalId),
   });
 }
 
