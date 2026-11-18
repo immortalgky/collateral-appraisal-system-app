@@ -12,13 +12,13 @@ import ActionBar from '@/shared/components/ActionBar';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import CancelButton from '@/shared/components/buttons/CancelButton';
-import { findAddressBySubDistrictCode } from '@/shared/data/thaiAddresses';
 import type { ApiError } from '@/shared/types/api';
 
 import { useGetProject, useSaveProject } from '../../api/project';
 import { isCondo } from '../../types';
 import type { ProjectType } from '../../types';
 import ProjectInfoForm from '../../forms/ProjectInfoForm';
+import { projectToInfoForm } from '../../utils/formMappers';
 import { CondoFrame } from '../condo';
 import ChangeProjectTypeDialog, { type ChildCounts } from '../ChangeProjectTypeDialog';
 import {
@@ -80,83 +80,7 @@ export default function ProjectInfoTab({
   } = methods;
 
   useEffect(() => {
-    if (project) {
-      // The names are display-only and normally written by the location selector, which a read page
-      // does not mount. Any source, as the field's resolveFromAnySource does.
-      const address = project.subDistrict
-        ? findAddressBySubDistrictCode(project.subDistrict)
-        : undefined;
-      const locationNames = {
-        subDistrictName: address?.subDistrictName ?? null,
-        districtName: address?.districtName ?? null,
-        provinceName: address?.provinceName ?? null,
-      };
-      if (isCondo(projectType)) {
-        reset({
-          projectName: project.projectName ?? '',
-          projectDescription: project.projectDescription ?? null,
-          developer: project.developer ?? null,
-          projectSaleLaunchDate: project.projectSaleLaunchDate ?? null,
-          landAreaRai: project.landAreaRai ?? null,
-          landAreaNgan: project.landAreaNgan ?? null,
-          landAreaSquareWa: project.landAreaSquareWa ?? null,
-          unitForSaleCount: project.unitForSaleCount ?? null,
-          landOffice: project.landOffice ?? '',
-          projectType: '', // placeholder; stamped from the stored type at submit (see onSubmit)
-          numberOfPhase: project.numberOfPhase ?? null,
-          isUnderConstruction: project.isUnderConstruction ?? null,
-          constructionProgressPercent: project.constructionProgressPercent ?? null,
-          houseNumber: project.houseNumber ?? null,
-          road: project.road ?? null,
-          soi: project.soi ?? null,
-          subDistrict: project.subDistrict ?? null,
-          district: project.district ?? null,
-          province: project.province ?? null,
-          postcode: project.postcode ?? null,
-          ...locationNames,
-          latitude: project.latitude ?? null,
-          longitude: project.longitude ?? null,
-          builtOnTitleDeedNumber: project.builtOnTitleDeedNumber ?? null,
-          utilities: project.utilities ?? [],
-          utilitiesOther: project.utilitiesOther ?? null,
-          facilities: project.facilities ?? [],
-          facilitiesOther: project.facilitiesOther ?? null,
-          remark: project.remark ?? null,
-        });
-      } else {
-        reset({
-          projectName: project.projectName ?? '',
-          projectDescription: project.projectDescription ?? null,
-          developer: project.developer ?? null,
-          projectSaleLaunchDate: project.projectSaleLaunchDate ?? null,
-          landAreaRai: project.landAreaRai ?? null,
-          landAreaNgan: project.landAreaNgan ?? null,
-          landAreaSquareWa: project.landAreaSquareWa ?? null,
-          unitForSaleCount: project.unitForSaleCount ?? null,
-          landOffice: project.landOffice ?? '',
-          projectType: '', // placeholder; stamped from the stored type at submit (see onSubmit)
-          numberOfPhase: project.numberOfPhase ?? null,
-          isUnderConstruction: project.isUnderConstruction ?? null,
-          constructionProgressPercent: project.constructionProgressPercent ?? null,
-          houseNumber: project.houseNumber ?? null,
-          road: project.road ?? null,
-          soi: project.soi ?? null,
-          subDistrict: project.subDistrict ?? null,
-          district: project.district ?? null,
-          province: project.province ?? null,
-          postcode: project.postcode ?? null,
-          ...locationNames,
-          latitude: project.latitude ?? null,
-          longitude: project.longitude ?? null,
-          licenseExpirationDate: project.licenseExpirationDate ?? null,
-          utilities: project.utilities ?? [],
-          utilitiesOther: project.utilitiesOther ?? null,
-          facilities: project.facilities ?? [],
-          facilitiesOther: project.facilitiesOther ?? null,
-          remark: project.remark ?? null,
-        });
-      }
-    }
+    if (project) reset(projectToInfoForm(project, projectType));
   }, [project, reset, projectType]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

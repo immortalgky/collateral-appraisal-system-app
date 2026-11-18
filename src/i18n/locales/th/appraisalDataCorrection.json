@@ -51,7 +51,8 @@
     "edits_other": "แก้ {{count}}",
     "unsaved": "มีข้อมูลที่ยังไม่บันทึก",
     "propertyCount_one": "{{count}} รายการ",
-    "propertyCount_other": "{{count}} รายการ"
+    "propertyCount_other": "{{count}} รายการ",
+    "project": "โครงการ"
   },
   "confirmDialog": {
     "title": "ยืนยันการแก้ไขข้อมูล",
@@ -159,7 +160,8 @@
     "filter": {
       "all": "ทั้งหมด",
       "property": "ทรัพย์สิน",
-      "documents": "เอกสาร"
+      "documents": "เอกสาร",
+      "project": "โครงการ"
     },
     "documents": "เอกสาร",
     "appraisalSummary": "รายงานสรุปผลการประเมิน",
@@ -172,9 +174,23 @@
       "notify": "แจ้งระบบต้นทาง",
       "attach": "แนบเอกสาร",
       "replace": "แทนที่เอกสาร",
-      "delete": "ลบเอกสาร"
+      "delete": "ลบเอกสาร",
+      "project": "แก้ข้อมูลโครงการ"
     },
     "reasonLabel": "เหตุผล:",
-    "deleted": "ลบแล้ว"
+    "deleted": "ลบแล้ว",
+    "project": "โครงการ",
+    "changeCount_one": "{{count}} รายการที่เปลี่ยน",
+    "changeCount_other": "{{count}} รายการที่เปลี่ยน",
+    "showMore": "แสดงเพิ่มอีก {{count}} รายการ (เหลือ {{remaining}})"
+  },
+  "project": {
+    "backToList": "กลับไปที่รายการ",
+    "nothingSaved": "ยังไม่มีข้อมูลส่วนนี้ของโครงการที่บันทึกไว้ จึงไม่มีอะไรให้แก้ไข",
+    "unnamedModel": "แบบไม่มีชื่อ",
+    "unnamedTower": "อาคารไม่มีชื่อ",
+    "noModels": "โครงการนี้ไม่มีแบบ",
+    "noTowers": "โครงการนี้ไม่มีอาคาร",
+    "pickToCorrect": "เลือกรายการที่ต้องการแก้ไข"
   }
 }

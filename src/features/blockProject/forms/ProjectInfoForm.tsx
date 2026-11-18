@@ -34,9 +34,9 @@ import { MapLocationPicker, MapPickerTriggerIcon } from '@/shared/components/Map
 interface ProjectInfoFormProps {
   /** The project's effective type: the stored one, which BlockProjectPage resolves (L shares the LB route). */
   projectType: ProjectType;
-  pendingType: ProjectType | null;
-  hasExistingProject: boolean;
-  onProjectTypeChange: (newType: ProjectType | null) => void;
+  pendingType?: ProjectType | null;
+  hasExistingProject?: boolean;
+  onProjectTypeChange?: (newType: ProjectType | null) => void;
 }
 
 /**
@@ -115,14 +115,16 @@ const ProjectInfoForm = ({
     <>
       <FormFields fields={projectNameField} />
       {/* data-field names these two hand-built controls the way FormFields do. */}
-      <div className="col-span-4" data-field="projectType">
-        <ProjectTypePill
-          projectType={projectType}
-          pendingType={pendingType}
-          hasExistingProject={hasExistingProject}
-          onPendingTypeChange={onProjectTypeChange}
-        />
-      </div>
+      {onProjectTypeChange && (
+        <div className="col-span-4" data-field="projectType">
+          <ProjectTypePill
+            projectType={projectType}
+            pendingType={pendingType ?? null}
+            hasExistingProject={hasExistingProject ?? true}
+            onPendingTypeChange={onProjectTypeChange}
+          />
+        </div>
+      )}
       <FormFields fields={beforeLaunchDate} />
       {readOnly ? (
         // A read page shows the date as text, not three disabled dropdowns (DESIGN.md 17.3).

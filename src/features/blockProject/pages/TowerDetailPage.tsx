@@ -30,6 +30,7 @@ import {
   projectTowerFormDefaults,
   type ProjectTowerFormType,
 } from '../schemas/form';
+import { towerToForm } from '../utils/formMappers';
 import ProjectTowerPhotoSection, {
   type ProjectTowerPhotoSectionRef,
 } from '../components/ProjectTowerPhotoSection';
@@ -71,41 +72,10 @@ export default function TowerDetailPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const photoSectionRef = useRef<ProjectTowerPhotoSectionRef>(null);
 
-  const formDefaults = useMemo<ProjectTowerFormType>(() => {
-    if (isEditMode && towerData) {
-      return {
-        towerName: towerData.towerName ?? null,
-        numberOfUnits: towerData.numberOfUnits ?? 0,
-        numberOfFloors: towerData.numberOfFloors ?? 0,
-        condoRegistrationNumber: towerData.condoRegistrationNumber ?? '',
-        conditionType: towerData.conditionType ?? null,
-        hasObligation: towerData.hasObligation ?? '',
-        obligationDetails: towerData.obligationDetails ?? null,
-        documentValidationType: towerData.documentValidationType ?? null,
-        isLocationCorrect: towerData.isLocationCorrect ?? true,
-        distance: towerData.distance ?? null,
-        roadWidth: towerData.roadWidth ?? null,
-        rightOfWay: towerData.rightOfWay ?? null,
-        roadSurfaceType: towerData.roadSurfaceType ?? null,
-        roadSurfaceTypeOther: towerData.roadSurfaceTypeOther ?? null,
-        decorationType: towerData.decorationType ?? null,
-        decorationTypeOther: towerData.decorationTypeOther ?? null,
-        buildingAge: towerData.buildingAge ?? null,
-        buildingFormType: towerData.buildingFormType ?? null,
-        constructionMaterialType: towerData.constructionMaterialType ?? null,
-        roofType: towerData.roofType ?? [],
-        roofTypeOther: towerData.roofTypeOther ?? null,
-        isExpropriated: towerData.isExpropriated ?? false,
-        expropriationRemark: towerData.expropriationRemark ?? null,
-        isInExpropriationLine: towerData.isInExpropriationLine ?? false,
-        royalDecree: towerData.royalDecree ?? null,
-        isForestBoundary: towerData.isForestBoundary ?? false,
-        forestBoundaryRemark: towerData.forestBoundaryRemark ?? null,
-        remark: towerData.remark ?? null,
-      };
-    }
-    return projectTowerFormDefaults;
-  }, [isEditMode, towerData]);
+  const formDefaults = useMemo<ProjectTowerFormType>(
+    () => (isEditMode && towerData ? towerToForm(towerData) : projectTowerFormDefaults),
+    [isEditMode, towerData],
+  );
 
   const methods = useForm<ProjectTowerFormType>({
     defaultValues: formDefaults,

@@ -29,19 +29,13 @@ import ModelDetailForm from '../forms/ModelDetailForm';
 import ProjectModelPhotoSection, {
   type ProjectModelPhotoSectionRef,
 } from '../components/ProjectModelPhotoSection';
-import {
-  projectModelForm,
-  condoModelFormDefaults,
-  lbModelFormDefaults,
-  type CondoModelFormType,
-  type LbModelFormType,
-} from '../schemas/form';
+import { projectModelForm, condoModelFormDefaults, lbModelFormDefaults } from '../schemas/form';
+import { modelToForm, modelToPayload } from '../utils/formMappers';
 import { CondoDetailShell } from '../components/condo/towersModels/CondoDetailShell';
 import { ModelPricingButton } from '../components/condo/towersModels/ModelPricingButton';
 import { VillageModelFacts } from '../components/condo/towersModels/VillageModelFacts';
 import { isCondo } from '../types';
 import type { ProjectType } from '../types';
-import { mapSurfacesToApi } from '@/features/appraisal/utils/mappers';
 
 type AppError = AxiosError & { apiError?: ApiError };
 
@@ -98,86 +92,7 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
   const photoSectionRef = useRef<ProjectModelPhotoSectionRef>(null);
 
   const formDefaults = useMemo(() => {
-    if (isEditMode && modelData) {
-      if (isCondo(projectType)) {
-        return {
-          modelName: modelData.modelName ?? '',
-          modelDescription: modelData.modelDescription ?? null,
-          projectTowerId: modelData.projectTowerId ?? null,
-          startingPriceMin: modelData.startingPriceMin ?? null,
-          startingPriceMax: modelData.startingPriceMax ?? null,
-          hasMezzanine: modelData.hasMezzanine ?? false,
-          usableAreaMin: modelData.usableAreaMin ?? null,
-          usableAreaMax: modelData.usableAreaMax ?? null,
-          standardUsableArea: modelData.standardUsableArea ?? null,
-          fireInsuranceCode: modelData.fireInsuranceCode ?? null,
-          roomLayoutType: modelData.roomLayoutType ?? null,
-          roomLayoutTypeOther: modelData.roomLayoutTypeOther ?? null,
-          groundFloorMaterialType: modelData.groundFloorMaterialType ?? null,
-          groundFloorMaterialTypeOther: modelData.groundFloorMaterialTypeOther ?? null,
-          upperFloorMaterialType: modelData.upperFloorMaterialType ?? null,
-          upperFloorMaterialTypeOther: modelData.upperFloorMaterialTypeOther ?? null,
-          bathroomFloorMaterialType: modelData.bathroomFloorMaterialType ?? null,
-          bathroomFloorMaterialTypeOther: modelData.bathroomFloorMaterialTypeOther ?? null,
-          remark: modelData.remark ?? null,
-          areaDetails: modelData.areaDetails ?? [],
-        } satisfies CondoModelFormType;
-      }
-      // LandAndBuilding
-      return {
-        modelName: modelData.modelName ?? '',
-        modelDescription: modelData.modelDescription ?? null,
-        numberOfHouse: modelData.numberOfHouse ?? null,
-        startingPriceMin: modelData.startingPriceMin ?? null,
-        startingPriceMax: modelData.startingPriceMax ?? null,
-        usableAreaMin: modelData.usableAreaMin ?? null,
-        usableAreaMax: modelData.usableAreaMax ?? null,
-        standardUsableArea: modelData.standardUsableArea ?? null,
-        landAreaMin: modelData.landAreaMin ?? null,
-        landAreaMax: modelData.landAreaMax ?? null,
-        standardLandArea: modelData.standardLandArea ?? null,
-        fireInsuranceCode: modelData.fireInsuranceCode ?? null,
-        remark: modelData.remark ?? null,
-        buildingType: modelData.buildingType ?? null,
-        buildingTypeOther: modelData.buildingTypeOther ?? null,
-        numberOfFloors: modelData.numberOfFloors ?? null,
-        decorationType: modelData.decorationType ?? null,
-        decorationTypeOther: modelData.decorationTypeOther ?? null,
-        isEncroachingOthers: modelData.isEncroachingOthers ?? false,
-        encroachingOthersRemark: modelData.encroachingOthersRemark ?? null,
-        encroachingOthersArea: modelData.encroachingOthersArea ?? null,
-        buildingMaterialType: modelData.buildingMaterialType ?? null,
-        buildingStyleType: modelData.buildingStyleType ?? null,
-        isResidential: modelData.isResidential ?? false,
-        buildingAge: modelData.buildingAge ?? null,
-        constructionYear: modelData.constructionYear ?? null,
-        residentialRemark: modelData.residentialRemark ?? null,
-        constructionStyleType: modelData.constructionStyleType ?? null,
-        constructionStyleRemark: modelData.constructionStyleRemark ?? null,
-        constructionType: modelData.constructionType ?? null,
-        constructionTypeOther: modelData.constructionTypeOther ?? null,
-        utilizationType: modelData.utilizationType ?? null,
-        utilizationTypeOther: modelData.utilizationTypeOther ?? null,
-        structureType: modelData.structureType ?? [],
-        structureTypeOther: modelData.structureTypeOther ?? null,
-        roofFrameType: modelData.roofFrameType ?? [],
-        roofFrameTypeOther: modelData.roofFrameTypeOther ?? null,
-        roofType: modelData.roofType ?? [],
-        roofTypeOther: modelData.roofTypeOther ?? null,
-        ceilingType: modelData.ceilingType ?? [],
-        ceilingTypeOther: modelData.ceilingTypeOther ?? null,
-        interiorWallType: modelData.interiorWallType ?? [],
-        interiorWallTypeOther: modelData.interiorWallTypeOther ?? null,
-        exteriorWallType: modelData.exteriorWallType ?? [],
-        exteriorWallTypeOther: modelData.exteriorWallTypeOther ?? null,
-        fenceType: modelData.fenceType ?? [],
-        fenceTypeOther: modelData.fenceTypeOther ?? null,
-        surfaces: [...(modelData.surfaces ?? [])].sort(
-          (a, b) => (a.fromFloorNumber ?? 0) - (b.fromFloorNumber ?? 0),
-        ),
-        depreciationDetails: modelData.depreciationDetails ?? [],
-      } satisfies Partial<LbModelFormType>;
-    }
+    if (isEditMode && modelData) return modelToForm(modelData, projectType);
     return isCondo(projectType) ? condoModelFormDefaults : lbModelFormDefaults;
   }, [isEditMode, modelData, projectType]);
 
@@ -228,7 +143,7 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const submitForm = (data: any, isDraft: boolean) => {
     if (!appraisalId) return;
-    const payload = data.surfaces ? { ...data, surfaces: mapSurfacesToApi(data.surfaces) } : data;
+    const payload = modelToPayload(data);
     if (isEditMode && modelId) {
       updateModel(
         { appraisalId, modelId, data: payload },

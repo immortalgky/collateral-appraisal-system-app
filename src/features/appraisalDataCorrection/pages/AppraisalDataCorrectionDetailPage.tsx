@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useForm, type Resolver } from 'react-hook-form';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +11,6 @@ import {
   FormSection,
   FormSheet,
   UserFormLayoutProvider,
-  useFormLayout,
   type FormField,
 } from '@shared/components/form';
 import Icon from '@/shared/components/Icon';
@@ -47,6 +46,7 @@ import { diffFormValues, type DiffEntry } from '../utils/formDiff';
 import { withReason } from '../utils/withReason';
 import { withStoredBuildingValues } from '@/features/appraisal/utils/buildingStoredValues';
 import CorrectionConfirmDialog from '../components/CorrectionConfirmDialog';
+import { EditorScroller, hasEdit } from '../components/EditorScroller';
 import CorrectionHistoryPanel, { HistoryFilterChips } from '../components/CorrectionHistoryPanel';
 import CorrectionPageHeader from '../components/CorrectionPageHeader';
 import DocumentCorrectionPane from '../components/DocumentCorrectionPane';
@@ -55,11 +55,25 @@ import { useRegenerationPoll } from '../hooks/useRegenerationPoll';
 import { readApiError } from '../utils/readApiError';
 import {
   countByTarget,
+  countUnder,
   DOCUMENTS_PANE,
+  isProjectPane,
   latestOf,
+  PROJECT_PANES,
+  projectRowPane,
   type HistoryFilter,
 } from '../utils/correctionHistory';
 import type { Regeneration } from '../utils/documentCorrection';
+import ProjectCorrectionPane from '../components/project/ProjectCorrectionPane';
+import { useGetProject } from '@/features/blockProject/api/project';
+import { useGetProjectModels } from '@/features/blockProject/api/projectModel';
+import { useGetProjectTowers } from '@/features/blockProject/api/projectTower';
+import {
+  hasStructures,
+  isCondo,
+  type Project,
+  type ProjectType,
+} from '@/features/blockProject/types';
 
 // =============================================================================
 // Left rail — properties in this appraisal
@@ -138,6 +152,72 @@ function SectionLabel({ children, aside }: { children: string; aside?: string })
     <div className="flex items-baseline justify-between px-[0.9231rem] pb-[0.2308rem] pt-[0.6154rem] text-[0.8077rem] font-semibold tracking-[0.04em] text-[color:var(--dc-ink-3)]">
       <span>{children}</span>
       {aside && <span className="font-normal normal-case tracking-normal">{aside}</span>}
+    </div>
+  );
+}
+
+/**
+ * The parts of a block project the rail offers, in the block page's tab order.
+ */
+const projectRailItems = (projectType: ProjectType) => {
+  const items: {
+    pane: string;
+    labelKey:
+      | 'page.tabs.projectInfo'
+      | 'page.tabs.towers'
+      | 'page.tabs.projectLand'
+      | 'page.tabs.models'
+      | 'page.tabs.unitPrice';
+    icon: string;
+  }[] = [
+    { pane: PROJECT_PANES.info, labelKey: 'page.tabs.projectInfo', icon: 'building-columns' },
+    isCondo(projectType)
+      ? { pane: PROJECT_PANES.towers, labelKey: 'page.tabs.towers', icon: 'building' }
+      : { pane: PROJECT_PANES.land, labelKey: 'page.tabs.projectLand', icon: 'map' },
+    {
+      pane: PROJECT_PANES.models,
+      labelKey: 'page.tabs.models',
+      icon: isCondo(projectType) ? 'layer-group' : 'house',
+    },
+    { pane: PROJECT_PANES.unitPrice, labelKey: 'page.tabs.unitPrice', icon: 'tags' },
+  ];
+  return items.filter(item => item.pane !== PROJECT_PANES.models || hasStructures(projectType));
+};
+
+const isUnder = (pane: string | null, item: string) =>
+  pane === item || (pane?.startsWith(`${item}:`) ?? false);
+
+/** The project of a block appraisal, one entry per part of it the block page edits. */
+function ProjectRail({
+  project,
+  selectedPane,
+  editCounts,
+  dirtyPane,
+  onSelect,
+}: {
+  project: Project;
+  selectedPane: string | null;
+  editCounts: ReadonlyMap<string, number>;
+  dirtyPane: string | null;
+  onSelect: (pane: string) => void;
+}) {
+  const { t } = useTranslation('appraisalDataCorrection');
+  const { t: tb } = useTranslation('blockProject');
+
+  return (
+    <div>
+      <SectionLabel aside={project.projectName || undefined}>{t('rail.project')}</SectionLabel>
+      {projectRailItems(project.projectType).map(item => (
+        <RailItem
+          key={item.pane}
+          icon={{ style: 'solid', name: item.icon }}
+          label={tb(item.labelKey)}
+          isSelected={isUnder(selectedPane, item.pane)}
+          editCount={countUnder(editCounts, item.pane)}
+          isDirty={isUnder(dirtyPane, item.pane)}
+          onSelect={() => onSelect(item.pane)}
+        />
+      ))}
     </div>
   );
 }
@@ -276,32 +356,6 @@ function DocumentsRailEntry({
 // =============================================================================
 // Property correction editor — one mounted instance per property
 // =============================================================================
-
-/**
- * Whether a dirtyFields node holds a real edit. After a field-array operation RHF leaves the
- * array's entry behind as a tree of `false` leaves even when the rows equal the record, so a key
- * being present is not enough.
- */
-const hasEdit = (node: unknown): boolean =>
-  node === true || (typeof node === 'object' && node !== null && Object.values(node).some(hasEdit));
-
-/**
- * The editor's scroller, as the property pages have it: `#form-scroll-container` is what the
- * form-error scroll and the tab bar look for, and `--form-scroll-offset` is the pinned tab row's
- * height, which `FormSection` scrolls under. Inside the layout provider so it reads the layout.
- */
-function EditorScroller({ children }: { children: ReactNode }) {
-  const compact = useFormLayout() === 'compact';
-  return (
-    <div
-      id="form-scroll-container"
-      style={{ '--form-scroll-offset': compact ? '2.4286rem' : '2.5714rem' } as CSSProperties}
-      className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
-    >
-      {children}
-    </div>
-  );
-}
 
 function PropertyCorrectionEditor({
   appraisalId,
@@ -604,6 +658,12 @@ const AppraisalDataCorrectionDetailPage = () => {
     refetch: refetchProperties,
   } = useGetAppraisalPropertiesWithType(appraisalId);
   const { data: appraisal } = useGetAppraisalById(appraisalId);
+  const { data: project, isLoading: projectLoading } = useGetProject(appraisalId ?? '');
+  const { data: projectModels } = useGetProjectModels(project ? (appraisalId ?? '') : '');
+  const { data: projectTowers } = useGetProjectTowers(
+    appraisalId ?? '',
+    !!project && isCondo(project.projectType),
+  );
   // Customer lives on the request, same source as the 360 page header.
   const { data: request } = useGetRequestById(appraisal?.requestId);
 
@@ -626,11 +686,11 @@ const AppraisalDataCorrectionDetailPage = () => {
   // would open one property and then swap it for another's editor as the earlier group arrives.
   const selectedPropertyId =
     searchParams.get('propertyId') ??
-    (isLoading || propertiesFailed
+    (isLoading || propertiesFailed || projectLoading
       ? null
       : (properties.find(p => p.propertyId)?.propertyId ??
-        // A block appraisal has no properties at all; its documents are the only thing to correct.
-        DOCUMENTS_PANE));
+        // A block appraisal has no properties at all: its project, else its documents.
+        (project ? PROJECT_PANES.info : DOCUMENTS_PANE)));
   // Re-selecting the open entry is not a navigation — it would raise the unsaved-changes prompt for nothing.
   const setSelectedPropertyId = (id: string) => {
     if (id !== selectedPropertyId) setSearchParams({ propertyId: id }, { replace: true });
@@ -664,6 +724,31 @@ const AppraisalDataCorrectionDetailPage = () => {
     setSelectedPropertyId(id);
   };
 
+  // Names of the project's rail entries and rows, for the history's project rows.
+  const { t: tb } = useTranslation('blockProject');
+  const projectTabs = useMemo(() => {
+    const labels = new Map<string, string>();
+    if (!project) return labels;
+    for (const item of projectRailItems(project.projectType)) {
+      labels.set(item.pane, tb(item.labelKey));
+    }
+    for (const m of projectModels ?? []) {
+      labels.set(
+        projectRowPane('models', m.id),
+        `${tb('page.tabs.models')} · ${m.modelName || t('project.unnamedModel')}`,
+      );
+    }
+    for (const tw of projectTowers ?? []) {
+      labels.set(
+        projectRowPane('towers', tw.id),
+        `${tb('page.tabs.towers')} · ${tw.towerName || t('project.unnamedTower')}`,
+      );
+    }
+    return labels;
+  }, [project, projectModels, projectTowers, t, tb]);
+  // A block appraisal usually has no properties: then the project takes the empty property list's place.
+  const showPropertyRail = !project || isLoading || propertiesFailed || properties.length > 0;
+
   return (
     // The gutter is what lets the frame's shadow show: the app layout's content scroller clips at its
     // own edge, and the property pages have the same 0.75rem gutter around their frame.
@@ -682,16 +767,27 @@ const AppraisalDataCorrectionDetailPage = () => {
 
         <div className="flex-1 min-h-0 flex">
           <nav className="grid w-[17.8462rem] shrink-0 content-start gap-px overflow-y-auto border-r border-[color:var(--dc-line)] bg-[color:var(--dc-surface)] pb-[1.2308rem] pt-[0.3077rem]">
-            <PropertyRail
-              propertyGroups={propertyGroups}
-              isLoading={isLoading}
-              isError={propertiesFailed}
-              onRetry={refetchProperties}
-              selectedPropertyId={selectedPropertyId}
-              editCounts={editCounts}
-              dirtyPropertyId={editorDirty ? selectedPropertyId : null}
-              onSelect={setSelectedPropertyId}
-            />
+            {project && (
+              <ProjectRail
+                project={project}
+                selectedPane={selectedPropertyId}
+                editCounts={editCounts}
+                dirtyPane={editorDirty ? selectedPropertyId : null}
+                onSelect={setSelectedPropertyId}
+              />
+            )}
+            {showPropertyRail && (
+              <PropertyRail
+                propertyGroups={propertyGroups}
+                isLoading={isLoading}
+                isError={propertiesFailed}
+                onRetry={refetchProperties}
+                selectedPropertyId={selectedPropertyId}
+                editCounts={editCounts}
+                dirtyPropertyId={editorDirty ? selectedPropertyId : null}
+                onSelect={setSelectedPropertyId}
+              />
+            )}
             <DocumentsRailEntry
               appraisalId={appraisalId}
               isSelected={selectedPropertyId === DOCUMENTS_PANE}
@@ -709,6 +805,19 @@ const AppraisalDataCorrectionDetailPage = () => {
                 appraisalId={appraisalId!}
                 regeneration={regeneration}
                 onRegenerationChange={setRegeneration}
+              />
+            ) : isProjectPane(selectedPropertyId) && project ? (
+              <ProjectCorrectionPane
+                // Per entry: leaving a model for its list (or another part) starts a fresh editor.
+                key={`${appraisalId}-${selectedPropertyId}`}
+                appraisalId={appraisalId!}
+                project={project}
+                pane={selectedPropertyId}
+                corrections={corrections}
+                editCounts={editCounts}
+                onOpenHistory={openHistory}
+                onDirtyChange={setEditorDirty}
+                onSelect={setSelectedPropertyId}
               />
             ) : selectedProperty ? (
               <PropertyCorrectionEditor
@@ -736,11 +845,12 @@ const AppraisalDataCorrectionDetailPage = () => {
           onClose={() => setHistoryOpen(false)}
           title={t('history.title')}
           width="md"
-          headerActions={<HistoryFilterChips value={historyFilter} onChange={setHistoryFilter} />}
+          headerBelow={<HistoryFilterChips value={historyFilter} onChange={setHistoryFilter} />}
         >
           <CorrectionHistoryPanel
             appraisalId={appraisalId!}
             properties={properties}
+            projectTabs={projectTabs}
             onSelectTarget={selectFromHistory}
             filter={historyFilter}
           />

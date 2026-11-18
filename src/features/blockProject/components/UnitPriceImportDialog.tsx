@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent, type ReactNode } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
@@ -339,6 +340,7 @@ interface UnitPriceImportDialogProps {
   onClose: () => void;
   /** Called once the import has been written, before the dialog closes. */
   onImported?: (result: UnitPriceImportPreview, startedAt: number) => void;
+  importOverride?: (file: File) => Promise<void>;
 }
 
 /**
@@ -349,12 +351,20 @@ export default function UnitPriceImportDialog({
   appraisalId,
   onClose,
   onImported,
+  importOverride,
 }: UnitPriceImportDialogProps) {
   const { t } = useTranslation('blockProject');
   const d = 'unitPrice.import.dialog';
   const [file, setFile] = useState<File | null>(null);
   const previewMutation = usePreviewUnitPriceImport();
-  const importMutation = useImportUnitPrices();
+  const pageImport = useImportUnitPrices();
+  const overrideImport = useMutation({
+    mutationFn: async ({ file: picked }: { appraisalId: string; file: File }) => {
+      await importOverride!(picked);
+      return preview!;
+    },
+  });
+  const importMutation = importOverride ? overrideImport : pageImport;
   // Held here rather than read from the mutation: a new request clears the mutation's data, and a
   // failed re-check must leave the last result on screen.
   const [preview, setPreview] = useState<UnitPriceImportPreview | null>(null);

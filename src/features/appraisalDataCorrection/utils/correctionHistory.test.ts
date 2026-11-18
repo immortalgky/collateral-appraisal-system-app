@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   countByTarget,
+  countUnder,
   DOCUMENTS_PANE,
+  PROJECT_PANES,
   filterByKind,
   groupByDay,
   latestOf,
@@ -178,6 +180,58 @@ describe('propertyFieldLabel', () => {
   it('keeps the DOPA suffix on a column inside a row', () => {
     expect(propertyFieldLabel('Land.Titles[#1].DopaSubDistrict')).toBe(
       'Land titles #1 · Sub District (DOPA)',
+    );
+  });
+});
+
+describe('project entries', () => {
+  const project = (id: string, propertyType: string, targetId: string | null = null) => ({
+    id,
+    appraisalPropertyId: null,
+    propertyType,
+    targetId,
+    changedAt: at(20, 9),
+  });
+  const projectRows = [
+    project('i', 'PROJECT'),
+    project('m1', 'PROJECT_MODEL', 'model-1'),
+    project('m2', 'PROJECT_MODEL', 'model-2'),
+    project('u', 'PROJECT_UNIT_PRICE'),
+    { ...row('doc', null, at(20, 10)), propertyType: 'DOCUMENT' },
+  ];
+
+  it('maps each project row to its rail entry, a model or tower to its own row', () => {
+    expect(projectRows.map(targetOf)).toEqual([
+      PROJECT_PANES.info,
+      `${PROJECT_PANES.models}:model-1`,
+      `${PROJECT_PANES.models}:model-2`,
+      PROJECT_PANES.unitPrice,
+      DOCUMENTS_PANE,
+    ]);
+  });
+
+  it('counts a list entry with every row under it', () => {
+    const counts = countByTarget(projectRows);
+    expect(countUnder(counts, PROJECT_PANES.models)).toBe(2);
+    expect(countUnder(counts, PROJECT_PANES.towers)).toBe(0);
+    expect(countUnder(counts, PROJECT_PANES.info)).toBe(1);
+  });
+
+  it('filters project rows apart from property and document rows', () => {
+    expect(filterByKind(projectRows, 'project').map(r => r.id)).toEqual(['i', 'm1', 'm2', 'u']);
+    expect(filterByKind(projectRows, 'documents').map(r => r.id)).toEqual(['doc']);
+    expect(filterByKind(projectRows, 'property')).toEqual([]);
+  });
+
+  it('labels a project row as a project correction', () => {
+    expect(
+      entryKind({ appraisalPropertyId: null, propertyType: 'PROJECT_LAND', changes: [] }),
+    ).toBe('project');
+  });
+
+  it('names a row keyed by unit or model', () => {
+    expect(propertyFieldLabel('UnitPrices.#12 A-101.IsCorner')).toBe(
+      'Unit Prices #12 A-101 · Is Corner',
     );
   });
 });

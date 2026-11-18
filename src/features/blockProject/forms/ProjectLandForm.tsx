@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { type SubmitHandler, useForm, useWatch } from 'react-hook-form';
+import { type SubmitHandler, useForm, useFormContext, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -31,6 +31,34 @@ import { formatNumber } from '@/shared/utils/formatUtils';
 import type { ApiError } from '@/shared/types/api';
 
 type AppError = AxiosError & { apiError?: ApiError };
+
+export function ProjectLandFormBody() {
+  const { t } = useTranslation('blockProject');
+  const { control } = useFormContext<createProjectLandFormType>();
+  // The section head's summary follows the table as it is edited (rows are added before Save).
+  const titles = useWatch({ control, name: 'titles' }) as
+    | { rai?: unknown; ngan?: unknown; squareWa?: unknown }[]
+    | undefined;
+  const titlesWa = (titles ?? []).reduce(
+    (sum, row) => sum + toSquareWa(row.rai, row.ngan, row.squareWa),
+    0,
+  );
+
+  return (
+    <div className="flex flex-col gap-6 min-w-0">
+      {/* A project land does not store title order, so no order controls. */}
+      <TitleDeedForm
+        orderable={false}
+        hint={t('landDetail.titlesSummary', {
+          n: formatNumber(titles?.length ?? 0),
+          rnw: toRaiNganWa(titlesWa),
+          wa: formatNumber(titlesWa, 2),
+        })}
+      />
+      <BlockLandDetailForm />
+    </div>
+  );
+}
 
 /**
  * LandAndBuilding-only project land form.
@@ -66,21 +94,11 @@ export default function ProjectLandForm() {
     resolver: zodResolver(createProjectLandForm),
   });
   const {
-    control,
     handleSubmit,
     getValues,
     reset,
     formState: { dirtyFields },
   } = methods;
-
-  // The section head's summary follows the table as it is edited (rows are added before Save).
-  const titles = useWatch({ control, name: 'titles' }) as
-    | { rai?: unknown; ngan?: unknown; squareWa?: unknown }[]
-    | undefined;
-  const titlesWa = (titles ?? []).reduce(
-    (sum, row) => sum + toSquareWa(row.rai, row.ngan, row.squareWa),
-    0,
-  );
 
   const hasDirtyFields = Object.keys(dirtyFields).length > 0;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
@@ -138,18 +156,7 @@ export default function ProjectLandForm() {
             {/* The property shell without photos: the form, and the section TOC in the rail when
               wide. Nothing is pinned above it, so sections scroll to the top edge. */}
             <FormShell bodyClassName="pb-4">
-              <div className="flex flex-col gap-6 min-w-0">
-                {/* A project land does not store title order, so no order controls. */}
-                <TitleDeedForm
-                  orderable={false}
-                  hint={t('landDetail.titlesSummary', {
-                    n: formatNumber(titles?.length ?? 0),
-                    rnw: toRaiNganWa(titlesWa),
-                    wa: formatNumber(titlesWa, 2),
-                  })}
-                />
-                <BlockLandDetailForm />
-              </div>
+              <ProjectLandFormBody />
             </FormShell>
 
             {/* Sticky Action Buttons */}
