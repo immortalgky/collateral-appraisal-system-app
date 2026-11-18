@@ -113,10 +113,9 @@ const WinnerFeeReview = ({
         <h3 className="text-sm font-semibold text-(--palette-ink)">{t('winnerFee.title')}</h3>
         <p className="text-xs text-(--palette-ink-2)">{t('winnerFee.saveOnConfirmHint')}</p>
       </div>
-      {/* The toolbar sits inside the scroller so its two columns line up with the rows under
-          the scrollbar; the 1-unit inset keeps focus rings from being clipped. */}
-      <div className="max-h-[48vh] overflow-y-auto px-1">
-        <div className="sticky top-0 z-10 grid grid-cols-2 gap-2 bg-(--palette-surface) pt-1 pb-2 px-1.5 mb-1">
+
+      <div className="px-1">
+        <div className="sticky -top-4 z-10 -mx-7 mb-1 grid grid-cols-2 gap-2 border-b border-(--palette-line-soft) bg-(--palette-surface) px-7 pt-2 pb-2">
           <SearchBox query={query} onQueryChange={setQuery} />
           <ApplyAllControl
             hasEditableRows={editableRows.length > 0}

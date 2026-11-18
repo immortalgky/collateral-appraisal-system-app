@@ -996,11 +996,38 @@ const QuotationSelectionPage = () => {
       {/* ─── Modals ───────────────────────────────────────────────────────────── */}
 
       {/* RM pick confirmation */}
-      <Modal
+      <SlideOverPanel
         isOpen={isConfirmOpen}
         onClose={closePickDialog}
         title={t('selectWinner.title')}
-        size="xl"
+        width="2xl"
+        footer={
+          <div className="flex items-center justify-end gap-3">
+            {Object.entries(feeDrafts.drafts).length > 0 && (
+              <Badge tone="yellow">{t('winnerFee.unsavedChanges')}</Badge>
+            )}
+            <Button
+              variant="outline"
+              onClick={closePickDialog}
+              disabled={isPickPending || feeDrafts.isSaving}
+            >
+              {t('common:actions.cancel')}
+            </Button>
+            <Button onClick={handleConfirmPick} disabled={isPickPending || feeDrafts.isSaving}>
+              {isPickPending || feeDrafts.isSaving ? (
+                <>
+                  <Icon name="spinner" style="solid" className="size-4 mr-2 animate-spin" />
+                  {t('selectWinner.selecting')}
+                </>
+              ) : (
+                <>
+                  <Icon name="crown" style="solid" className="size-4 mr-2" />
+                  {t('buttons.confirmSelection')}
+                </>
+              )}
+            </Button>
+          </div>
+        }
       >
         <div className="flex flex-col gap-4">
           <div className="p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg border border-indigo-100 dark:border-indigo-500/20 flex items-start gap-2">
@@ -1070,34 +1097,8 @@ const QuotationSelectionPage = () => {
               </div>
             )}
           </div>
-
-          <div className="flex items-center justify-end gap-3 pt-2">
-            {Object.entries(feeDrafts.drafts).length > 0 && (
-              <Badge tone="yellow">{t('winnerFee.unsavedChanges')}</Badge>
-            )}
-            <Button
-              variant="outline"
-              onClick={closePickDialog}
-              disabled={isPickPending || feeDrafts.isSaving}
-            >
-              {t('common:actions.cancel')}
-            </Button>
-            <Button onClick={handleConfirmPick} disabled={isPickPending || feeDrafts.isSaving}>
-              {isPickPending || feeDrafts.isSaving ? (
-                <>
-                  <Icon name="spinner" style="solid" className="size-4 mr-2 animate-spin" />
-                  {t('selectWinner.selecting')}
-                </>
-              ) : (
-                <>
-                  <Icon name="crown" style="solid" className="size-4 mr-2" />
-                  {t('buttons.confirmSelection')}
-                </>
-              )}
-            </Button>
-          </div>
         </div>
-      </Modal>
+      </SlideOverPanel>
 
       {/* Admin cancel confirmation */}
       <Modal
