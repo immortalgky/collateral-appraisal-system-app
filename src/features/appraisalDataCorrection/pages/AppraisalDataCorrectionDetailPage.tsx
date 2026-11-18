@@ -845,7 +845,7 @@ const AppraisalDataCorrectionDetailPage = () => {
           onClose={() => setHistoryOpen(false)}
           title={t('history.title')}
           width="md"
-          headerActions={<HistoryFilterChips value={historyFilter} onChange={setHistoryFilter} />}
+          headerBelow={<HistoryFilterChips value={historyFilter} onChange={setHistoryFilter} />}
         >
           <CorrectionHistoryPanel
             appraisalId={appraisalId!}

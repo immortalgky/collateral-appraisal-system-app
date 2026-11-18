@@ -17,6 +17,8 @@ interface SlideOverPanelProps {
   footer?: ReactNode;
   /** Controls shown on the title row, left of the close button (e.g. filter chips). */
   headerActions?: ReactNode;
+  /** A row of controls under the title row, still inside the header (e.g. filter chips). */
+  headerBelow?: ReactNode;
   /** A light dim with no blur, so the page behind stays readable (it is still inert while open). */
   lightOverlay?: boolean;
   /** Runs once the panel has finished closing (its leave transition is done). */
@@ -43,6 +45,7 @@ const SlideOverPanel = ({
   children,
   footer,
   headerActions,
+  headerBelow,
   lightOverlay = false,
   afterLeave,
 }: SlideOverPanelProps) => {
@@ -82,25 +85,28 @@ const SlideOverPanel = ({
             >
               <div className="flex h-full flex-col bg-(--palette-surface) shadow-xl">
                 {/* Header */}
-                <div className="flex items-start justify-between px-6 py-4 border-b border-(--palette-line)">
-                  <div className="min-w-0">
-                    <h2 className="text-lg font-semibold break-words text-(--palette-ink)">
-                      {title}
-                    </h2>
-                    {subtitle && (
-                      <p className="mt-0.5 text-sm text-(--palette-gray-500)">{subtitle}</p>
+                <div className="px-6 py-4 border-b border-(--palette-line)">
+                  <div className="flex items-start justify-between">
+                    <div className="min-w-0">
+                      <h2 className="text-lg font-semibold break-words text-(--palette-ink)">
+                        {title}
+                      </h2>
+                      {subtitle && (
+                        <p className="mt-0.5 text-sm text-(--palette-gray-500)">{subtitle}</p>
+                      )}
+                    </div>
+                    {headerActions && (
+                      <div className="ml-auto flex shrink-0 items-center pl-3">{headerActions}</div>
                     )}
+                    <button
+                      onClick={onClose}
+                      className="ml-3 text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors"
+                      aria-label={t('actions.closePanel')}
+                    >
+                      <Icon name="xmark" style="regular" className="w-5 h-5" />
+                    </button>
                   </div>
-                  {headerActions && (
-                    <div className="ml-auto flex shrink-0 items-center pl-3">{headerActions}</div>
-                  )}
-                  <button
-                    onClick={onClose}
-                    className="ml-3 text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors"
-                    aria-label={t('actions.closePanel')}
-                  >
-                    <Icon name="xmark" style="regular" className="w-5 h-5" />
-                  </button>
+                  {headerBelow && <div className="mt-3">{headerBelow}</div>}
                 </div>
 
                 {/* Content */}

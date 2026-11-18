@@ -73,7 +73,7 @@ const KIND_STYLE: Record<HistoryEntryKind, { dot: string; pill: string }> = {
   },
 };
 
-/** Filter chips — rendered by the page on the drawer's title row, so the state lives there. */
+/** Filter chips — rendered by the page in the drawer's header, under the title, so the state lives there. */
 export const HistoryFilterChips = ({
   value,
   onChange,
@@ -83,7 +83,7 @@ export const HistoryFilterChips = ({
 }) => {
   const { t } = useTranslation('appraisalDataCorrection');
   return (
-    <div className="flex gap-1.5" role="group" aria-label={t('history.title')}>
+    <div className="flex flex-wrap gap-1.5" role="group" aria-label={t('history.title')}>
       {FILTERS.map(f => (
         <button
           key={f}
