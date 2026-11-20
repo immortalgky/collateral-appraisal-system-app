@@ -328,7 +328,7 @@ describe('TextInput', () => {
       expect(screen.getByLabelText('Name')).toHaveClass('min-h-ctl-c', 'rounded-ctl-c');
     });
 
-    it('should be 28px as a table cell in a Compact form, and unchanged in Standard', () => {
+    it('should be as tall as a normal field as a table cell in a Compact form, and unchanged in Standard', () => {
       render(
         <>
           <FormLayoutProvider layout="compact">
@@ -338,7 +338,7 @@ describe('TextInput', () => {
         </>,
       );
 
-      expect(screen.getByLabelText('Compact cell')).toHaveClass('min-h-8');
+      expect(screen.getByLabelText('Compact cell')).toHaveClass('min-h-ctl-c');
       expect(screen.getByLabelText('Standard cell')).toHaveClass('min-h-ctl');
     });
   });

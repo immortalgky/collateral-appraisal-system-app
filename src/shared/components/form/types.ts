@@ -108,6 +108,14 @@ export type FormField =
   | FieldArrayField
   | ParameterSearchField;
 
+/** How a chip in `booleanChips()` reads and writes its field (see `FormField.chip`). */
+export interface ChipSpec {
+  isOn: (value: unknown) => boolean;
+  on: unknown;
+  off: unknown;
+  labelKey?: string;
+}
+
 /**
  * Base properties shared by all form fields
  */
@@ -122,7 +130,7 @@ interface BaseFormField {
   wrapperClassName?: string;
   /** A chip group only: keep the span in `wrapperClassName` in Standard instead of taking the whole row. */
   keepSpan?: boolean;
-  /** Standard, narrow shell (below 84.2857rem, where spans 3 and 4 fall back to 6): take this many columns instead. 12 puts the field on a row of its own, so a companion after it keeps its 6 under it; 3 or 4 keep a field at its wide span. */
+  /** Standard, narrow shell (below 56rem, where spans 3 and 4 fall back to 6): take this many columns instead. 12 puts the field on a row of its own, so a companion after it keeps its 6 under it; 3 or 4 keep a field at its wide span. */
   narrowSpan?: 3 | 4 | 6 | 12;
   /** Disable the input */
   disabled?: boolean;
@@ -132,6 +140,12 @@ interface BaseFormField {
   clearOnEnable?: boolean;
   /** Value to reset to when the field becomes editable again (default: null) */
   enabledValue?: unknown;
+  /**
+   * A chip in `booleanChips()` over a field that is not a boolean (for instance a text that is
+   * "on" once it is not null): when it reads as picked, what a pick and a drop write, and the
+   * `fieldLabels` key of its caption (default: the field's own name).
+   */
+  chip?: ChipSpec;
   /** Mark as required (shows asterisk, overrides schema) */
   required?: boolean;
   /** Unconditionally hide the field (excluded from rendering and schema) */
@@ -146,6 +160,14 @@ interface BaseFormField {
   clearOnHide?: boolean;
   /** Value to set when field is cleared on hide (default: null) */
   hiddenValue?: unknown;
+  /**
+   * Fill this field when the appraiser picks a value of another one: `cases` is checked against the
+   * new value of `field`, and the first `is` that matches sets this field to its `value`, over
+   * whatever it holds. Only a change made by the user counts: opening a record or a reset never
+   * fires it, so saved data is not touched. A value no case names does nothing, and the field
+   * stays editable afterwards.
+   */
+  defaultWhen?: { field: string; cases: { is: unknown; value: unknown }[] };
 
   // Conditional disabled state
   /** Disable field when condition is met */
@@ -160,6 +182,10 @@ interface BaseFormField {
   // Help
   /** Explanation surfaced by a "?" button beside the label (see FieldHelp) */
   help?: FieldHelpConfig;
+  /** One helper line under the control (`mt-1 text-xs`). Translated via `fieldHints.<scope>.<name>` (FieldLabels). */
+  hint?: string;
+  /** Helper line shown instead of `hint` while the field's own `disableWhen` holds: why it is locked. */
+  disabledHint?: string;
 
   // Format & input helpers
   /** Placeholder text (e.g., "DD/MM/YYYY") */
@@ -175,6 +201,56 @@ interface BaseFormField {
    *  Requires react-imask integration in input components. */
   inputMask?: string;
 }
+
+/**
+ * A row of yes/no toggles that flow at their own width, with the fields they open as plain rows
+ * under it. They are drawn only while one of `follow` shows; in Compact the fields are the
+ * plain label/value pairs, in order. Build one with `flowGroup()`; it is a layout for a form's
+ * field list, not a field of the schema.
+ */
+export interface FlowGroup {
+  type: 'flow';
+  /** The toggles (and any small inline field, e.g. a distance) of the row, in order. */
+  row: FormField[];
+  /** What the row opens: its fields, drawn together under it. */
+  follow: FormField[];
+  /** Standard only: a width class per field name of the row (a number input beside a toggle). */
+  rowWidths?: Record<string, string>;
+}
+
+/** Builds a flow group (see {@link FlowGroup}). */
+export const flowGroup = (
+  row: FormField[],
+  follow: FormField[],
+  rowWidths?: Record<string, string>,
+): FlowGroup => ({ type: 'flow', row, follow, rowWidths });
+
+/** What `FormFields` takes: fields, and flow groups and boolean chips among them. */
+export type FormFieldItem = FormField | FlowGroup | BooleanChips;
+
+/**
+ * One multi-select chip group that stands for several yes/no fields: a chip per boolean, selected
+ * while it is true. Picking a chip sets its boolean true, dropping it sets it false; a stored null
+ * shows as unselected and is not written. The booleans keep their own names, so the data and the
+ * API are what they were, and what a boolean opens (`showWhen`) is listed as ordinary fields.
+ * `name` only names the group (its label key, `data-field`): it is not a field of the schema.
+ * Build one with `booleanChips()`.
+ */
+export interface BooleanChips {
+  type: 'boolean-chips';
+  name: string;
+  label: string;
+  /** The booleans, in chip order; each `label` is its chip's caption. */
+  items: FormField[];
+}
+
+/** Builds a boolean chip group (see {@link BooleanChips}). */
+export const booleanChips = (name: string, label: string, items: FormField[]): BooleanChips => ({
+  type: 'boolean-chips',
+  name,
+  label,
+  items,
+});
 
 // =============================================================================
 // Text-based fields
@@ -227,7 +303,7 @@ export interface NumberInputField extends BaseFormField {
   thousandSeparator?: boolean;
   /** When true, 0 is treated as a valid value instead of "empty" (default: false) */
   allowZero?: boolean;
-  /** Non-interactive unit suffix shown inside the input on the right (e.g. "m", "years", "%"). Visual-only — does not affect the value. */
+  /** Non-interactive unit shown inside the input on the right. A key of `common:units.*` ('m', 'sqm', 'baht', …) is translated; any other text is shown as given. Visual-only — does not affect the value. */
   suffix?: string;
   /** Icon rendered inside the input on the left */
   leftIcon?: ReactNode;
@@ -308,6 +384,8 @@ interface BaseBooleanToggleField extends BaseFormField {
   label: string;
   /** Size variant */
   size?: 'sm' | 'md';
+  /** Optional answer: neither option is chosen until picked, and a click on the chosen one clears it (null). */
+  nullable?: boolean;
 }
 
 export type StringToggleField = BaseStringToggleField &
@@ -318,6 +396,8 @@ interface BaseStringToggleField extends BaseFormField {
   label: string;
   /** Size variant */
   size?: 'sm' | 'md';
+  /** An unset answer (null, an unknown code, options not loaded yet) shows as unset, and a click writes nothing until the options are known. */
+  showUnset?: boolean;
 }
 
 // =============================================================================
@@ -342,6 +422,8 @@ interface BaseCheckboxGroupField extends BaseFormField {
   orientation?: 'horizontal' | 'vertical';
   /** Visual variant: 'tag' (default), 'chip', or 'button' */
   variant?: 'tag' | 'chip' | 'button';
+  /** Option values that stand alone: picking one clears the rest, picking any other clears it. */
+  exclusiveValues?: string[];
 }
 
 export type RadioGroupField = BaseRadioGroupField &
@@ -354,6 +436,8 @@ interface BaseRadioGroupField extends BaseFormField {
   orientation?: 'horizontal' | 'vertical';
   /** Visual variant: 'default' (radio circles), 'card', or 'button' (pill style) */
   variant?: 'default' | 'card' | 'button';
+  /** Leave retired parameter options out; the saved value's own option stays. */
+  activeOnly?: boolean;
 }
 
 export interface SwitchField extends BaseFormField {

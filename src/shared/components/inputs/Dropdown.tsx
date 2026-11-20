@@ -98,8 +98,7 @@ interface DropdownBaseProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>
    */
   compact?: boolean;
   /**
-   * A table cell trigger (DESIGN.md 17.7): 28px in a Compact form, the plain Standard control in a
-   * Standard one.
+   * A table cell trigger (DESIGN.md 17.7): as tall as the normal control in both layouts.
    */
   cell?: boolean;
   /** List the "Please select" entry first. Off for a control that always has a value. */

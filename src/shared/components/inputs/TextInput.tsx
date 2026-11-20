@@ -15,7 +15,7 @@ interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
   leftIcon?: React.ReactNode;
   /** Icon node rendered inside the input on the right. Useful for click-to-open helpers. */
   rightIcon?: React.ReactNode;
-  /** Table cell input (28px in Compact forms) — forwarded to the underlying Input. See Input.tsx. */
+  /** Table cell input (as tall as a normal field) — forwarded to the underlying Input. See Input.tsx. */
   cell?: boolean;
   /** Pricing-analysis grid input (21px), not for forms — forwarded to the underlying Input. */
   dense?: boolean;

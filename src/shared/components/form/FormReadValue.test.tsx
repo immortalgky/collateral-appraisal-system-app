@@ -253,7 +253,7 @@ describe('FormFields on a read page', () => {
       </FormLayoutProvider>,
     );
     const pair = container.querySelector('[data-field="owner"]') as HTMLElement;
-    expect(pair).toHaveClass('grid-cols-[10.8571rem_minmax(0,1fr)]');
+    expect(pair).toHaveClass('grid-cols-[13.1429rem_minmax(0,1fr)]');
     expect(pair.querySelector('.min-h-\\[2\\.3571rem\\]')).not.toBeNull();
     expect(screen.getByText('Somchai')).toBeInTheDocument();
   });
@@ -281,9 +281,7 @@ describe('FormFields on a read page', () => {
         </Harness>
       </FormLayoutProvider>,
     );
-    expect(container.querySelector('[data-field="c"]')).not.toHaveClass(
-      '@[60rem]/sheet:col-span-6',
-    );
-    expect(container.querySelector('[data-field="t"]')).toHaveClass('col-span-12');
+    expect(container.querySelector('[data-field="c"]')).not.toHaveAttribute('data-half');
+    expect(container.querySelector('[data-field="t"]')).toHaveClass('basis-full');
   });
 });

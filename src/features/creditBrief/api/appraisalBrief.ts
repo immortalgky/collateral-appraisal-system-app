@@ -49,17 +49,19 @@ export interface BriefAsset {
   /** The system records no unit for either pond figure. */
   pondArea: number | null;
   pondDepth: number | null;
-  /** TRUE = the land is FAR from the electricity line (the FE label is "Far from Electricity"). */
+  /** TRUE = the land is FAR from the electricity line (the FE label is "Far from Power Distribution Line"). */
   farFromElectricity: boolean | null;
   /** Metres. */
   electricityDistance: number | null;
   /** Metres. */
-  accessRoadWidth: number | null;
+  carriagewayWidth: number | null;
   /** RoadSurface code. */
   roadSurfaceType: string | null;
   /** Only the directions that carry a text or a number. */
   boundaries: BriefBoundary[];
   isLandlocked: boolean | null;
+  /** LandAccessibility code ('01' reachable, '02' not reachable = a landlocked plot, '03' needs work, '04' seasonal). Land only; null elsewhere. */
+  landAccessibilityType?: string | null;
   isExpropriated: boolean | null;
   isInExpropriationLine: boolean | null;
   isEncroached: boolean | null;
@@ -333,10 +335,12 @@ export interface BriefProjectLand {
   landShapeType: string | null;
   /** Metres. */
   roadFrontage: number | null;
-  accessRoadWidth: number | null;
+  carriagewayWidth: number | null;
   roadSurfaceType: string | null;
   landUseType: string[];
   isLandlocked: boolean | null;
+  /** LandAccessibility code ('01' reachable, '02' not reachable = a landlocked plot, '03' needs work, '04' seasonal); null when unanswered. */
+  landAccessibilityType?: string | null;
   isExpropriated: boolean | null;
   isInExpropriationLine: boolean | null;
   isEncroached: boolean | null;

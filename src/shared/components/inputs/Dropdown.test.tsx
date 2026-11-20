@@ -337,4 +337,28 @@ describe('Dropdown', () => {
       expect(screen.getByText('Select...')).toBeInTheDocument();
     });
   });
+
+  // A retired option (isActive false) leaves the list but a record that still holds it keeps showing it.
+  describe('retired options', () => {
+    const retired: ListBoxItem[] = [
+      { value: '01', label: 'Square', id: 1, isActive: false },
+      { value: '04', label: 'Trapezium', id: 4, isActive: true },
+    ];
+
+    it('hides them from the list but still shows the saved one as selected', async () => {
+      const { user } = render(
+        <Dropdown
+          label="Shape"
+          options={retired}
+          value="01"
+          onChange={() => {}}
+          filterOptions={{ type: 'isActive', values: true }}
+        />,
+      );
+      expect(screen.getByRole('button', { name: /Square/ })).toBeInTheDocument();
+      await user.click(screen.getByRole('button'));
+      expect(await screen.findByRole('option', { name: /Trapezium/ })).toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: /Square/ })).toBeNull();
+    });
+  });
 });

@@ -501,7 +501,7 @@ describe('figures that are blank whenever their toggle says they do not apply', 
     expect(screen.getByTestId('dirty').textContent).toBe('false');
   });
 
-  it('switching to No clears the figure, and switching back gives it back', async () => {
+  it('switching to No hides and clears the distance, and switching back shows it blank', async () => {
     const user = userEvent.setup();
     render(
       <Harness
@@ -513,9 +513,32 @@ describe('figures that are blank whenever their toggle says they do not apply', 
     const toggle = (name: string) =>
       screen.getAllByRole('radio').find(r => r.textContent === name) as HTMLElement;
 
+    // No hides the distance AND clears it.
     await user.click(toggle('No'));
+    expect(document.querySelector('[data-field="electricityDistance"]')).toBeNull();
     expect(screen.getByTestId('value').textContent).toBe('null');
     await user.click(toggle('Yes'));
-    expect(screen.getByTestId('value').textContent).toBe('12');
+    expect(document.querySelector('[data-field="electricityDistance"]')).not.toBeNull();
+    expect(screen.getByTestId('value').textContent).toBe('null');
+  });
+
+  it('switching the encroachment to No hides and clears the area, and switching back shows it blank', async () => {
+    const user = userEvent.setup();
+    render(
+      <Harness
+        configFields={encroachmentField}
+        defaults={{ isEncroachingOthers: true, encroachingOthersArea: 12.5 }}
+        number="encroachingOthersArea"
+      />,
+    );
+    const toggle = (name: string) =>
+      screen.getAllByRole('radio').find(r => r.textContent === name) as HTMLElement;
+    expect(document.querySelector('[data-field="encroachingOthersArea"]')).not.toBeNull();
+    await user.click(toggle('No'));
+    expect(document.querySelector('[data-field="encroachingOthersArea"]')).toBeNull();
+    expect(screen.getByTestId('value').textContent).toBe('null');
+    await user.click(toggle('Yes'));
+    expect(document.querySelector('[data-field="encroachingOthersArea"]')).not.toBeNull();
+    expect(screen.getByTestId('value').textContent).toBe('null');
   });
 });

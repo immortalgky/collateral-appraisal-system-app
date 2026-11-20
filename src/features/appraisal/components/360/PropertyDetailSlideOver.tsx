@@ -46,6 +46,7 @@ const PropertyDetailSlideOver = ({
   propertyType,
 }: PropertyDetailSlideOverProps) => {
   const { t } = useTranslation('appraisal');
+  const { t: tc } = useTranslation('common');
   const config = getConfig(propertyType);
 
   // Use the same query key pattern as existing hooks in api/property.ts
@@ -151,8 +152,9 @@ const PropertyDetailSlideOver = ({
       {/* Section-based detail fields */}
       {sections.map(section => {
         const hasData = section.fields.some(f => {
-          const v = data[f.key];
-          return v != null && v !== '';
+          const v = f.read ? f.read(data) : data[f.key];
+          // A blank or whitespace-only text is no data, as the trimmed parameter rows below read it.
+          return v != null && String(v).trim() !== '';
         });
         if (!hasData) return null;
 
@@ -163,13 +165,17 @@ const PropertyDetailSlideOver = ({
             </h4>
             <div className="space-y-0">
               {section.fields.map(field => {
-                const value = data[field.key];
+                const value = field.read ? field.read(data) : data[field.key];
                 if (value == null && !field.isBoolean) return null;
                 if (value === '' && !field.isBoolean) return null;
 
                 // Parameter group → use ParameterDisplay
                 if (field.parameterGroup) {
-                  const code = Array.isArray(value) ? value : value != null ? String(value) : null;
+                  const code = Array.isArray(value)
+                    ? value
+                    : value != null
+                      ? String(value).trim()
+                      : null;
                   if (!code || (typeof code === 'string' && code === '')) return null;
                   return (
                     <div
@@ -196,7 +202,16 @@ const PropertyDetailSlideOver = ({
                     <DetailRow
                       key={field.key}
                       label={field.label}
-                      value={t(value ? 'view360.common.yes' : 'view360.common.no')}
+                      value={
+                        field.booleanCaptions
+                          ? tc(
+                              `toggle.${field.key}.${field.booleanCaptions[value ? 1 : 0]}` as never,
+                              {
+                                defaultValue: t(value ? 'view360.common.yes' : 'view360.common.no'),
+                              },
+                            )
+                          : t(value ? 'view360.common.yes' : 'view360.common.no')
+                      }
                     />
                   );
                 }

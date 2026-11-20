@@ -20,6 +20,13 @@
 // Components
 export { FormProvider } from './FormProvider';
 export { FormFields } from './FormFields';
+export {
+  flowGroup,
+  booleanChips,
+  type FlowGroup,
+  type FormFieldItem,
+  type BooleanChips,
+} from './types';
 export { FormFieldShell } from './FormFieldShell';
 export { FormReadValue } from './FormReadValue';
 
@@ -103,6 +110,8 @@ export { mergeSchemas, buildFormSchema, type MergeSchemaOptions } from './schema
 // Validation messages: i18n tokens made in a schema, translated where a control shows them
 export { vmsg } from './validationMessage';
 export { ValidationText } from './ValidationText';
+
+export { PART_WIDTH } from './partWidth';
 
 // Condition Evaluation (shared between UI and schema builder)
 export { evaluateCondition, evaluateConditions } from './conditions';

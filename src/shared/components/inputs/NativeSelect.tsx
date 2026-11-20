@@ -6,7 +6,7 @@ import { controlFrame, controlPad, controlSkin } from './controlStyles';
 interface NativeSelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   /** Red border and ring, with `aria-invalid`. */
   error?: boolean;
-  /** A table cell select (DESIGN.md 17.7): 28px in a Compact form, the plain Standard control otherwise. */
+  /** A table cell select (DESIGN.md 17.7): as tall as the normal control in both layouts. */
   cell?: boolean;
 }
 

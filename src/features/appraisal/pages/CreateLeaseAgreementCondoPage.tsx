@@ -270,6 +270,7 @@ const CreateLeaseAgreementCondoPage = () => {
                 appraisalId={appraisalId}
                 propertyId={propertyId}
                 typeCode="LSU"
+                nameFieldType="LSU"
                 photoSectionRef={photoSectionRef}
                 tabs={editorTabs}
                 activeTab={shownTab}
@@ -286,7 +287,7 @@ const CreateLeaseAgreementCondoPage = () => {
                       anchor
                       className="flex flex-col gap-6 min-w-0 overflow-hidden"
                     >
-                      <CondoDetailForm />
+                      <CondoDetailForm hideRentedOut />
                     </Section>
                   </div>
 

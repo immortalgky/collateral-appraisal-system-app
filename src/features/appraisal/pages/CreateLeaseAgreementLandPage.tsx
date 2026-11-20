@@ -241,6 +241,7 @@ const CreateLeaseAgreementLandPage = () => {
               appraisalId={appraisalId}
               propertyId={propertyId}
               typeCode="LSL"
+              nameFieldType="LSL"
               photoSectionRef={photoSectionRef}
               tabs={editorTabs}
               activeTab={activeTab}
@@ -264,7 +265,7 @@ const CreateLeaseAgreementLandPage = () => {
                     anchor
                     className="flex flex-col gap-6 min-w-0 overflow-hidden"
                   >
-                    <LandDetailForm />
+                    <LandDetailForm hideRentedOut />
                   </Section>
                 </div>
 

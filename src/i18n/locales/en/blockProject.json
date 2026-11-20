@@ -910,6 +910,7 @@
       "latitude": "Latitude",
       "longitude": "Longitude",
       "builtOnTitleDeedNumber": "Title Number",
+      "licenseNumber": "Construction License No.",
       "licenseExpirationDate": "License Expiration Date",
       "utilities": "Utilities",
       "utilitiesOther": "Other Utilities",
@@ -923,8 +924,9 @@
       "numberOfUnits": "Number of Units",
       "numberOfFloors": "Number of Floors",
       "conditionType": "Condition",
-      "hasObligation": "Is Obligation",
-      "obligationDetails": "Obligation",
+      "obligationType": "Obligations",
+      "mortgageDetails": "Mortgage details",
+      "obligationDetails": "Other obligation details",
       "documentValidationType": "Document Validation",
       "isLocationCorrect": "Location Correct",
       "distance": "Distance (m)",
@@ -973,8 +975,9 @@
       "landDescription": "Land Description",
       "isOwnerVerified": "Check Owner",
       "ownerName": "Owner",
-      "hasObligation": "Is Obligation",
-      "obligationDetails": "Obligation"
+      "obligationType": "Obligations",
+      "mortgageDetails": "Mortgage details",
+      "obligationDetails": "Other obligation details"
     },
     "pricing": {
       "floorIncrementEveryXFloor": "Every X Floor",

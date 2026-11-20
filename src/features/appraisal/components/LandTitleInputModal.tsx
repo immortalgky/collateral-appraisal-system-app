@@ -16,12 +16,14 @@ import { landtitlesFields } from '@features/appraisal/configs/fields.ts';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { DEED_SHEET_FIELDS, TitleDeedSheet } from './TitleDeedSheet';
+import { documentValidationToggle } from '../utils/documentValidationToggle';
 import { TitleFormView, toRaiNganWa, useTitleFieldLabels } from './TitleFormView';
 
 type TitleView = 'deed' | 'form';
 
 /** A new title starts as a โฉนด, by far the most common; editing keeps whatever was saved. */
-const NEW_TITLE_DEFAULTS = { titleType: 'DEED' };
+// A new title opens with the document check "consistent" (01), as the condo form does; a saved title keeps its own.
+const NEW_TITLE_DEFAULTS = { titleType: 'DEED', documentValidationResultType: '01' };
 const VIEW_KEY = 'cas.titleEntryView';
 /** Title types with a paper to draw; ตราจอง and others are keyed in the form view only. */
 const DOCUMENT_TITLE_TYPES = new Set(['DEED', 'NS3K', 'NS3', 'NS3KO']);
@@ -93,6 +95,7 @@ const LandTitleModal = ({
   );
 
   const { t } = useTranslation('appraisal');
+  const { t: tc } = useTranslation('common');
   const translate = useTitleFieldLabels();
   // The page's own form (this dialog renders inside it, and only portals its markup out): its title
   // address — from the land detail — goes on the paper for orientation. Read-only here.
@@ -123,16 +126,19 @@ const LandTitleModal = ({
     'boundaryMarkerType',
     'boundaryMarkerRemark',
     'documentValidationResultType',
-  ]).map(field =>
-    field.name === 'boundaryMarkerType'
-      ? ({
-          ...field,
-          type: 'radio-group',
-          orientation: 'horizontal',
-          variant: 'button',
-        } as FormField)
-      : field,
-  );
+  ]).map(field => {
+    if (field.name === 'boundaryMarkerType')
+      return {
+        ...field,
+        type: 'radio-group',
+        orientation: 'horizontal',
+        variant: 'button',
+      } as FormField;
+    // The same two-sided toggle as the condo form: inconsistent on the left.
+    if (field.name === 'documentValidationResultType')
+      return documentValidationToggle(field, key => tc(key as never));
+    return field;
+  });
   const priceFields = pick(['isMissingFromSurvey', 'governmentPricePerSqWa']);
   const shownElsewhere = new Set([
     ...DEED_SHEET_FIELDS,

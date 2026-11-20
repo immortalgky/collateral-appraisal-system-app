@@ -40,8 +40,8 @@ interface NumberInputProps extends Omit<
   /** Value from react-hook-form or controlled component */
   value?: number | string | null;
   /**
-   * A table cell input (DESIGN.md 17.7): 28px in a Compact form, the plain Standard control in a
-   * Standard one. Use it in the form table kit instead of `dense`.
+   * A table cell input (DESIGN.md 17.7): as tall as the normal control in both layouts.
+   * Use it in the form table kit instead of `dense`.
    */
   cell?: boolean;
   /** The error look (red edge and ring, `aria-invalid`) without a message, for a table cell whose reason is stated elsewhere. */
@@ -333,6 +333,8 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           className={clsx(
             'relative',
             fullWidth && 'w-full',
+            // Compact table: a figure with decimals (an amount) stays readable, 96px at least.
+            cell && layout === 'compact' && decimalPlaces >= 2 && 'min-w-[6.8571rem]',
             // The box itself when the unit sits inside it: border, fill and focus ring live here.
             suffixInBox && [
               'flex items-center',
@@ -417,7 +419,8 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
               className={
                 suffixInBox
                   ? clsx(
-                      'shrink-0 pl-2 text-xs text-(--palette-ink-2) select-none',
+                      // The unit after a thin divider, quiet beside the figure: "35.00 | sqm".
+                      'my-1.5 ml-2 flex shrink-0 items-center self-stretch border-l border-(--palette-line-soft) pl-2 text-xs text-(--palette-ink-2) select-none',
                       controlPad(layout, { cell, side: 'r' }),
                     )
                   : 'absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-xs font-medium text-(--palette-gray-400) select-none'

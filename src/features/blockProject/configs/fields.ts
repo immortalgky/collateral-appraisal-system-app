@@ -1,11 +1,10 @@
 import type { FormField } from '@/shared/components/form';
 import { LOCATION_METHOD_OPTIONS } from '../data/options';
+import { obligationFields } from '@/features/appraisal/configs/obligationFields';
 
 // =============================================================================
 // Shared Project Info fields
 // =============================================================================
-
-const ObligationDetail = ['02', '03', '04', '05', '99'];
 
 export const projectInformationFields: FormField[] = [
   {
@@ -605,24 +604,7 @@ export const condoTowerConditionFields: FormField[] = [
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
   },
-  {
-    type: 'radio-group',
-    label: 'Is Obligation',
-    name: 'hasObligation',
-    orientation: 'horizontal',
-    variant: 'button',
-    group: 'Obligation',
-    wrapperClassName: 'col-span-12',
-  },
-  {
-    type: 'text-input',
-    label: 'Obligation',
-    name: 'obligationDetails',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
-    requiredWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
-    maxLength: 100,
-  },
+  ...obligationFields,
   {
     type: 'radio-group',
     label: 'Document Validation',
@@ -755,13 +737,25 @@ export const condoTowerRoofFields: FormField[] = [
   },
 ];
 
-export const condoTowerLegalFields: FormField[] = [
+// "Located in an expropriation map sheet" and its remark are no longer asked. They stay in the tower schema (see
+// condoTowerCarriedFields) so a stored value goes back untouched on save.
+export const condoTowerCarriedFields: FormField[] = [
   {
     type: 'checkbox',
     label: 'Is Expropriated',
     name: 'isExpropriated',
     wrapperClassName: 'col-span-6',
   },
+  {
+    type: 'text-input',
+    label: 'Expropriation Remark',
+    name: 'expropriationRemark',
+    wrapperClassName: 'col-span-12',
+    maxLength: 4000,
+  },
+];
+
+export const condoTowerLegalFields: FormField[] = [
   {
     type: 'checkbox',
     label: 'In Line Expropriated',
@@ -773,21 +767,8 @@ export const condoTowerLegalFields: FormField[] = [
     label: 'Royal Decree Reference',
     name: 'royalDecree',
     wrapperClassName: 'col-span-12',
-    showWhen: {
-      conditions: [
-        { field: 'isExpropriated', is: true },
-        { field: 'isInExpropriationLine', is: true },
-      ],
-      match: 'any',
-    },
-    maxLength: 20,
-  },
-  {
-    type: 'text-input',
-    label: 'Expropriation Remark',
-    name: 'expropriationRemark',
-    wrapperClassName: 'col-span-12',
-    maxLength: 4000,
+    showWhen: { field: 'isInExpropriationLine', is: true },
+    maxLength: 200,
   },
   {
     type: 'boolean-toggle',
@@ -854,6 +835,13 @@ export const condoPricingFloorFields: FormField[] = [
 // =============================================================================
 
 export const lbProjectInfoFields: FormField[] = [
+  {
+    type: 'text-input',
+    label: 'Construction License No.',
+    name: 'licenseNumber',
+    wrapperClassName: 'col-span-4',
+    maxLength: 50,
+  },
   {
     type: 'date-input',
     label: 'License Expiration Date',
@@ -1306,22 +1294,5 @@ export const projectLandInfoFields: FormField[] = [
     disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
     maxLength: 100,
   },
-  {
-    type: 'radio-group',
-    label: 'Is Obligation',
-    name: 'hasObligation',
-    orientation: 'horizontal',
-    variant: 'button',
-    group: 'Obligation',
-    wrapperClassName: 'col-span-12',
-  },
-  {
-    type: 'text-input',
-    label: 'Obligation',
-    name: 'obligationDetails',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
-    requiredWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
-    maxLength: 200,
-  },
+  ...obligationFields,
 ];

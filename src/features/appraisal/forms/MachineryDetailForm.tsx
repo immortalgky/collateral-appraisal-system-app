@@ -99,18 +99,18 @@ const MachineryDetailForm = () => {
   );
 };
 
-type GroupEntry = string | [name: string, span: string];
+type GroupEntry = string | [name: string, span: string, narrowSpan?: 3 | 4 | 6 | 12];
 
 /** Picks translated fields by name; a span given here replaces the config's own col-span. */
 function pick(byName: Map<string, FormField>, entries: GroupEntry[]): FormField[] {
   return entries.map(entry => {
-    const [name, span] = typeof entry === 'string' ? [entry] : entry;
+    const [name, span, narrowSpan] = typeof entry === 'string' ? [entry] : entry;
     const field = byName.get(name);
     // Fail loudly: a renamed config field would otherwise just vanish from the form.
     if (!field) throw new Error(`MachineryDetailForm: no field config named "${name}"`);
     if (!span) return field;
     const rest = (field.wrapperClassName ?? '').replace(/\bcol-span-\d+\b/g, '').trim();
-    return { ...field, wrapperClassName: `${span} ${rest}`.trim() };
+    return { ...field, wrapperClassName: `${span} ${rest}`.trim(), narrowSpan };
   });
 }
 
@@ -125,63 +125,66 @@ const GROUPS = [
     icon: 'gears',
     fields: [
       'propertyName',
-      ['machineType', 'col-span-12'],
-      ['brand', 'col-span-6'],
+      // The type, the year and the count; then the four names (brand, model, series, maker).
+      ['machineType', 'col-span-6'],
+      ['yearOfManufacture', 'col-span-3'],
+      ['quantity', 'col-span-3'],
+      ['brand', 'col-span-3'],
       ['model', 'col-span-3'],
       ['series', 'col-span-3'],
-      ['manufacturer', 'col-span-6'],
-      ['yearOfManufacture', 'col-span-6'],
-      ['quantity', 'col-span-12'],
+      ['manufacturer', 'col-span-3'],
     ],
   },
   {
     titleKey: 'propertyInfo.machineryInfo.groups.ownership',
     icon: 'scale-balanced',
-    // Price certification gets a row of its own: it is a decision, not a detail of the purchase.
+    // Each check sits beside the text it governs (a toggle + field row); the purchase is a row of four; price
+    // certification is a decision, not a detail of the purchase, so it ends the group.
     fields: [
-      // The owner and the registration number each sit on their own line under their check.
-      ['isOwnerVerified', 'col-span-12'],
-      ['ownerName', 'col-span-12'],
-      ['registrationStatus', 'col-span-12'],
-      ['registrationNumber', 'col-span-12'],
-      ['purchaseDate', 'col-span-6'],
-      ['purchasePrice', 'col-span-6'],
-      ['installationStatus', 'col-span-6'],
-      ['invoiceNumber', 'col-span-6'],
-      'location',
-      ['isPriceCertified', 'col-span-12'],
+      ['isOwnerVerified', 'col-span-3'],
+      ['ownerName', 'col-span-9'],
+      ['registrationStatus', 'col-span-3'],
+      ['registrationNumber', 'col-span-9'],
+      ['purchaseDate', 'col-span-3'],
+      ['purchasePrice', 'col-span-3'],
+      ['installationStatus', 'col-span-3'],
+      ['invoiceNumber', 'col-span-3'],
+      ['location', 'col-span-9'],
+      ['isPriceCertified', 'col-span-3'],
     ],
   },
   {
     titleKey: 'propertyInfo.machineryInfo.groups.condition',
     icon: 'gauge',
     fields: [
-      // Whether it runs at all comes first, then how it is used, then its age and condition together.
-      ['isOperational', 'col-span-12'],
+      // Whether it runs at all comes first, then how it is used, then its age, condition and
+      // efficiency together (3 + 4 + 5), then the capacity, purpose, energy and technology in pairs.
+      ['isOperational', 'col-span-3', 3],
       'conditionUse',
-      ['machineAge', 'col-span-6'],
-      ['machineCondition', 'col-span-6'],
-      ['machineEfficiency', 'col-span-6'],
+      ['machineAge', 'col-span-3'],
+      ['machineCondition', 'col-span-4'],
+      ['machineEfficiency', 'col-span-5'],
       ['capacity', 'col-span-6'],
       ['usagePurpose', 'col-span-6'],
       ['energyUse', 'col-span-6'],
-      ['machineTechnology', 'col-span-12'],
+      ['machineTechnology', 'col-span-6'],
     ],
   },
   {
     titleKey: 'propertyInfo.machineryInfo.groups.dimensions',
     icon: 'ruler-combined',
+    // Width, length and height stay three fields side by side (2 + 2 + 2), beside the free text.
     fields: [
-      ['width', 'col-span-6'],
-      ['length', 'col-span-3'],
-      ['height', 'col-span-3'],
-      'machineDimensions',
+      ['width', 'col-span-2'],
+      ['length', 'col-span-2'],
+      ['height', 'col-span-2'],
+      ['machineDimensions', 'col-span-6'],
     ],
   },
   {
     titleKey: 'propertyInfo.machineryInfo.groups.notes',
     icon: 'comment',
-    fields: ['machineParts', 'other', 'remark'],
+    fields: ['machineParts', ['other', 'col-span-12'], 'remark'],
   },
   {
     titleKey: 'propertyInfo.machineryInfo.groups.opinion',

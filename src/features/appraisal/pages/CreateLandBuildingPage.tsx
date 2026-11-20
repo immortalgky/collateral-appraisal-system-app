@@ -265,6 +265,7 @@ const CreateLandBuildingPage = () => {
                 appraisalId={appraisalId}
                 propertyId={propertyId}
                 typeCode="LB"
+                nameFieldType="LB"
                 photoSectionRef={photoSectionRef}
                 tabs={editorTabs}
                 activeTab={shownTab}

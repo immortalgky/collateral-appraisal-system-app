@@ -1,7 +1,16 @@
-import { FormFields, FormSection, FormSheet, type FormField } from '@/shared/components/form';
+import {
+  flowGroup,
+  PART_WIDTH,
+  FormFields,
+  FormSection,
+  FormSheet,
+  type FormField,
+  type FormFieldItem,
+} from '@/shared/components/form';
 import SurfaceTable from '../components/tables/SurfaceTable';
 import { BuildingDetail } from '../components/tables/BuildingDetail';
-import { useMemo } from 'react';
+import BuildingSizeField from '../components/BuildingSizeField';
+import { useContext, useMemo } from 'react';
 import {
   buildingInfoField,
   buildingTypeField,
@@ -21,12 +30,17 @@ import {
   constTypeFeild,
   utilizationFeild,
   buildingArea,
+  buildingSizeField,
+  buildingMaintenanceField,
+  doorWindowField,
+  buildingServicesField,
   remarkBuildingField,
 } from '../configs/fields';
 import { PropertyNameTriggerIcon, type PropertyType } from '../components/PropertyNameTriggerIcon';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { FieldLabels } from '../components/FieldLabels';
+import { PropertyNameInHeaderContext } from '../components/propertyNameInHeader';
 
 interface BuildingDetailFormProps {
   prefix?: string;
@@ -81,6 +95,9 @@ const BuildingDetailForm = ({ prefix, propertyType = 'B' }: BuildingDetailFormPr
     [displayOwnerIcon],
   );
 
+  // The name is drawn in the page header when the shell has one (see PropertyNameInHeaderContext).
+  const nameInHeader = useContext(PropertyNameInHeaderContext);
+
   // The property-name and owner fields carry trigger icons that depend on the property type.
   const { identity, legal } = useMemo(() => {
     const withIcons = (fields: FormField[]) =>
@@ -90,8 +107,13 @@ const BuildingDetailForm = ({ prefix, propertyType = 'B' }: BuildingDetailFormPr
           return { ...field, rightIcon: ownerIcon };
         return field;
       });
-    return { identity: withIcons(identityFields), legal: withIcons(legalFields) };
-  }, [fillIcon, ownerIcon]);
+    return {
+      identity: withIcons(
+        nameInHeader ? identityFields.filter(f => f.name !== 'propertyName') : identityFields,
+      ),
+      legal: withIcons(legalFields),
+    };
+  }, [fillIcon, ownerIcon, nameInHeader]);
 
   return (
     <FieldLabels scope="building">
@@ -105,7 +127,10 @@ const BuildingDetailForm = ({ prefix, propertyType = 'B' }: BuildingDetailFormPr
         </FormSection>
 
         <FormSection title={t('forms.building.groups.typeUse')} icon="list">
-          <FormFields fields={typeAndUseFields} />
+          <FormFields fields={typeFields} />
+          {/* The size (width × length) sits beside the floors, as the report prints them. */}
+          <BuildingSizeField />
+          <FormFields fields={useFields} />
         </FormSection>
 
         <FormSection title={t('forms.building.groups.condition')} icon="gauge">
@@ -132,10 +157,11 @@ const BuildingDetailForm = ({ prefix, propertyType = 'B' }: BuildingDetailFormPr
               showCostSummary
             />
           </div>
+          <FormFields fields={areaCostFields} />
         </FormSection>
 
         <FormSection title={t('forms.building.groups.limitations')} icon="triangle-exclamation">
-          <FormFields fields={limitationFields} />
+          <FormFields fields={encroachmentItems} />
         </FormSection>
 
         <FormSection title={t('forms.building.groups.remark')} icon="comment">
@@ -170,6 +196,10 @@ const byName = new Map(
     ...constTypeFeild,
     ...utilizationFeild,
     ...buildingArea,
+    ...buildingSizeField,
+    ...buildingMaintenanceField,
+    ...doorWindowField,
+    ...buildingServicesField,
     ...encroachmentField,
   ].map(field => [field.name, field]),
 );
@@ -188,48 +218,80 @@ const pick = (
   });
 
 const identityFields = pick(
-  // Name, house number and its "none" chips make one row (4 + 4 + 4). Narrow: the name takes a row
-  // and the house number keeps its chips beside it (6 + 6).
-  ['propertyName', 'col-span-4', 12],
-  ['houseNumber', 'col-span-4'],
-  ['noHouseNumber', 'col-span-4'],
-  ['buildingNumber', 'col-span-4'],
-  ['modelName', 'col-span-4'],
-  ['builtOnTitleNumber', 'col-span-4'],
-  // The building's size at a glance: its age, floors and area close the identity section.
-  ['buildingAge', 'col-span-4'],
-  ['numberOfFloors', 'col-span-4'],
+  // The name (only drawn when the page header has none, e.g. Data Correction) takes the first row.
+  ['propertyName', 'col-span-12'],
+  // The building's own identity first: the building number and the model, a row of two (6 + 6).
+  ['buildingNumber', 'col-span-6'],
+  ['modelName', 'col-span-6'],
+  // The house number, with the chips for its status (none, unclear…): one row split in half (6 + 6),
+  // so the chips stay beside the number they qualify.
+  ['houseNumber', 'col-span-6'],
+  ['houseNumberStatus', 'col-span-6'],
+  // The title deed it stands on, alone on the last row at full width.
+  ['builtOnTitleNumber', 'col-span-12'],
+);
+
+// Encroachment on others' land: the toggle with its area beside it (a number-field width, not the
+// rest of the row; the area shows only for "Yes"), then the remark on the row below.
+const encroachmentItems: FormFieldItem[] = [
+  flowGroup(pick('isEncroachingOthers', 'encroachingOthersArea'), [], {
+    encroachingOthersArea: PART_WIDTH.quarter,
+  }),
+  ...pick('encroachingOthersRemark'),
+];
+
+// Whether the building is valued (required): the last row of the area and cost section, under its
+// table and cost summary. The toggle keeps its width; while it is Exclude, the reason is asked right
+// under it. It drives no calculation here.
+const areaCostFields = pick(['isAppraisable', 'col-span-4', 4], 'notAppraisableReason');
+
+const legalFields = pick(
+  ['isOwnerVerifiedBuilding', 'col-span-3'],
+  ['ownerNameBuilding', 'col-span-9'],
+  // The construction licence number and its expiry date, after the owner they are held by: a row
+  // of their own (8 + 4), half and half when narrow.
+  ['constructionLicenseNumber', 'col-span-8', 6],
+  ['constructionLicenseExpirationDate', 'col-span-4', 6],
+  'obligationType',
+  'mortgageDetails',
+  'obligationDetails',
+);
+
+// The type, then one row of floors (3), the usable area (4) and, drawn right after this list, the
+// size (BuildingSizeField, 5). The floors and the area are in one list, so Compact can pair them.
+const typeFields = pick(
+  'buildingType',
+  'buildingTypeOther',
+  ['numberOfFloors', 'col-span-3'],
   ['totalBuildingArea', 'col-span-4'],
 );
 
-const legalFields = pick(
-  ['isOwnerVerifiedBuilding', 'col-span-4'],
-  ['ownerNameBuilding', 'col-span-8'],
-  'hasObligation',
-  'obligationDetails',
-  // Required; a row of its own, after the obligation chips and their details.
-  ['isAppraisable', 'col-span-3'],
-);
-
-const typeAndUseFields = pick(
-  'buildingType',
-  'buildingTypeOther',
-  ['constructionType', 'col-span-4'],
+// After the size: how the area is divided (moved here from the identity group, as the report prints
+// them together), then how it is built and used, each a row of its own.
+const useFields = pick(
+  'spaceDivision',
+  ['constructionType', 'col-span-12'],
   'constructionTypeOther',
-  ['utilizationType', 'col-span-8'],
+  ['utilizationType', 'col-span-12'],
   'utilizationTypeOther',
-  ['isResidential', 'col-span-4'],
-  ['residentialRemark', 'col-span-8'],
+  // Whether it can be lived in (3) and, beside it, the reason (9).
+  ['isResidential', 'col-span-3'],
+  ['residentialRemark', 'col-span-9'],
 );
 
 const conditionFields = pick(
+  // Whether it is under construction opens the group, on a row of its own with the toggle at its own
+  // width (a full-row cell, so the age cannot join it). Picking the condition "under construction"
+  // turns it on (`defaultWhen`). The age follows on its own row: a small number, a quarter of the
+  // row, as on the condo form; the condition chips below keep their own row.
+  ['isUnderConstruction', 'col-span-12'],
+  ['buildingAge', 'col-span-3'],
   'buildingConditionType',
   'buildingConditionTypeOther',
-  // The construction toggle and its licence expiry share a row; narrow: the toggle first, the date under it.
-  ['isUnderConstruction', 'col-span-4', 12],
-  ['constructionLicenseExpirationDate', 'col-span-4'],
-  ['buildingMaterialType', 'col-span-6'],
-  ['buildingStyleType', 'col-span-6'],
+  'maintenanceType',
+  'maintenanceTypeOther',
+  ['buildingMaterialType', 'col-span-12'],
+  ['buildingStyleType', 'col-span-12'],
   'buildingStyleTypeOther',
   'decorationType',
   'decorationTypeOther',
@@ -243,23 +305,26 @@ const structureFields = pick(
   'roofFrameTypeOther',
   ['roofType', 'col-span-6'],
   'roofTypeOther',
+  // The ceiling follows the roof, as in the report (moved from the finishes).
+  ['ceilingType', 'col-span-6'],
+  'ceilingTypeOther',
 );
 
 const finishesFields = pick(
-  ['ceilingType', 'col-span-6'],
-  'ceilingTypeOther',
   ['interiorWallType', 'col-span-6'],
   'interiorWallTypeOther',
   ['exteriorWallType', 'col-span-6'],
   'exteriorWallTypeOther',
+  ['doorType', 'col-span-6'],
+  'doorTypeOther',
+  ['windowType', 'col-span-6'],
+  'windowTypeOther',
+  'sanitaryType',
+  'sanitaryTypeOther',
+  'buildingSystemType',
+  'buildingSystemTypeOther',
   ['fenceType', 'col-span-6'],
   'fenceTypeOther',
-);
-
-const limitationFields = pick(
-  ['isEncroachingOthers', 'col-span-4'],
-  ['encroachingOthersArea', 'col-span-4'],
-  'encroachingOthersRemark',
 );
 
 const surfaceTableHeader = [

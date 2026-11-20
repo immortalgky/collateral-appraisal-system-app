@@ -55,7 +55,7 @@ export interface TabLayout {
   buildingType?: 'LB' | 'LS';
   /** The inspection belongs to a condo unit rather than a house. */
   condo?: boolean;
-  /** Lease and rental tabs exist only while `isRentedOut` is on (land, land-and-building). */
+  /** Lease and rental tabs exist only while `isRentedOut` is on (land, land-and-building, condo). */
   rentedOutOnly?: boolean;
 }
 
@@ -153,7 +153,10 @@ export function PropertyTabs({ layout, context }: { layout: TabLayout; context: 
               <TitleDeedForm />
             </Section>
             <Section id="land-info" anchor className="flex flex-col gap-6 min-w-0 overflow-hidden">
-              <LandDetailForm propertyType={layout.landType} />
+              <LandDetailForm
+                propertyType={layout.landType}
+                hideRentedOut={!layout.rentedOutOnly}
+              />
             </Section>
           </div>
         );
@@ -169,7 +172,7 @@ export function PropertyTabs({ layout, context }: { layout: TabLayout; context: 
         return (
           <div key={id} id="condo-section" className={`flex flex-col gap-6 ${hidden(id)}`}>
             <Section id="condo-info" anchor className="flex flex-col gap-6 min-w-0 overflow-hidden">
-              <CondoDetailForm />
+              <CondoDetailForm hideRentedOut={!layout.rentedOutOnly} />
             </Section>
           </div>
         );

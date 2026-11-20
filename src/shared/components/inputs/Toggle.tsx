@@ -17,9 +17,15 @@ interface ToggleProps {
    * grids, outside the form system.
    */
   size?: 'sm' | 'md';
-  checked?: boolean;
+  checked?: boolean | null;
   onChange?: (checked: boolean) => void;
+  /** Makes the value optional: `checked` null/undefined shows neither option, and a click on the chosen option calls this to clear it. */
+  onClear?: () => void;
+  /** `checked` null/undefined shows neither option (without making the chosen one clearable, unlike `onClear`). */
+  showUnset?: boolean;
   disabled?: boolean;
+  /** Disabled because a rule fixes the answer (not because it is unavailable): the chosen option keeps its accent fill. */
+  locked?: boolean;
   className?: string;
 }
 
@@ -50,17 +56,21 @@ const Toggle = ({
   required,
   className,
   disabled,
+  locked,
   size = 'md',
   checked,
   onChange,
+  onClear,
+  showUnset,
 }: ToggleProps) => {
   const isReadOnly = useFormReadOnly();
   const isDisabled = disabled || isReadOnly;
   const layout = useFormLayout();
   const geometry = GEOMETRY[size === 'sm' ? 'small' : layout];
 
-  // Treat undefined/null as false (first option active)
-  const activeIndex = checked ? 1 : 0;
+  // Treat undefined/null as false (first option active), unless the value is optional (onClear) or
+  // the caller wants an unset value shown as unset (showUnset).
+  const activeIndex = checked == null && (onClear || showUnset) ? -1 : checked ? 1 : 0;
   const [firstOption, secondOption] = options;
 
   // The pill is sized and placed from the active button, so options may be any width.
@@ -71,11 +81,23 @@ const Toggle = ({
   // Off until the pill has been measured twice, so it does not fly in from 0 on first paint
   // (or when a hidden section is opened and the first real measurement arrives).
   const [animate, setAnimate] = useState(false);
+  // Which captions an over-narrow cell has cut short, so only those get the full text as a title.
+  const [clipped, setClipped] = useState<boolean[]>([false, false]);
 
   useLayoutEffect(() => {
     const measure = () => {
+      const cut = buttonRefs.current.map(b => {
+        const text = b?.firstElementChild;
+        return !!text && text.scrollWidth > text.clientWidth;
+      });
+      setClipped(prev => (prev[0] === cut[0] && prev[1] === cut[1] ? prev : cut));
       const button = buttonRefs.current[activeIndex];
-      if (!button) return;
+      if (!button) {
+        // Nothing chosen: no pill, and the next choice slides in from nowhere.
+        pillRef.current = null;
+        setPill(null);
+        return;
+      }
       const next = { x: button.offsetLeft, w: button.offsetWidth };
       const prev = pillRef.current;
       if (prev?.x === next.x && prev.w === next.w) return;
@@ -93,12 +115,14 @@ const Toggle = ({
 
   const handleClick = (index: number) => {
     if (isDisabled) return;
-    onChange?.(index !== 0);
+    if (onClear && index === activeIndex) onClear();
+    else onChange?.(index !== 0);
   };
 
   return (
     <div className={clsx('text-sm', className)}>
-      <fieldset>
+      {/* `min-w-0`: a fieldset is as wide as its content by default, which let the track out of its cell. */}
+      <fieldset className="min-w-0">
         {/* The addon goes INSIDE the legend, never in a wrapper around it: <legend> must be a
             direct child of <fieldset> or assistive technology loses the group's name. */}
         {label && (
@@ -116,7 +140,10 @@ const Toggle = ({
         <div
           ref={trackRef}
           className={clsx(
-            'relative inline-flex rounded-full transition-colors duration-200',
+            // `max-w-full`: the track never outgrows its cell; the captions give way (see below).
+            // `isolate`: the captions' z-10 orders them above the pill inside the track only, so they
+            // cannot paint over a sticky bar (tab bar, table header) the toggle scrolls under.
+            'relative isolate inline-flex max-w-full rounded-full transition-colors duration-200',
             geometry.track,
             // The error ring is inset so it adds no height: the control stays the control height.
             error
@@ -136,7 +163,7 @@ const Toggle = ({
                 animate &&
                   'transition-[transform,width] duration-250 ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none',
                 // danger-600: white on the brand red is 3.8:1.
-                error ? 'bg-danger-600' : isDisabled ? 'bg-gray-500' : 'bg-primary-700',
+                error ? 'bg-danger-600' : isDisabled && !locked ? 'bg-gray-500' : 'bg-primary-700',
               )}
               style={{ width: pill.w, transform: `translateX(${pill.x}px)` }}
               aria-hidden="true"
@@ -153,11 +180,12 @@ const Toggle = ({
                 }}
                 type="button"
                 role="radio"
+                title={clipped[index] ? option : undefined}
                 aria-checked={isActive}
                 disabled={isDisabled}
                 onClick={() => handleClick(index)}
                 className={clsx(
-                  'relative z-10 flex items-center justify-center rounded-full select-none font-medium leading-normal whitespace-nowrap transition-colors duration-200',
+                  'relative z-10 flex min-w-0 items-center justify-center rounded-full select-none font-medium leading-normal whitespace-nowrap transition-colors duration-200',
                   size === 'sm' ? 'text-xs' : 'text-sm',
                   geometry.option,
                   isDisabled ? 'cursor-not-allowed' : 'cursor-pointer',
@@ -168,7 +196,9 @@ const Toggle = ({
                       : 'text-(--palette-ink)',
                 )}
               >
-                {option}
+                {/* Whole captions at any normal width; an ellipsis (and the full text on hover) only
+                    when the cell is too narrow for them. */}
+                <span className="min-w-0 truncate">{option}</span>
               </button>
             );
           })}

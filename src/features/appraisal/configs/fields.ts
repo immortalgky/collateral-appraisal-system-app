@@ -1,5 +1,10 @@
 import { createElement } from 'react';
-import type { FormField } from '@/shared/components/form';
+import {
+  booleanChips,
+  type ConditionFn,
+  type FormField,
+  type FormFieldItem,
+} from '@/shared/components/form';
 import {
   AERIAL_TITLE_TYPES,
   LAND_PARCEL_TITLE_TYPES,
@@ -7,6 +12,10 @@ import {
   SURVEY_TITLE_TYPES,
 } from '@/shared/constants/titleTypes';
 import { requiredUnlessDevelopmentOnly } from '../utils/developmentOnlyBuilding';
+import { obligationFields } from './obligationFields';
+
+// Re-exported so the Data Correction labels (read from every export of this file) include them.
+export { obligationFields };
 
 /** ฿ left-adornment for currency number-inputs (Land + Condo PMA prices). */
 const bahtPrefix = createElement('span', { className: 'text-sm text-(--palette-gray-400)' }, '฿');
@@ -19,8 +28,6 @@ export function prefixFields(fields: FormField[], prefix: string): FormField[] {
 // =============================================================================
 // Land fields (from LandDetailForm.tsx)
 // =============================================================================
-
-const ObligationDetail = ['02', '03', '04', '05', '99'];
 
 export const landInfoField: FormField[] = [
   {
@@ -167,25 +174,7 @@ export const landInfoFieldTail: FormField[] = [
     maxLength: 100,
   },
 
-  {
-    type: 'radio-group',
-    label: 'Is Obligation',
-    name: 'hasObligation',
-    orientation: 'horizontal',
-    variant: 'button',
-    group: 'Obligation',
-    wrapperClassName: 'col-span-12',
-  },
-
-  {
-    type: 'text-input',
-    label: 'Obligation',
-    name: 'obligationDetails',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
-    requiredWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
-    maxLength: 100,
-  },
+  ...obligationFields,
 ];
 
 export const landLocationField: FormField[] = [
@@ -193,17 +182,16 @@ export const landLocationField: FormField[] = [
     type: 'boolean-toggle',
     label: 'Land Location Verified',
     name: 'isLandLocationVerified',
-    options: ['In Correct', 'Correct'],
+    options: ['Incorrect', 'Correct'],
     wrapperClassName: 'col-span-12',
   },
 
   {
-    type: 'radio-group',
+    type: 'checkbox-group',
     label: 'Check By',
     name: 'landCheckMethodType',
     orientation: 'horizontal',
     group: 'CheckBy',
-    variant: 'button',
     wrapperClassName: 'col-span-12',
   },
 
@@ -212,9 +200,22 @@ export const landLocationField: FormField[] = [
     label: 'Other',
     name: 'landCheckMethodTypeOther',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'landCheckMethodType', is: '99' },
-    requiredWhen: { field: 'landCheckMethodType', is: '99' },
+    showWhen: { field: 'landCheckMethodType', is: '99', operator: 'contains' },
+    requiredWhen: { field: 'landCheckMethodType', is: '99', operator: 'contains' },
     maxLength: 100,
+  },
+
+  {
+    type: 'textarea',
+    label: 'Land Location Remark',
+    name: 'landLocationRemark',
+    wrapperClassName: 'col-span-12',
+    // Why the position is not correct: offered while the verdict is "Incorrect", never required
+    // (the verdict starts at Incorrect, so a required remark would block every new land).
+    showWhen: { field: 'isLandLocationVerified', is: false },
+    maxLength: 4000,
+    showCharCount: true,
+    rows: 4,
   },
 
   {
@@ -238,6 +239,7 @@ export const landLocationField: FormField[] = [
     type: 'number-input',
     label: 'Distance',
     name: 'distanceFromMainRoad',
+    suffix: 'm',
     wrapperClassName: 'col-span-3',
     maxIntegerDigits: 5,
     decimalPlaces: 2,
@@ -261,11 +263,15 @@ export const landLocationField: FormField[] = [
   },
 
   {
-    type: 'dropdown',
+    type: 'radio-group',
     label: 'Land Shape',
     name: 'landShapeType',
+    orientation: 'horizontal',
+    variant: 'button',
     wrapperClassName: 'col-span-12',
     group: 'LandShape',
+    // Retired options are left out; a record that still holds one keeps showing it as selected.
+    activeOnly: true,
   },
 
   {
@@ -354,6 +360,15 @@ export const landFillField: FormField[] = [
     type: 'number-input',
     label: 'Landfill ( % )',
     name: 'landFillPercent',
+    suffix: 'percent',
+    // Filled (and overwritten) when the appraiser picks the condition: 02 filled = 100, 03 not filled = 0.
+    defaultWhen: {
+      field: 'landFillType',
+      cases: [
+        { is: '02', value: 100 },
+        { is: '03', value: 0 },
+      ],
+    },
     wrapperClassName: 'col-span-6',
     decimalPlaces: 2,
     maxIntegerDigits: 3,
@@ -362,8 +377,9 @@ export const landFillField: FormField[] = [
 
   {
     type: 'number-input',
-    label: 'Soil Level ( cm )',
+    label: 'Soil Level ( m )',
     name: 'soilLevel',
+    suffix: 'm',
     wrapperClassName: 'col-span-6',
     maxIntegerDigits: 5,
     decimalPlaces: 2,
@@ -374,18 +390,30 @@ export const landFillField: FormField[] = [
 export const roadField: FormField[] = [
   {
     type: 'number-input',
-    label: 'Road Width',
-    name: 'accessRoadWidth',
-    wrapperClassName: 'col-span-6',
+    label: 'Carriageway Width (m)',
+    name: 'carriagewayWidth',
+    suffix: 'm',
+    wrapperClassName: 'col-span-4',
     maxIntegerDigits: 3,
-    decimalPlaces: 0,
+    decimalPlaces: 2,
   },
 
   {
     type: 'number-input',
-    label: 'Right of Way',
-    name: 'rightOfWay',
-    wrapperClassName: 'col-span-6',
+    label: 'Right-of-way Width (m)',
+    name: 'rightOfWayWidth',
+    suffix: 'm',
+    wrapperClassName: 'col-span-4',
+    maxIntegerDigits: 3,
+    decimalPlaces: 2,
+  },
+
+  {
+    type: 'number-input',
+    label: 'Number of Lanes',
+    name: 'numberOfLanes',
+    suffix: 'lane',
+    wrapperClassName: 'col-span-4',
     maxIntegerDigits: 3,
     decimalPlaces: 0,
   },
@@ -394,6 +422,7 @@ export const roadField: FormField[] = [
     type: 'number-input',
     label: 'Wide frontage of land adjacent to the road',
     name: 'roadFrontage',
+    suffix: 'm',
     wrapperClassName: 'col-span-6',
     maxIntegerDigits: 3,
   },
@@ -402,6 +431,7 @@ export const roadField: FormField[] = [
     type: 'number-input',
     label: 'Number of sides facing the road',
     name: 'numberOfSidesFacingRoad',
+    suffix: 'side',
     wrapperClassName: 'col-span-6',
     decimalPlaces: 0,
     maxIntegerDigits: 1,
@@ -564,8 +594,44 @@ export const anticipationProsperityField: FormField[] = [
     requiredWhen: { field: 'propertyAnticipationType', is: '99' },
     maxLength: 100,
   },
+
+  {
+    type: 'radio-group',
+    label: 'Development Suitability',
+    name: 'developmentSuitabilityType',
+    orientation: 'horizontal',
+    group: 'DevelopmentSuitability',
+    variant: 'button',
+    wrapperClassName: 'col-span-12',
+  },
 ];
 
+// Drawn by UrbanPlanningColorField (colour cards), not by FormFields; kept here so the schema, the
+// correction labels and the missing-field check read them like any other field.
+export const urbanPlanningColorFields: FormField[] = [
+  {
+    type: 'radio-group',
+    label: 'Urban Planning Color',
+    name: 'urbanPlanningColor',
+    group: 'UrbanPlanningColor',
+    variant: 'button',
+    wrapperClassName: 'col-span-12',
+  },
+
+  {
+    type: 'text-input',
+    label: 'Other',
+    name: 'urbanPlanningColorOther',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'urbanPlanningColor', is: '99' },
+    requiredWhen: { field: 'urbanPlanningColor', is: '99' },
+    maxLength: 100,
+  },
+];
+
+// "Located in an expropriation map sheet" (isExpropriated and its remark) is no longer asked on any form. Both stay here,
+// unrendered and with no rule, so the schema declares them and a stored value goes back untouched on
+// save (as with encroachmentRemark below): the forms simply do not pick them.
 export const expropriateField: FormField[] = [
   {
     type: 'boolean-toggle',
@@ -580,8 +646,6 @@ export const expropriateField: FormField[] = [
     label: 'Is Expropriated',
     name: 'expropriationRemark',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'isExpropriated', is: true },
-    requiredWhen: { field: 'isExpropriated', is: true },
     maxLength: 4000,
     showCharCount: true,
   },
@@ -610,7 +674,9 @@ export const expropriateField: FormField[] = [
     label: 'Royal Decree',
     name: 'royalDecree',
     wrapperClassName: 'col-span-12',
-    maxLength: 20,
+    // The decree belongs to the expropriation line: it opens with it and is cleared when it is No.
+    showWhen: { field: 'isInExpropriationLine', is: true },
+    maxLength: 200,
   },
 ];
 
@@ -647,7 +713,7 @@ export const electricityField: FormField[] = [
     name: 'hasElectricity',
     // Yes = the plot lies far from the power line (the distance opens only then). The field name
     // says "has"; the meaning, and so the label, is "far from".
-    label: 'Far from Electricity',
+    label: 'Far from Power Distribution Line',
     wrapperClassName: 'col-span-6',
     options: ['No', 'Yes'],
   },
@@ -656,10 +722,11 @@ export const electricityField: FormField[] = [
     type: 'number-input',
     label: 'Distance from Electricity (m)',
     name: 'electricityDistance',
+    suffix: 'm',
     wrapperClassName: 'col-span-6',
-    disableWhen: { field: 'hasElectricity', is: false },
-    // Disabled means blank, not 0: switching back to No clears the distance to null.
-    disabledValue: null,
+    // The distance opens only while the plot is far from the power line, and goes back to blank
+    // (null) when it goes to No.
+    showWhen: { field: 'hasElectricity', is: true },
     maxIntegerDigits: 3,
   },
 ];
@@ -705,15 +772,51 @@ export const landBoundaryField: FormField[] = [
 
   {
     type: 'textarea',
-    label: 'Other',
+    label: 'Other Limitations Found',
     name: 'otherLegalLimitations',
     wrapperClassName: 'col-span-12',
-    maxLength: 100,
+    maxLength: 4000,
+    showCharCount: true,
+    rows: 4,
   },
 ];
 
+/**
+ * "Others" under the limitations found: the text of `otherLegalLimitations` is asked while the chip
+ * is on. There is no column for the chip: it is on while the text is not null (a blank text reads as
+ * off), a pick writes '' (so the text is required) and a drop writes null (the text is hidden and
+ * cleared). The land form only; the block project form keeps the plain textarea above.
+ */
+const hasOtherLegalLimitations: ConditionFn = Object.assign(
+  (values: Record<string, unknown>) => values.otherLegalLimitations != null,
+  { deps: ['otherLegalLimitations'] },
+);
+const otherLegalLimitationsPlain = landBoundaryField.find(f => f.name === 'otherLegalLimitations')!;
+export const otherLegalLimitationsField: FormField = {
+  ...otherLegalLimitationsPlain,
+  showWhen: hasOtherLegalLimitations,
+  requiredWhen: hasOtherLegalLimitations,
+};
+export const otherLegalLimitationsChip: FormField = {
+  ...otherLegalLimitationsPlain,
+  label: 'Others',
+  chip: {
+    isOn: value => value != null,
+    on: '',
+    off: null,
+    labelKey: 'otherLegalLimitationsChip',
+  },
+};
+
 /** @deprecated Use electricityField + landBoundaryField instead */
 export const LimitationOther: FormField[] = [...electricityField, ...landBoundaryField];
+
+/** Shown while at least one right-restriction chip is picked (no list operator: `isNotEmpty` is true for `[]`). */
+const hasEvictionType: ConditionFn = Object.assign(
+  (values: Record<string, unknown>) =>
+    Array.isArray(values.evictionType) && values.evictionType.length > 0,
+  { deps: ['evictionType'] },
+);
 
 export const evictionField: FormField[] = [
   {
@@ -735,6 +838,18 @@ export const evictionField: FormField[] = [
     showWhen: { field: 'evictionType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'evictionType', is: '99', operator: 'contains' },
     maxLength: 100,
+  },
+
+  {
+    type: 'textarea',
+    label: 'Right Restriction Details',
+    name: 'evictionRemark',
+    wrapperClassName: 'col-span-12',
+    // Optional: it opens with the first chip and clears when the last one goes.
+    showWhen: hasEvictionType,
+    maxLength: 4000,
+    showCharCount: true,
+    rows: 4,
   },
 ];
 
@@ -820,11 +935,24 @@ export const sizeAndBoundary: FormField[] = [
   },
 ];
 
+/** "Rented out" under the obligations (land, land-and-building, condo). Pairs with useRentedOutFollowsLease. */
+export const rentedOutField: FormField = {
+  type: 'boolean-toggle',
+  label: 'Rented Out',
+  name: 'isRentedOut',
+  options: ['No', 'Yes'],
+  // Picking "tied to a lease" in the obligations sets it to Yes and locks it.
+  disableWhen: { field: 'obligationType', is: '03', operator: 'contains' },
+  disabledHint: 'Yes because "Tied to a lease" is picked.',
+  wrapperClassName: 'col-span-12',
+};
+
 export const otherInformationField: FormField[] = [
   {
     type: 'number-input',
     label: 'Pond Area',
     name: 'pondArea',
+    suffix: 'sqwa',
     wrapperClassName: 'col-span-6',
     maxIntegerDigits: 5,
   },
@@ -833,6 +961,7 @@ export const otherInformationField: FormField[] = [
     type: 'number-input',
     label: 'Depth of Pit',
     name: 'pondDepth',
+    suffix: 'm',
     wrapperClassName: 'col-span-6',
     maxIntegerDigits: 5,
   },
@@ -850,18 +979,12 @@ export const otherInformationField: FormField[] = [
     label: 'Other',
     name: 'hasBuildingOther',
     wrapperClassName: 'col-span-12',
+    // Not asked on any form now, so it must not block a save: no requiredWhen.
     showWhen: { field: 'hasBuilding', is: true },
-    requiredWhen: { field: 'hasBuilding', is: true },
     maxLength: 100,
   },
 
-  {
-    type: 'boolean-toggle',
-    label: 'Land is rented out to others',
-    name: 'isRentedOut',
-    options: ['No', 'Yes'],
-    wrapperClassName: 'col-span-12',
-  },
+  rentedOutField,
 ];
 
 export const remarkLandField: FormField[] = [
@@ -902,7 +1025,7 @@ export const buildingInfoField: FormField[] = [
     label: 'House No.',
     name: 'houseNumber',
     wrapperClassName: 'col-span-3',
-    disableWhen: { field: 'noHouseNumber', is: '02' },
+    disableWhen: { field: 'houseNumberStatus', is: '02' },
     disabledValue: '-',
     required: true,
     maxLength: 50,
@@ -949,11 +1072,11 @@ export const buildingInfoField: FormField[] = [
 
   {
     type: 'radio-group',
-    label: 'No House Number',
-    name: 'noHouseNumber',
+    label: 'House Number Status',
+    name: 'houseNumberStatus',
     wrapperClassName: 'col-span-12',
     keepSpan: true,
-    group: 'NoHouseNumber',
+    group: 'HouseNumberStatus',
     orientation: 'horizontal',
     variant: 'button',
   },
@@ -982,8 +1105,19 @@ export const buildingInfoField: FormField[] = [
     type: 'boolean-toggle',
     label: 'Under Construction',
     name: 'isUnderConstruction',
+    // Picking the condition "under construction" (BuildingCondition 04) turns it on; the appraiser
+    // can still flip it, and nothing else moves it.
+    defaultWhen: { field: 'buildingConditionType', cases: [{ is: '04', value: true }] },
     wrapperClassName: 'col-span-3',
     options: ['No', 'Yes'],
+  },
+
+  {
+    type: 'text-input',
+    label: 'Construction License No.',
+    name: 'constructionLicenseNumber',
+    wrapperClassName: 'col-span-6',
+    maxLength: 50,
   },
 
   {
@@ -995,32 +1129,28 @@ export const buildingInfoField: FormField[] = [
 
   {
     type: 'boolean-toggle',
-    label: 'Appraisal',
+    label: 'Include Building in Valuation',
     name: 'isAppraisable',
     required: true,
-    options: ['Not Appraised', 'Appraise'],
+    options: ['Exclude', 'Include'],
     wrapperClassName: 'col-span-12',
   },
 
   {
-    type: 'radio-group',
-    label: 'Is Obligation',
-    name: 'hasObligation',
-    orientation: 'horizontal',
-    variant: 'button',
-    group: 'Obligation',
+    type: 'textarea',
+    label: 'Reason Not Appraised',
+    name: 'notAppraisableReason',
     wrapperClassName: 'col-span-12',
+    // Why the building is left out of the valuation: asked while it is excluded, cleared when it is
+    // included again. Data entry only; no calculation reads it.
+    showWhen: { field: 'isAppraisable', is: false },
+    requiredWhen: { field: 'isAppraisable', is: false },
+    maxLength: 4000,
+    showCharCount: true,
+    rows: 4,
   },
 
-  {
-    type: 'text-input',
-    label: 'Obligation',
-    name: 'obligationDetails',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
-    requiredWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
-    maxLength: 100,
-  },
+  ...obligationFields,
 ];
 
 export const buildingTypeField: FormField[] = [
@@ -1050,6 +1180,7 @@ export const buildingTypeField: FormField[] = [
     type: 'number-input',
     label: 'Total Floor',
     name: 'numberOfFloors',
+    suffix: 'floor',
     wrapperClassName: 'col-span-12',
     // Development-only buildings (every depreciation row non-building) have no floors to count.
     requiredWhen: requiredUnlessDevelopmentOnly,
@@ -1095,10 +1226,10 @@ export const encroachmentField: FormField[] = [
     type: 'number-input',
     label: 'Encroaching Area',
     name: 'encroachingOthersArea',
+    suffix: 'sqwa',
     wrapperClassName: 'col-span-6',
-    disableWhen: { field: 'isEncroachingOthers', is: false },
-    // Disabled means blank, not 0: switching back to No clears the area to null.
-    disabledValue: null,
+    // Opens with "Yes"; going back to "No" hides it and clears it to null (blank, not 0).
+    showWhen: { field: 'isEncroachingOthers', is: true },
     maxIntegerDigits: 8,
   },
 
@@ -1161,6 +1292,7 @@ export const isResidentialField: FormField[] = [
     type: 'number-input',
     label: 'Building Age',
     name: 'buildingAge',
+    suffix: 'year',
     wrapperClassName: 'col-span-2',
     maxIntegerDigits: 3,
     decimalPlaces: 1,
@@ -1375,10 +1507,144 @@ export const constTypeFeild: FormField[] = [
   },
 ];
 
+// Kept apart from ceilingField / buildingArea: the block-project model form reads those and has no
+// column for these yet.
+export const buildingSizeField: FormField[] = [
+  {
+    type: 'number-input',
+    label: 'Building Width (m.)',
+    name: 'buildingWidth',
+    wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 5,
+    decimalPlaces: 2,
+  },
+
+  {
+    type: 'number-input',
+    label: 'Building Length (m.)',
+    name: 'buildingLength',
+    wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 5,
+    decimalPlaces: 2,
+  },
+
+  {
+    type: 'textarea',
+    label: 'Space Division',
+    name: 'spaceDivision',
+    wrapperClassName: 'col-span-12',
+    maxLength: 1000,
+    showCharCount: true,
+  },
+];
+
+export const buildingMaintenanceField: FormField[] = [
+  {
+    type: 'radio-group',
+    label: 'Maintenance',
+    group: 'BuildingMaintenance',
+    orientation: 'horizontal',
+    name: 'maintenanceType',
+    variant: 'button',
+    wrapperClassName: 'col-span-12',
+  },
+
+  {
+    type: 'textarea',
+    label: 'Other',
+    name: 'maintenanceTypeOther',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'maintenanceType', is: '99' },
+    requiredWhen: { field: 'maintenanceType', is: '99' },
+    maxLength: 100,
+  },
+];
+
+export const doorWindowField: FormField[] = [
+  {
+    type: 'checkbox-group',
+    label: 'Door',
+    name: 'doorType',
+    orientation: 'horizontal',
+    group: 'Door',
+    wrapperClassName: 'col-span-12',
+  },
+
+  {
+    type: 'textarea',
+    label: 'Other',
+    name: 'doorTypeOther',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'doorType', is: '99', operator: 'contains' },
+    requiredWhen: { field: 'doorType', is: '99', operator: 'contains' },
+    maxLength: 100,
+  },
+
+  {
+    type: 'checkbox-group',
+    label: 'Window',
+    name: 'windowType',
+    orientation: 'horizontal',
+    group: 'Window',
+    wrapperClassName: 'col-span-12',
+  },
+
+  {
+    type: 'textarea',
+    label: 'Other',
+    name: 'windowTypeOther',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'windowType', is: '99', operator: 'contains' },
+    requiredWhen: { field: 'windowType', is: '99', operator: 'contains' },
+    maxLength: 100,
+  },
+];
+
+export const buildingServicesField: FormField[] = [
+  {
+    type: 'checkbox-group',
+    label: 'Sanitary Ware',
+    name: 'sanitaryType',
+    orientation: 'horizontal',
+    group: 'Sanitary',
+    wrapperClassName: 'col-span-12',
+  },
+
+  {
+    type: 'textarea',
+    label: 'Other',
+    name: 'sanitaryTypeOther',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'sanitaryType', is: '99', operator: 'contains' },
+    requiredWhen: { field: 'sanitaryType', is: '99', operator: 'contains' },
+    maxLength: 100,
+  },
+
+  {
+    type: 'checkbox-group',
+    label: 'Building Systems',
+    name: 'buildingSystemType',
+    orientation: 'horizontal',
+    group: 'BuildingSystem',
+    wrapperClassName: 'col-span-12',
+  },
+
+  {
+    type: 'textarea',
+    label: 'Other',
+    name: 'buildingSystemTypeOther',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'buildingSystemType', is: '99', operator: 'contains' },
+    requiredWhen: { field: 'buildingSystemType', is: '99', operator: 'contains' },
+    maxLength: 100,
+  },
+];
+
 export const buildingArea: FormField[] = [
   {
     type: 'number-input',
     name: 'totalBuildingArea',
+    suffix: 'sqm',
     label: 'Total Building Area (sq.m.)',
     wrapperClassName: 'col-span-12',
     required: true,
@@ -1492,6 +1758,7 @@ export const condoFields: FormField[] = [
     type: 'number-input',
     label: 'Usable Area (Sq.M)',
     name: 'usableArea',
+    suffix: 'sqm',
     wrapperClassName: 'col-span-6',
     required: true,
     maxIntegerDigits: 5,
@@ -1513,6 +1780,8 @@ export const condoFields: FormField[] = [
     type: 'boolean-toggle',
     label: 'Under Construction',
     name: 'isUnderConstruction',
+    // As on the building form: picking the condition "under construction" (04) turns it on.
+    defaultWhen: { field: 'buildingConditionType', cases: [{ is: '04', value: true }] },
     wrapperClassName: 'col-span-12',
     options: ['No', 'Yes'],
   },
@@ -1664,25 +1933,7 @@ export const condoFieldsTail: FormField[] = [
     maxLength: 100,
   },
 
-  {
-    type: 'radio-group',
-    label: 'Is Obligation',
-    name: 'hasObligation',
-    orientation: 'horizontal',
-    variant: 'button',
-    group: 'Obligation',
-    wrapperClassName: 'col-span-12',
-  },
-
-  {
-    type: 'text-input',
-    label: 'Obligation',
-    name: 'obligationDetails',
-    wrapperClassName: 'col-span-12',
-    showWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
-    requiredWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
-    maxLength: 100,
-  },
+  ...obligationFields,
 
   {
     type: 'dropdown',
@@ -1697,12 +1948,24 @@ export const condoFieldsTail: FormField[] = [
 export const condoLocationFields: FormField[] = [
   {
     type: 'radio-group',
-    label: 'Location',
+    label: 'Unit Location',
     name: 'locationType',
     wrapperClassName: 'col-span-12',
     orientation: 'horizontal',
     group: 'CondoLocation',
     variant: 'button',
+  },
+
+  {
+    type: 'textarea',
+    label: 'Unit Location Remark',
+    name: 'locationRemark',
+    wrapperClassName: 'col-span-12',
+    // Why the position is not correct (code '2'): optional, cleared when the code changes back.
+    showWhen: { field: 'locationType', is: '2' },
+    maxLength: 4000,
+    showCharCount: true,
+    rows: 4,
   },
 
   {
@@ -1725,26 +1988,39 @@ export const condoLocationFields: FormField[] = [
     type: 'number-input',
     label: 'Distance',
     name: 'distanceFromMainRoad',
+    suffix: 'm',
     wrapperClassName: 'col-span-4',
     maxIntegerDigits: 5,
   },
 
   {
     type: 'number-input',
-    label: 'Road Width',
-    name: 'accessRoadWidth',
+    label: 'Carriageway Width (m)',
+    name: 'carriagewayWidth',
+    suffix: 'm',
     wrapperClassName: 'col-span-4',
     maxIntegerDigits: 3,
-    decimalPlaces: 0,
+    decimalPlaces: 2,
   },
 
   {
     type: 'number-input',
-    label: 'Right of Way',
-    name: 'rightOfWay',
+    label: 'Right-of-way Width (m)',
+    name: 'rightOfWayWidth',
+    suffix: 'm',
     wrapperClassName: 'col-span-4',
-    decimalPlaces: 0,
     maxIntegerDigits: 3,
+    decimalPlaces: 2,
+  },
+
+  {
+    type: 'number-input',
+    label: 'Number of Lanes',
+    name: 'numberOfLanes',
+    suffix: 'lane',
+    wrapperClassName: 'col-span-4',
+    maxIntegerDigits: 3,
+    decimalPlaces: 0,
   },
 
   {
@@ -1816,6 +2092,7 @@ export const ageHeightCondoFields: FormField[] = [
     type: 'number-input',
     label: 'Building Age (Years)',
     name: 'buildingAge',
+    suffix: 'year',
     wrapperClassName: 'col-span-12',
     maxIntegerDigits: 3,
     decimalPlaces: 1,
@@ -1825,6 +2102,7 @@ export const ageHeightCondoFields: FormField[] = [
     type: 'number-input',
     label: 'Total Number of Floors',
     name: 'numberOfFloors',
+    suffix: 'floor',
     wrapperClassName: 'col-span-12',
     required: true,
     maxIntegerDigits: 3,
@@ -1982,6 +2260,7 @@ export const roofFormFields: FormField[] = [
   },
 ];
 
+// As on the land form (see expropriateField): isExpropriated and its remark are carried, not asked.
 export const expropriationFields: FormField[] = [
   {
     type: 'boolean-toggle',
@@ -1996,8 +2275,6 @@ export const expropriationFields: FormField[] = [
     label: 'Is Expropriated',
     name: 'expropriationRemark',
     wrapperClassName: 'col-span-12',
-    showWhen: { field: 'isExpropriated', is: true },
-    requiredWhen: { field: 'isExpropriated', is: true },
     maxLength: 4000,
     showCharCount: true,
   },
@@ -2026,7 +2303,9 @@ export const expropriationFields: FormField[] = [
     label: 'Royal Decree',
     name: 'royalDecree',
     wrapperClassName: 'col-span-12',
-    maxLength: 20,
+    // As on the land form: it opens with the expropriation line and is cleared when it is No.
+    showWhen: { field: 'isInExpropriationLine', is: true },
+    maxLength: 200,
   },
 ];
 
@@ -2070,6 +2349,109 @@ export const environmentFields: FormField[] = [
     requiredWhen: { field: 'environmentType', is: '99', operator: 'contains' },
     maxLength: 100,
   },
+];
+
+// Flood and pollution problems around the property (book section 1.5); land and condo share them.
+export const environmentProblemFields: FormField[] = [
+  {
+    type: 'boolean-toggle',
+    label: 'Flood Problem',
+    name: 'hasFloodProblem',
+    wrapperClassName: 'col-span-12',
+    options: ['No', 'Yes'],
+  },
+
+  {
+    type: 'textarea',
+    label: 'Flood Remark',
+    name: 'floodProblemRemark',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'hasFloodProblem', is: true },
+    maxLength: 4000,
+    showCharCount: true,
+    rows: 4,
+  },
+
+  {
+    type: 'boolean-toggle',
+    label: 'Pollution Problem',
+    name: 'hasPollutionProblem',
+    wrapperClassName: 'col-span-12',
+    options: ['No', 'Yes'],
+  },
+
+  {
+    type: 'checkbox-group',
+    label: 'Pollution Type',
+    name: 'pollutionType',
+    orientation: 'horizontal',
+    group: 'Pollution',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'hasPollutionProblem', is: true },
+  },
+
+  {
+    type: 'textarea',
+    label: 'Other',
+    name: 'pollutionTypeOther',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'pollutionType', is: '99', operator: 'contains' },
+    requiredWhen: { field: 'pollutionType', is: '99', operator: 'contains' },
+    maxLength: 100,
+  },
+
+  {
+    type: 'textarea',
+    label: 'Pollution Remark',
+    name: 'pollutionProblemRemark',
+    wrapperClassName: 'col-span-12',
+    // Free text about the pollution, not required: it opens with the toggle and clears with it.
+    showWhen: { field: 'hasPollutionProblem', is: true },
+    maxLength: 4000,
+    showCharCount: true,
+    rows: 4,
+  },
+
+  {
+    type: 'boolean-toggle',
+    label: 'Other Environment Problem',
+    name: 'hasOtherEnvironmentProblem',
+    wrapperClassName: 'col-span-12',
+    options: ['No', 'Yes'],
+  },
+
+  {
+    type: 'textarea',
+    label: 'Other Environment Problem Remark',
+    name: 'otherEnvironmentProblemRemark',
+    wrapperClassName: 'col-span-12',
+    // What the problem is: asked for once the chip is on, and cleared with it.
+    showWhen: { field: 'hasOtherEnvironmentProblem', is: true },
+    requiredWhen: { field: 'hasOtherEnvironmentProblem', is: true },
+    maxLength: 4000,
+    showCharCount: true,
+    rows: 4,
+  },
+];
+
+/**
+ * The problems as the forms lay them out: one chip row (flood, pollution, other; each chip is its
+ * boolean, an unselected one is false), then what each chip opens, in chip order. Each block shows
+ * only while its chip is on and clears when it goes off (showWhen). The sub-heading above the row is
+ * `EnvironmentProblemsHeading`, drawn by the form.
+ */
+const environmentField = (name: string) => environmentProblemFields.find(f => f.name === name)!;
+export const environmentProblemItems: FormFieldItem[] = [
+  booleanChips('environmentProblems', 'Problems Found', [
+    environmentField('hasFloodProblem'),
+    environmentField('hasPollutionProblem'),
+    environmentField('hasOtherEnvironmentProblem'),
+  ]),
+  environmentField('floodProblemRemark'),
+  environmentField('pollutionType'),
+  environmentField('pollutionTypeOther'),
+  environmentField('pollutionProblemRemark'),
+  environmentField('otherEnvironmentProblemRemark'),
 ];
 
 export const inForestBoundaryFormFields: FormField[] = [
@@ -2176,6 +2558,10 @@ export const condoLandCharacteristicsFields: FormField[] = [
     requiredWhen: { field: 'landEntranceExitType', is: '99', operator: 'contains' },
     maxLength: 100,
   },
+
+  // The road passing the building and the ways of getting there: the land form's fields, reused.
+  roadField.find(f => f.name === 'roadPassInFrontOfLand')!,
+  ...transpotationField,
 ];
 
 // Condo government price — per SQUARE METRE (unlike land's per-Sq.Wa), since a condo
@@ -2194,6 +2580,7 @@ export const condoGovernmentPriceFields: FormField[] = [
     type: 'number-input',
     label: 'Government Price per Sq.M',
     name: 'governmentPricePerSqm',
+    suffix: 'baht',
     wrapperClassName: 'col-span-6',
     maxIntegerDigits: 16,
     decimalPlaces: 2,
@@ -2205,6 +2592,7 @@ export const condoGovernmentPriceFields: FormField[] = [
     type: 'number-input',
     label: 'Government Price',
     name: 'governmentPrice',
+    suffix: 'baht',
     wrapperClassName: 'col-span-6',
     disabled: true,
     maxIntegerDigits: 16,
@@ -2230,6 +2618,7 @@ export const condoBuildingInsuranceFields: FormField[] = [
     type: 'number-input',
     label: 'Building Insurance Price',
     name: 'buildingInsurancePrice',
+    suffix: 'baht',
     wrapperClassName: 'col-span-6',
     disabled: true,
     maxIntegerDigits: 16,
@@ -2455,6 +2844,7 @@ export const machineInfoFields: FormField[] = [
     type: 'number-input',
     label: 'Quantity',
     name: 'quantity',
+    suffix: 'machine',
     wrapperClassName: 'col-span-6',
     decimalPlaces: 0,
     maxIntegerDigits: 6,
@@ -2473,6 +2863,7 @@ export const machineInfoFields: FormField[] = [
     type: 'number-input',
     label: 'Year',
     name: 'yearOfManufacture',
+    suffix: 'be',
     wrapperClassName: 'col-span-6',
     decimalPlaces: 0,
     maxIntegerDigits: 4,
@@ -2491,6 +2882,7 @@ export const machineInfoFields: FormField[] = [
     type: 'number-input',
     label: 'Purchase Price',
     name: 'purchasePrice',
+    suffix: 'baht',
     wrapperClassName: 'col-span-6',
     maxIntegerDigits: 15,
     decimalPlaces: 2,
@@ -2613,6 +3005,7 @@ export const machineInfoFields: FormField[] = [
     type: 'number-input',
     label: 'Machinery Age ',
     name: 'machineAge',
+    suffix: 'year',
     wrapperClassName: 'col-span-6',
     decimalPlaces: 0,
     maxIntegerDigits: 3,
@@ -2656,6 +3049,7 @@ export const machineInfoFields: FormField[] = [
     type: 'number-input',
     label: 'Width',
     name: 'width',
+    suffix: 'm',
     wrapperClassName: 'col-span-4',
     maxIntegerDigits: 3,
   },
@@ -2664,6 +3058,7 @@ export const machineInfoFields: FormField[] = [
     type: 'number-input',
     label: 'Length',
     name: 'length',
+    suffix: 'm',
     wrapperClassName: 'col-span-4',
     maxIntegerDigits: 3,
   },
@@ -2672,6 +3067,7 @@ export const machineInfoFields: FormField[] = [
     type: 'number-input',
     label: 'Height',
     name: 'height',
+    suffix: 'm',
     wrapperClassName: 'col-span-4',
     maxIntegerDigits: 3,
   },
@@ -2742,7 +3138,34 @@ export const machineInfoFields: FormField[] = [
 
 // =============================================================================
 
-export const allLandFields: FormField[] = [
+/**
+ * The details of the expropriation line, the forest line and the landlocked plot (the decree, their
+ * remarks, and the landlocked flag), and the distance from the power line, are no longer asked on the
+ * land and condo forms: the Law & Regulation tab holds the first. They stay in the schema as carriers, with no rules and never rendered,
+ * so a stored value goes back untouched on save. The block project land form still asks them, so it
+ * takes the originals back (`lawTabOriginalFields`).
+ */
+const LAW_TAB_CARRIED = [
+  'royalDecree',
+  'expropriationLineRemark',
+  'forestBoundaryRemark',
+  'isLandlocked',
+  'landlockedRemark',
+  // The distance from the power line is not asked either.
+  'hasElectricity',
+  'electricityDistance',
+];
+const asLawTabCarrier = (fields: FormField[]): FormField[] =>
+  fields.map(f =>
+    LAW_TAB_CARRIED.includes(f.name) ? { ...f, showWhen: undefined, requiredWhen: undefined } : f,
+  );
+export const lawTabOriginalFields = new Map(
+  [...expropriateField, ...landBoundaryField, ...electricityField]
+    .filter(f => LAW_TAB_CARRIED.includes(f.name))
+    .map(f => [f.name, f]),
+);
+
+export const allLandFields: FormField[] = asLawTabCarrier([
   ...landInfoField,
   ...landAddressFields,
   ...landDopaAddressFields,
@@ -2756,16 +3179,22 @@ export const allLandFields: FormField[] = [
   ...landUseField,
   ...landEntranceField,
   ...transpotationField,
+  ...environmentFields,
   ...anticipationProsperityField,
   ...expropriateField,
   ...encroachedField,
-  ...LimitationOther,
+  // The land form's "Others" chip opens the other-limitations text (otherLegalLimitationsField).
+  ...LimitationOther.map(f =>
+    f.name === 'otherLegalLimitations' ? otherLegalLimitationsField : f,
+  ),
   ...evictionField,
   ...allocationField,
   ...sizeAndBoundary,
   ...otherInformationField,
+  ...urbanPlanningColorFields,
+  ...environmentProblemFields,
   ...remarkLandField,
-];
+]);
 
 export const allBuildingFields: FormField[] = [
   ...buildingInfoField,
@@ -2781,16 +3210,20 @@ export const allBuildingFields: FormField[] = [
   ...roofField,
   ...ceilingField,
   ...wallField,
+  ...doorWindowField,
+  ...buildingServicesField,
   ...fenceField,
   ...constTypeFeild,
   ...buildingArea,
+  ...buildingSizeField,
+  ...buildingMaintenanceField,
   ...utilizationFeild,
   ...remarkBuildingField,
 ];
 
 export const allLandBuildingFields: FormField[] = [...allLandFields, ...allBuildingFields];
 
-export const allCondoFields: FormField[] = [
+export const allCondoFields: FormField[] = asLawTabCarrier([
   ...condoFields,
   ...condoAddressFields,
   ...condoDopaAddressFields,
@@ -2808,11 +3241,15 @@ export const allCondoFields: FormField[] = [
   ...floorFormFields,
   ...roofFormFields,
   ...expropriationFields,
+  // The condo form's "Others" chip opens the other-limitations text, as on the land form.
+  otherLegalLimitationsField,
   ...condoFacilityFields,
   ...environmentFields,
+  ...urbanPlanningColorFields,
+  ...environmentProblemFields,
   ...inForestBoundaryFormFields,
   ...remarkFormFields,
-];
+]);
 
 export const allMachineryFields: FormField[] = [...machineInfoFields];
 
@@ -3024,6 +3461,7 @@ export const landtitlesFields: FormField[] = [
 
   {
     name: 'governmentPricePerSqWa',
+    suffix: 'baht',
     label: 'Government Price per Sq.Wa',
     type: 'number-input',
     wrapperClassName: 'col-span-12',
@@ -3037,6 +3475,7 @@ export const landtitlesFields: FormField[] = [
 
   {
     name: 'governmentPrice',
+    suffix: 'baht',
     label: 'Government Price',
     type: 'number-input',
     wrapperClassName: 'col-span-12',
@@ -3356,6 +3795,7 @@ export const leaseContractField: FormField[] = [
     type: 'number-input',
     label: 'Lease Period as Contract',
     name: 'leasePeriodAsContract',
+    suffix: 'year',
     wrapperClassName: 'col-span-6',
     maxIntegerDigits: 3,
     decimalPlaces: 2,
@@ -3365,6 +3805,7 @@ export const leaseContractField: FormField[] = [
     type: 'number-input',
     label: 'Remaining Lease as Appraisal Date',
     name: 'remainingLeaseAsAppraisalDate',
+    suffix: 'year',
     wrapperClassName: 'col-span-6',
     maxIntegerDigits: 3,
     decimalPlaces: 2,
@@ -3398,6 +3839,7 @@ export const leaseDatesFeesField: FormField[] = [
     type: 'number-input',
     label: 'Lease Rent Fee',
     name: 'leaseRentFee',
+    suffix: 'baht',
     wrapperClassName: 'col-span-3',
     maxIntegerDigits: 15,
     decimalPlaces: 2,
@@ -3407,6 +3849,7 @@ export const leaseDatesFeesField: FormField[] = [
     type: 'number-input',
     label: 'Rent Adjust',
     name: 'rentAdjust',
+    suffix: 'percent',
     wrapperClassName: 'col-span-3',
     maxIntegerDigits: 15,
     decimalPlaces: 2,
@@ -3426,6 +3869,7 @@ export const leaseTermsField: FormField[] = [
     type: 'number-input',
     label: 'Additional Expenses',
     name: 'additionalExpenses',
+    suffix: 'baht',
     wrapperClassName: 'col-span-6',
     maxIntegerDigits: 15,
     decimalPlaces: 2,
@@ -3466,6 +3910,26 @@ export const leaseRentalTermsField: FormField[] = [
   },
 ];
 
+export const leaseLegalField: FormField[] = [
+  {
+    type: 'boolean-toggle',
+    label: 'Lease Registered',
+    name: 'isLeaseRegistered',
+    options: ['Not Registered', 'Registered'],
+    nullable: true,
+    wrapperClassName: 'col-span-6',
+  },
+
+  {
+    type: 'boolean-toggle',
+    label: 'Leasehold Pledgeable',
+    name: 'isLeaseholdPledgeable',
+    options: ['Not Allowed', 'Allowed'],
+    nullable: true,
+    wrapperClassName: 'col-span-6',
+  },
+];
+
 export const leaseOtherField: FormField[] = [
   {
     type: 'textarea',
@@ -3483,6 +3947,7 @@ export const allLeaseAgreementFields: FormField[] = [
   ...leaseDatesFeesField,
   ...leaseTermsField,
   ...leaseRentalTermsField,
+  ...leaseLegalField,
   ...leaseOtherField,
 ];
 
@@ -3495,7 +3960,9 @@ export const rentalScheduleField: FormField[] = [
     type: 'number-input',
     label: 'Number of Year',
     name: 'numberOfYears',
-    wrapperClassName: 'col-span-6',
+    suffix: 'year',
+    decimalPlaces: 0,
+    wrapperClassName: 'col-span-3',
     maxIntegerDigits: 3,
     required: true,
   },
@@ -3504,7 +3971,7 @@ export const rentalScheduleField: FormField[] = [
     type: 'date-input',
     label: 'First Year Start From',
     name: 'firstYearStartDate',
-    wrapperClassName: 'col-span-6',
+    wrapperClassName: 'col-span-3',
     required: true,
   },
 
@@ -3512,7 +3979,8 @@ export const rentalScheduleField: FormField[] = [
     type: 'number-input',
     label: 'Contract Rental Fee per Year',
     name: 'contractRentalFeePerYear',
-    wrapperClassName: 'col-span-6',
+    suffix: 'bahtPerYear',
+    wrapperClassName: 'col-span-3',
     decimalPlaces: 2,
     maxIntegerDigits: 15,
     required: true,
@@ -3522,7 +3990,8 @@ export const rentalScheduleField: FormField[] = [
     type: 'number-input',
     label: 'Up Front',
     name: 'upFrontTotalAmount',
-    wrapperClassName: 'col-span-6',
+    suffix: 'baht',
+    wrapperClassName: 'col-span-3',
     decimalPlaces: 2,
     maxIntegerDigits: 15,
     required: true,
@@ -3535,7 +4004,8 @@ export const rentalGrowthPeriodField: FormField[] = [
     type: 'number-input',
     label: 'Growth Rate %',
     name: 'growthRatePercent',
-    wrapperClassName: 'col-span-12',
+    suffix: 'percent',
+    wrapperClassName: 'col-span-3',
     maxIntegerDigits: 3,
     decimalPlaces: 2,
   },
@@ -3544,7 +4014,8 @@ export const rentalGrowthPeriodField: FormField[] = [
     type: 'number-input',
     label: 'Every (Year)',
     name: 'growthIntervalYears',
-    wrapperClassName: 'col-span-12',
+    suffix: 'year',
+    wrapperClassName: 'col-span-3',
     maxIntegerDigits: 3,
     decimalPlaces: 0,
   },

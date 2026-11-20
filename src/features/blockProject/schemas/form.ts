@@ -20,6 +20,7 @@ import {
   condoTowerStructureFields,
   condoTowerFloorFields,
   condoTowerRoofFields,
+  condoTowerCarriedFields,
   condoTowerLegalFields,
   pricingLocationSharedFields,
   pricingForceSaleFields,
@@ -163,6 +164,7 @@ export const lbProjectInfoFormDefaults: LbProjectInfoFormType = {
   postcode: null,
   latitude: null,
   longitude: null,
+  licenseNumber: null,
   licenseExpirationDate: null,
   utilities: [],
   utilitiesOther: null,
@@ -388,6 +390,7 @@ const allTowerFields = [
   ...condoTowerStructureFields,
   ...condoTowerFloorFields,
   ...condoTowerRoofFields,
+  ...condoTowerCarriedFields,
   ...condoTowerLegalFields,
 ];
 
@@ -400,7 +403,8 @@ export const projectTowerFormDefaults: ProjectTowerFormType = {
   numberOfFloors: 0,
   condoRegistrationNumber: '',
   conditionType: null,
-  hasObligation: '',
+  obligationType: [],
+  mortgageDetails: null,
   obligationDetails: null,
   documentValidationType: null,
   isLocationCorrect: true,

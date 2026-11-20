@@ -20,6 +20,8 @@ interface FormRadioGroupBaseProps {
   orientation?: 'horizontal' | 'vertical';
   variant?: 'default' | 'card' | 'button';
   other?: OtherSpec;
+  /** Leave retired options out; the saved value's own option stays (see RadioGroup). */
+  activeOnly?: boolean;
 }
 
 const FormRadioGroup = ({
@@ -32,6 +34,7 @@ const FormRadioGroup = ({
   orientation,
   variant,
   other,
+  activeOnly,
   ...groupOrOptions
 }: FormRadioGroupProps) => {
   const formReadOnly = useFormReadOnly();
@@ -55,6 +58,7 @@ const FormRadioGroup = ({
       orientation={orientation}
       variant={variant}
       other={other}
+      activeOnly={activeOnly}
       name={name}
       {...groupOrOptions}
     />

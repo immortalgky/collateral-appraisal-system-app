@@ -42,6 +42,14 @@ export function FieldLabels({ scope, ns = 'appraisal', children }: FieldLabelsPr
       if (field.label && i18n.exists(key, { ns })) {
         field = { ...field, label: t(key as never) } as FormField;
       }
+      const hintKey = `fieldHints.${scope}.${field.name}`;
+      if (field.hint && i18n.exists(hintKey, { ns })) {
+        field = { ...field, hint: t(hintKey as never) } as FormField;
+      }
+      const disabledHintKey = `fieldHints.${scope}.${field.name}Locked`;
+      if (field.disabledHint && i18n.exists(disabledHintKey, { ns })) {
+        field = { ...field, disabledHint: t(disabledHintKey as never) } as FormField;
+      }
       if (field.placeholder && i18n.exists('fieldLabels.specifyPlaceholder', { ns })) {
         field = {
           ...field,

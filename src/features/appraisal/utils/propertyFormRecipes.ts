@@ -2,6 +2,7 @@ import type { z } from 'zod';
 import {
   createBuildingForm,
   createCondoForm,
+  createCondoFormDefault,
   createLandAndBuildingForm,
   createLandAndBuildingFormDefault,
   createLandForm,
@@ -15,6 +16,7 @@ import {
   createLeaseAgreementLandForm,
   createLeaseAgreementLandFormDefault,
   createMachineryForm,
+  type createCondoFormType,
   type createLandAndBuildingFormType,
   type createLandFormType,
   type createLeaseAgreementBuildingFormType,
@@ -85,6 +87,14 @@ export const landBuildingToForm = (raw: PropertyRecord): createLandAndBuildingFo
   }) as unknown as createLandAndBuildingFormType;
 
 // ── Condo ───────────────────────────────────────────────────────────────
+
+export const condoToForm = (raw: PropertyRecord): createCondoFormType =>
+  ({
+    ...createCondoFormDefault,
+    ...mapCondoPropertyResponseToForm(raw as never),
+    isRentedOut: asValues(raw).isRentedOut ?? false,
+    ...leaseBlock(raw),
+  }) as unknown as createCondoFormType;
 
 /**
  * buildingInsurancePrice is server-derived (rate x usableArea): display only, never sent back.
@@ -162,7 +172,7 @@ export const PROPERTY_FORM_RECIPES: Record<string, PropertyFormRecipe> = {
   },
   U: {
     schema: createCondoForm,
-    toForm: raw => mapCondoPropertyResponseToForm(raw as never),
+    toForm: condoToForm,
     toPayload: condoToPayload,
   },
   MAC: {

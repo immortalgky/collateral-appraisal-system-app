@@ -66,6 +66,8 @@ export interface Project {
   /** Condo only — null for LandAndBuilding */
   builtOnTitleDeedNumber?: string;
   /** LandAndBuilding only — null for Condo */
+  licenseNumber?: string;
+  /** LandAndBuilding only — null for Condo */
   licenseExpirationDate?: string;
 }
 
@@ -80,7 +82,8 @@ export interface ProjectTower {
   numberOfFloors?: number;
   condoRegistrationNumber?: string;
   conditionType?: string;
-  hasObligation?: string;
+  obligationType?: string[];
+  mortgageDetails?: string;
   obligationDetails?: string;
   documentValidationType?: string;
   isLocationCorrect?: boolean;
@@ -528,11 +531,13 @@ export interface ProjectLand {
   landOffice?: string;
   ownerName?: string;
   isOwnerVerified?: boolean;
-  hasObligation?: string;
+  obligationType?: string[];
+  mortgageDetails?: string;
   obligationDetails?: string;
   isLandLocationVerified?: boolean;
-  landCheckMethodType?: string;
+  landCheckMethodType?: string[];
   landCheckMethodTypeOther?: string;
+  landLocationRemark?: string;
   street?: string;
   soi?: string;
   distanceFromMainRoad?: number;
@@ -540,16 +545,21 @@ export interface ProjectLand {
   addressLocation?: string;
   landShapeType?: string;
   urbanPlanningType?: string;
+  urbanPlanningColor?: string;
+  urbanPlanningColorOther?: string;
   landZoneType?: string[];
   landZoneTypeOther?: string;
+  environmentType?: string[];
+  environmentTypeOther?: string;
   plotLocationType?: string[];
   plotLocationTypeOther?: string;
   landFillType?: string;
   landFillTypeOther?: string;
   landFillPercent?: number;
   soilLevel?: number;
-  accessRoadWidth?: number;
-  rightOfWay?: number;
+  carriagewayWidth?: number;
+  rightOfWayWidth?: number;
+  numberOfLanes?: number;
   roadFrontage?: number;
   numberOfSidesFacingRoad?: number;
   roadPassInFrontOfLand?: string;
@@ -569,6 +579,7 @@ export interface ProjectLand {
   transportationAccessTypeOther?: string;
   propertyAnticipationType?: string;
   propertyAnticipationTypeOther?: string;
+  developmentSuitabilityType?: string;
   isExpropriated?: boolean;
   expropriationRemark?: string;
   isInExpropriationLine?: boolean;
@@ -584,6 +595,7 @@ export interface ProjectLand {
   otherLegalLimitations?: string;
   evictionType?: string[];
   evictionTypeOther?: string;
+  evictionRemark?: string;
   allocationType?: string;
   northAdjacentArea?: string;
   northBoundaryLength?: number;

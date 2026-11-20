@@ -18,14 +18,15 @@ import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import CondoDetailForm from '../forms/CondoDetailForm';
+import LeaseAgreementForm from '../forms/LeaseAgreementForm';
+import RentalInfoForm from '../forms/RentalInfoForm';
 import {
   useCreateCondoProperty,
   useGetCondoPropertyById,
   useUpdateCondoProperty,
 } from '../api/property';
 import { createCondoForm, createCondoFormDefault, type createCondoFormType } from '../schemas/form';
-import { mapCondoPropertyResponseToForm } from '../utils/mappers';
-import { condoToPayload } from '../utils/propertyFormRecipes';
+import { condoToForm, condoToPayload } from '../utils/propertyFormRecipes';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
@@ -55,7 +56,7 @@ const CreateCondoPage = () => {
 
   const formDefaults = useMemo(() => {
     if (isEditMode && propertyData) {
-      return mapCondoPropertyResponseToForm(propertyData);
+      return condoToForm(propertyData);
     }
     return createCondoFormDefault;
   }, [isEditMode, propertyData]);
@@ -76,7 +77,7 @@ const CreateCondoPage = () => {
 
   useEffect(() => {
     if (isEditMode && propertyData) {
-      reset(mapCondoPropertyResponseToForm(propertyData));
+      reset(condoToForm(propertyData));
     }
   }, [isEditMode, propertyData, reset]);
 
@@ -248,7 +249,10 @@ const CreateCondoPage = () => {
   const isUnderConstruction = methods.watch('isUnderConstruction');
   const tabParam = searchParams.get('tab');
   const initialCondoTab = tabParam === 'construction' ? 'construction' : 'condo';
-  const [activeTab, setActiveTab] = useState<'condo' | 'construction'>(initialCondoTab);
+  const isRentedOut = methods.watch('isRentedOut');
+  const [activeTab, setActiveTab] = useState<
+    'condo' | 'construction' | 'lease-agreement' | 'rental-info'
+  >(initialCondoTab);
 
   const { shownTab, hasTab: hasConstructionTab } = useConstructionTab({
     methods,
@@ -259,6 +263,13 @@ const CreateCondoPage = () => {
     isCreateMode: !isEditMode,
     isCiAppraisal,
   });
+
+  // Back to the condo tab when rented-out is turned off while a rental tab is open.
+  useEffect(() => {
+    if (!isRentedOut && (activeTab === 'lease-agreement' || activeTab === 'rental-info')) {
+      setActiveTab('condo');
+    }
+  }, [isRentedOut, activeTab]);
 
   if (isLoading || (isEditMode && !propertyData)) {
     return (
@@ -272,11 +283,17 @@ const CreateCondoPage = () => {
     );
   }
 
-  // The header's tabs; construction appears only when it applies.
+  // The header's tabs; construction and lease/rental appear only when they apply.
   const editorTabs = [
     { id: 'condo', label: t('createPage.navCondo') },
     ...(hasConstructionTab
       ? [{ id: 'construction', label: t('createPage.navConstructionInspection') }]
+      : []),
+    ...(isRentedOut
+      ? [
+          { id: 'lease-agreement', label: t('createPage.navLeaseAgreement') },
+          { id: 'rental-info', label: t('createPage.navRentalInfo') },
+        ]
       : []),
   ];
 
@@ -291,6 +308,7 @@ const CreateCondoPage = () => {
                 appraisalId={appraisalId}
                 propertyId={propertyId}
                 typeCode="U"
+                nameFieldType="U"
                 photoSectionRef={photoSectionRef}
                 tabs={editorTabs}
                 activeTab={shownTab}
@@ -321,6 +339,30 @@ const CreateCondoPage = () => {
                     ciMode={isCiAppraisal}
                     condo
                   />
+
+                  {/* Lease Agreement Tab Content */}
+                  {isRentedOut && (
+                    <div
+                      id="lease-agreement-section"
+                      className={`flex flex-col gap-6 min-w-0 max-w-full ${shownTab !== 'lease-agreement' ? 'hidden' : ''}`}
+                    >
+                      <Section anchor className="min-w-0 overflow-hidden">
+                        <LeaseAgreementForm namePrefix="leaseAgreement" />
+                      </Section>
+                    </div>
+                  )}
+
+                  {/* Rental Info Tab Content */}
+                  {isRentedOut && (
+                    <div
+                      id="rental-info-section"
+                      className={`flex flex-col gap-6 min-w-0 max-w-full ${shownTab !== 'rental-info' ? 'hidden' : ''}`}
+                    >
+                      <Section anchor className="min-w-0 overflow-hidden">
+                        <RentalInfoForm namePrefix="rentalInfo" />
+                      </Section>
+                    </div>
+                  )}
                 </div>
               </PropertyFormShell>
 

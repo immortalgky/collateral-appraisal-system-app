@@ -2,24 +2,14 @@ import { useContext, type ReactNode } from 'react';
 import clsx from 'clsx';
 
 import { REQUIRED_MARK } from '../inputs/controlStyles';
+import { COMPACT } from './compactStyles';
 import { useFormLayout } from './formLayoutContext';
 import { FormSectionBodyContext } from './formSheetContext';
 import { ValidationLabelContext } from './validationMessage';
 
-// Field wrapper classes (DESIGN.md 17.4). `col-span-*` is the field's own business in Standard
-// (the section body is a 12-column grid); a Compact pair is full-width or half of a row.
+// Field wrapper classes (DESIGN.md 17.4): `col-span-*` is the field's own business in Standard (the
+// section body is a 12-column grid). The Compact pair classes are in `compactStyles.ts`.
 const LABEL_CLASS = 'block text-xs font-medium text-(--palette-ink)';
-const COMPACT = {
-  pair: 'grid grid-cols-[10.8571rem_minmax(0,1fr)] border-b border-l border-(--palette-line-soft)',
-  half: 'col-span-12 @[60rem]/sheet:col-span-6',
-  full: 'col-span-12',
-  label:
-    'flex items-center gap-1.5 border-r border-(--palette-line-soft) bg-(--palette-surface-2) px-[0.8571rem] py-[0.3571rem] text-xs font-medium leading-normal text-(--palette-ink-2)',
-  control: 'flex min-w-0 items-center px-[0.5714rem] py-[0.2857rem]',
-  // 40px with a 32px control, 33px for a read page's text row (DESIGN.md 17.3)
-  controlMin: 'min-h-[2.8571rem]',
-  readMin: 'min-h-[2.3571rem]',
-};
 
 // A read page's label sits over its value, quieter than an edit label (DESIGN.md 17.3).
 const READ_LABEL_CLASS = 'block text-xs font-medium text-(--palette-ink-2)';
@@ -29,13 +19,16 @@ const FLEX_CLASS = /(^|\s)(?:flex|items-center)(?=\s|$)/g;
 
 // Written out in full so Tailwind sees them; `!` beats the section body's own 3/4 -> 6 rule.
 const NARROW_SPAN = {
-  3: '@max-[84.2857rem]/form-shell:col-span-3!',
-  4: '@max-[84.2857rem]/form-shell:col-span-4!',
-  6: '@max-[84.2857rem]/form-shell:col-span-6!',
-  12: '@max-[84.2857rem]/form-shell:col-span-12!',
+  3: '@max-[56rem]/form-shell:col-span-3!',
+  4: '@max-[56rem]/form-shell:col-span-4!',
+  6: '@max-[56rem]/form-shell:col-span-6!',
+  12: '@max-[56rem]/form-shell:col-span-12!',
 } as const;
 
 const SPAN_CLASS = /(?:^|\s)(?:[\w-]+:)*col-(?:span|start|end)-\S+/g;
+/** A fraction width or minimum (`w-1/2`, `w-[calc(50%-0.5714rem)]`, `min-w-[11rem]`), at any breakpoint: a Standard field that fills part of a full row. A Compact pair drops them. */
+const PART_WIDTH =
+  /(?:^|\s)(?:\S+:)*(?:w-(?:1\/[234]|full|\[calc[^\s\]]+\])|min-w-\[[^\s\]]+\])(?=\s|$)/g;
 
 interface FormFieldShellProps {
   /** The `data-field` name: what a form error scrolls to. */
@@ -53,6 +46,10 @@ interface FormFieldShellProps {
   wrapperClassName?: string;
   /** Compact: take a whole row (chip groups, textareas, several inputs), not half of one. */
   full?: boolean;
+  /** Compact: the control is taller than one line (textarea, chip group); the label aligns to the top. */
+  tall?: boolean;
+  /** Compact: a half only from a wider sheet (a joined row of three controls). */
+  wide?: boolean;
   /** The field belongs to a run that makes one row (`rowGroupRoles`): Standard keeps its spans too, Compact only starts the row. */
   rowGroup?: 'start' | 'member' | 'start-only';
   /** A chip group: Standard gives it the whole row, whatever span the config has (DESIGN.md 17.4). */
@@ -66,7 +63,7 @@ interface FormFieldShellProps {
 
 /**
  * The wrapper every form field sits in (DESIGN.md 17.4): label above the control in Standard; in
- * Compact, inside a `FormSection`, a label-left pair (152px label cell) that sits two to a row on a
+ * Compact, inside a `FormSection`, a label-left pair (184px label cell) that sits two to a row on a
  * wide sheet. `FormFields` uses it for config-driven fields; a hand-built field in a form uses it
  * too, so it lays out like its neighbours.
  */
@@ -79,6 +76,8 @@ export function FormFieldShell({
   addon,
   wrapperClassName = '',
   full: fullPair,
+  tall,
+  wide,
   rowGroup,
   chips,
   narrowSpan,
@@ -153,20 +152,23 @@ export function FormFieldShell({
   // The config's own spans are for the 12-column Standard grid and would stretch this one, so they
   // are dropped for the pair's own.
   const full = fullPair || /(?:^|\s)col-span-12(?=\s|$)/.test(wrapperClassName);
-  return (
+  const pair = (
     <div
       data-field={name}
+      data-half={full ? undefined : ''}
       className={clsx(
         COMPACT.pair,
-        full ? COMPACT.full : COMPACT.half,
-        // Two to a row: a run that makes one row (latitude / longitude) starts one, so its
-        // first pair is not pulled up beside the field before it
-        (rowGroup === 'start' || rowGroup === 'start-only') && '@[60rem]/sheet:col-start-1',
+        full ? COMPACT.full : wide ? COMPACT.halfWide : COMPACT.half,
+        (rowGroup === 'start' || rowGroup === 'start-only') && COMPACT.rowStart,
         // `flex` / `items-center` on the wrapper would replace the pair's grid
-        wrapperClassName.replace(SPAN_CLASS, '').replace(FLEX_CLASS, '$1'),
+        wrapperClassName.replace(SPAN_CLASS, '').replace(PART_WIDTH, '').replace(FLEX_CLASS, '$1'),
       )}
     >
-      {head && <div className={COMPACT.label}>{head}</div>}
+      {head && (
+        <div className={clsx(COMPACT.label, tall || chips ? COMPACT.labelTop : COMPACT.labelMid)}>
+          {head}
+        </div>
+      )}
       <div
         className={clsx(
           COMPACT.control,
@@ -177,5 +179,15 @@ export function FormFieldShell({
         <div className="min-w-0 flex-1">{labelled}</div>
       </div>
     </div>
+  );
+  // Two to a row: a run that makes one row (address: sub-district / district / province) starts one, so its
+  // first pair is not pulled up beside the field before it.
+  return rowGroup === 'start' || rowGroup === 'start-only' ? (
+    <>
+      <div aria-hidden data-row-break="" className={COMPACT.rowBreak} />
+      {pair}
+    </>
+  ) : (
+    pair
   );
 }

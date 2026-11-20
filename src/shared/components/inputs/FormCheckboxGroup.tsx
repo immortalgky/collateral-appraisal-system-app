@@ -17,6 +17,8 @@ interface FormCheckboxGroupBaseProps {
   /** Visual variant for checkbox group */
   variant?: 'tag' | 'chip' | 'button';
   other?: OtherSpec;
+  /** Option values that stand alone (see CheckboxGroup). */
+  exclusiveValues?: string[];
 }
 
 /**
@@ -32,6 +34,7 @@ const FormCheckboxGroup = ({
   size,
   variant,
   other,
+  exclusiveValues,
   ...groupOrOptions
 }: FormCheckboxGroupProps) => {
   return (
@@ -44,6 +47,7 @@ const FormCheckboxGroup = ({
       size={size}
       variant={variant}
       other={other}
+      exclusiveValues={exclusiveValues}
       {...groupOrOptions}
     />
   );

@@ -58,3 +58,28 @@ describe('CheckboxGroup clear button', () => {
     expect(screen.getByRole('button', { name: 'Alpha' })).toHaveAttribute('aria-pressed', 'false');
   });
 });
+
+describe('CheckboxGroup exclusiveValues', () => {
+  function Exclusive() {
+    const methods = useForm({ defaultValues: { picks: [] as string[] } });
+    return (
+      <FormProvider {...methods}>
+        <CheckboxGroup name="picks" options={options} exclusiveValues={['a']} />
+        <output data-testid="picks">{methods.watch('picks').join(',')}</output>
+      </FormProvider>
+    );
+  }
+
+  it('an exclusive option clears the rest, and any other option clears it', async () => {
+    const user = userEvent.setup();
+    render(<Exclusive />);
+    await user.click(screen.getByRole('button', { name: 'Bravo' }));
+    await user.click(screen.getByRole('button', { name: 'Charlie' }));
+    await user.click(screen.getByRole('button', { name: 'Alpha' }));
+    expect(screen.getByTestId('picks')).toHaveTextContent(/^a$/);
+    await user.click(screen.getByRole('button', { name: 'Bravo' }));
+    expect(screen.getByTestId('picks')).toHaveTextContent(/^b$/);
+    await user.click(screen.getByRole('button', { name: 'Bravo' }));
+    expect(screen.getByTestId('picks')).toBeEmptyDOMElement();
+  });
+});

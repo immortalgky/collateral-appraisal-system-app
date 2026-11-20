@@ -220,6 +220,7 @@ const CreateLandPage = () => {
               appraisalId={appraisalId}
               propertyId={propertyId}
               typeCode="L"
+              nameFieldType="L"
               photoSectionRef={photoSectionRef}
               tabs={editorTabs}
               activeTab={activeTab}

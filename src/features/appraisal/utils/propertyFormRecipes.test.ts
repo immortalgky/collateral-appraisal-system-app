@@ -3,6 +3,7 @@ import {
   condoToPayload,
   landToPayload,
   leaseBuildingToPayload,
+  leaseCondoToForm,
   leaseCondoToPayload,
   PROPERTY_FORM_RECIPES,
 } from './propertyFormRecipes';
@@ -33,6 +34,30 @@ describe('payloads', () => {
     const lease = { ...values, leaseAgreement: null, rentalInfo: null };
     expect(condoToPayload(values)).not.toHaveProperty('buildingInsurancePrice');
     expect(leaseCondoToPayload(lease)).toMatchObject({ buildingInsurancePrice: 100 });
+  });
+});
+
+describe('lease condo road and transport', () => {
+  // The schema side (a key zod must not strip) is in form.carriedKeys.test.ts.
+  it('loads from the record and goes back out in the payload', () => {
+    const record = {
+      roadPassInFrontOfLand: 'ถนนสุขุมวิท',
+      transportationAccessType: ['01', '99'],
+      transportationAccessTypeOther: 'เรือโดยสาร',
+      leaseAgreement: null,
+      rentalInfo: null,
+    };
+    const form = leaseCondoToForm(record);
+    expect(form).toMatchObject({
+      roadPassInFrontOfLand: 'ถนนสุขุมวิท',
+      transportationAccessType: ['01', '99'],
+      transportationAccessTypeOther: 'เรือโดยสาร',
+    });
+    expect(leaseCondoToPayload(form)).toMatchObject({
+      roadPassInFrontOfLand: 'ถนนสุขุมวิท',
+      transportationAccessType: ['01', '99'],
+      transportationAccessTypeOther: 'เรือโดยสาร',
+    });
   });
 });
 

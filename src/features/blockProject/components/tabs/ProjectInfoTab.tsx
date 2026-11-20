@@ -148,6 +148,7 @@ export default function ProjectInfoTab({
           ...locationNames,
           latitude: project.latitude ?? null,
           longitude: project.longitude ?? null,
+          licenseNumber: project.licenseNumber ?? null,
           licenseExpirationDate: project.licenseExpirationDate ?? null,
           utilities: project.utilities ?? [],
           utilitiesOther: project.utilitiesOther ?? null,

@@ -16,6 +16,10 @@ interface FormBooleanToggleBaseProps {
   size?: 'sm' | 'md';
   disabled?: boolean;
   className?: string;
+  /** The answer is optional: it can be left unset (null), and a click on the chosen option clears it. */
+  nullable?: boolean;
+  /** Disabled by a rule that fixes the answer: the chosen option keeps its accent fill. */
+  locked?: boolean;
 }
 
 const FormBooleanToggle = ({
@@ -27,6 +31,8 @@ const FormBooleanToggle = ({
   size,
   disabled,
   className,
+  nullable,
+  locked,
 }: FormBooleanToggleProps) => {
   const { control } = useFormContext();
   const {
@@ -43,10 +49,12 @@ const FormBooleanToggle = ({
       options={resolvedOptions}
       size={size}
       disabled={disabled}
+      locked={locked}
       className={className}
       error={error?.message?.toString()}
       checked={field.value}
       onChange={field.onChange}
+      onClear={nullable ? () => field.onChange(null) : undefined}
     />
   );
 };

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import { useParameterOptions } from '@/shared/utils/parameterUtils';
 import { dateOnlyValue, formatDiffValue, groupDiff, type DiffEntry } from '../utils/formDiff';
 
 interface CorrectionConfirmDialogProps {
@@ -22,6 +23,16 @@ const CorrectionConfirmDialog = ({
 }: CorrectionConfirmDialogProps) => {
   const { t } = useTranslation('appraisalDataCorrection');
   const groups = useMemo(() => groupDiff(diff), [diff]);
+  // The obligation list holds codes; the dialog names them as the form's chips do.
+  const obligations = useParameterOptions('Obligation');
+  const show = (entry: DiffEntry, value: unknown) => {
+    const shown = dateOnlyValue(entry.key, value);
+    if (!/(^|\.)obligationType$/.test(entry.key) || !Array.isArray(shown))
+      return formatDiffValue(shown);
+    return formatDiffValue(
+      shown.map(code => obligations.find(o => o.value === code)?.label ?? code),
+    );
+  };
 
   return (
     <ConfirmDialog
@@ -53,12 +64,10 @@ const CorrectionConfirmDialog = ({
                     <div className="font-medium text-(--palette-ink) mb-0.5">{entry.label}</div>
                     {entry.kind === 'changed' && (
                       <div className="flex items-center gap-2 text-(--palette-gray-500)">
-                        <span className="line-through">
-                          {formatDiffValue(dateOnlyValue(entry.key, entry.from))}
-                        </span>
+                        <span className="line-through">{show(entry, entry.from)}</span>
                         <span aria-hidden="true">→</span>
                         <span className="text-(--palette-ink) font-medium">
-                          {formatDiffValue(dateOnlyValue(entry.key, entry.to))}
+                          {show(entry, entry.to)}
                         </span>
                       </div>
                     )}
@@ -67,7 +76,7 @@ const CorrectionConfirmDialog = ({
                         <span className="mr-2 font-semibold text-emerald-700 dark:text-emerald-300">
                           {t('confirmDialog.rowAdded')}
                         </span>
-                        {formatDiffValue(dateOnlyValue(entry.key, entry.to))}
+                        {show(entry, entry.to)}
                       </div>
                     )}
                     {entry.kind === 'removed' && (
@@ -75,9 +84,7 @@ const CorrectionConfirmDialog = ({
                         <span className="mr-2 font-semibold text-(--palette-req)">
                           {t('confirmDialog.rowRemoved')}
                         </span>
-                        <span className="line-through">
-                          {formatDiffValue(dateOnlyValue(entry.key, entry.from))}
-                        </span>
+                        <span className="line-through">{show(entry, entry.from)}</span>
                       </div>
                     )}
                   </div>

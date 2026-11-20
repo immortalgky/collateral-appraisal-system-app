@@ -22,10 +22,24 @@ function resolveGroup(
 ): Parameter[] {
   const key = `${group}.${country}.${language}`.toLowerCase();
   const rows = parameters[key];
-  if (rows?.length) return rows;
+  if (rows?.length) return otherLast(rows);
 
   const fallbackKey = `${group}.${country}.en`.toLowerCase();
-  return parameters[fallbackKey] ?? [];
+  return otherLast(parameters[fallbackKey] ?? []);
+}
+
+/** The parameter code for "other": always the last option, wherever its SeqNo puts it. */
+const OTHER_CODE = '99';
+
+/**
+ * Every option list (chips, radios, dropdowns) comes through here, so this is the one place that
+ * orders them: SeqNo order as stored, then "other" (code 99) moved to the end, the rest untouched.
+ * Returns the same array when it is already in that order.
+ */
+function otherLast(rows: Parameter[]): Parameter[] {
+  const firstOther = rows.findIndex(r => r.code === OTHER_CODE);
+  if (firstOther < 0 || rows.slice(firstOther).every(r => r.code === OTHER_CODE)) return rows;
+  return [...rows.filter(r => r.code !== OTHER_CODE), ...rows.filter(r => r.code === OTHER_CODE)];
 }
 
 /** Returns Parameter[] filtered by group + current locale (falls back to EN) */
@@ -110,7 +124,10 @@ export function useParameterAsCheckboxOptions(group: string): CheckboxOption[] {
 export function useParameterAsRadioOptions(group: string): RadioOption[] {
   const params = useParametersByGroup(group);
 
-  return useMemo(() => params.map(p => ({ value: p.code, label: p.description })), [params]);
+  return useMemo(
+    () => params.map(p => ({ value: p.code, label: p.description, isActive: p.isActive })),
+    [params],
+  );
 }
 
 /** Reactive — returns ListBoxItem[] for the Dealer dropdown */

@@ -50,7 +50,7 @@ interface FormTableCellProps {
 
 /**
  * A body cell. `kind` picks the per-kind look. Its inputs size themselves: pass `cell` to
- * Input / NumberInput / Dropdown and they are 28px in Compact, the normal control in Standard.
+ * Input / NumberInput / Dropdown and they are as tall as the normal control in both layouts.
  */
 export function FormTableCell({
   kind = 'text',
@@ -256,6 +256,19 @@ export interface FormTableProps<Row> {
    * nothing for none.
    */
   rowNote?: (row: Row, position: number) => ReactNode;
+  /**
+   * Extra `<tr>`s at the end of the body, in the same columns as the rows (a subtotal, a section of
+   * related rows, a net line). Gets the columns drawn, so its cells can line up under them. Table
+   * mode only: nothing while the table is empty or turned into cards. They sit above the totals
+   * row, so a table that uses `tail` for its totals leaves `total` out.
+   */
+  tail?: (columns: FormTableColumn<Row>[]) => ReactNode;
+  /**
+   * A `<tfoot>` after the body (and the totals row): a summary that can pin itself with
+   * `sticky bottom-0` so a table that scrolls inside `maxHeight` keeps it in view. Gets the columns
+   * drawn. Table mode only.
+   */
+  foot?: (columns: FormTableColumn<Row>[]) => ReactNode;
   /** The "+ เพิ่ม…" actions. Not shown in read-only mode, nor while the table is empty (see `empty`). */
   add?: FormTableAddAction[];
   /** Shown instead of the table when there are no rows; its box is the add button. */
@@ -288,6 +301,8 @@ export function FormTable<Row>({
   rowProps,
   rowElement: RowElement,
   rowNote,
+  tail,
+  foot,
   add = [],
   empty,
   totalLabel,
@@ -388,8 +403,10 @@ export function FormTable<Row>({
               </Fragment>
             );
           })}
+          {tail?.(tableCols)}
         </tbody>
         {hasTotals && <FormTableTotals columns={tableCols} label={label} frozen={frozen} />}
+        {foot?.(tableCols)}
       </table>
     );
 

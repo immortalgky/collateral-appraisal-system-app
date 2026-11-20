@@ -1,4 +1,5 @@
 import type { TFunction } from 'i18next';
+import { hasLandAccessibilityAnswer, isLandlocked } from '@/shared/utils/landlocked';
 
 /**
  * Field/section labels are resolved through i18n at render time, so each list is a
@@ -6,7 +7,7 @@ import type { TFunction } from 'i18next';
  * `makeLandDetailFormSchema` in ../../types/landDetail.ts.
  *
  * Key naming: lowerCamelCase of the ENGLISH label with parentheticals and punctuation
- * dropped — "Access Road Width (m)" -> `accessRoadWidth`, "Landfill %" -> `landfillPercent`.
+ * dropped — "Access Road Width (m)" -> `carriagewayWidth`, "Landfill %" -> `landfillPercent`.
  * Key off the LABEL, never `field.key`: `landFillType` is "Landfill Type" on land but
  * "Land Condition" on condo, and `buildingConditionType` is "Building Condition" vs
  * "Condition" — keying off the data key would silently mistranslate condo.
@@ -17,6 +18,14 @@ export interface FieldDef {
   key: string;
   label: string;
   isBoolean?: boolean;
+  /** Reads the value from the record when it is not just `record[key]` (a value worked out from more than one field). */
+  read?: (record: Record<string, unknown>) => unknown;
+  /**
+   * The field's toggle captions in the form, [false, true] as the config spells them. A boolean
+   * read from `common:toggle.<key>.<caption>` where the form words it its own way; the plain
+   * yes / no otherwise.
+   */
+  booleanCaptions?: [string, string];
   isNumber?: boolean;
   isDate?: boolean;
   parameterGroup?: string;
@@ -42,7 +51,12 @@ const landSections = (t: T): SectionDef[] => [
       { key: 'landDescription', label: t('view360.fields.landDescription') },
       { key: 'isOwnerVerified', label: t('view360.fields.ownerVerified'), isBoolean: true },
       { key: 'ownerName', label: t('view360.fields.ownerName') },
-      { key: 'hasObligation', label: t('view360.fields.hasObligation'), isBoolean: true },
+      {
+        key: 'obligationType',
+        label: t('view360.fields.obligationType'),
+        parameterGroup: 'Obligation',
+      },
+      { key: 'mortgageDetails', label: t('view360.fields.mortgageDetails') },
       { key: 'obligationDetails', label: t('view360.fields.obligationDetails') },
     ],
   },
@@ -75,6 +89,11 @@ const landSections = (t: T): SectionDef[] => [
         parameterGroup: 'TypeOfUrbanPlanning',
       },
       { key: 'landZoneType', label: t('view360.fields.landZone'), parameterGroup: 'Location' },
+      {
+        key: 'environmentType',
+        label: t('view360.fields.environment'),
+        parameterGroup: 'Environment',
+      },
     ],
   },
   {
@@ -94,12 +113,18 @@ const landSections = (t: T): SectionDef[] => [
     title: t('view360.sections.road&Access'),
     fields: [
       {
-        key: 'accessRoadWidth',
-        label: t('view360.fields.accessRoadWidth'),
+        key: 'carriagewayWidth',
+        label: t('view360.fields.carriagewayWidth'),
         isNumber: true,
         decimalPlaces: 2,
       },
-      { key: 'rightOfWay', label: t('view360.fields.rightOfWay') },
+      {
+        key: 'rightOfWayWidth',
+        label: t('view360.fields.rightOfWayWidth'),
+        isNumber: true,
+        decimalPlaces: 2,
+      },
+      { key: 'numberOfLanes', label: t('view360.fields.numberOfLanes') },
       {
         key: 'roadFrontage',
         label: t('view360.fields.roadFrontage'),
@@ -117,6 +142,8 @@ const landSections = (t: T): SectionDef[] => [
         label: t('view360.fields.accessibility'),
         parameterGroup: 'LandAccessibility',
       },
+      // The note on the accessibility answer, whatever the answer is.
+      { key: 'landAccessibilityRemark', label: t('view360.fields.accessibilityDescription') },
       {
         key: 'roadSurfaceType',
         label: t('view360.fields.roadSurface'),
@@ -154,18 +181,40 @@ const landSections = (t: T): SectionDef[] => [
   {
     title: t('view360.sections.legal&Limitation'),
     fields: [
-      { key: 'isExpropriated', label: t('view360.fields.expropriated'), isBoolean: true },
       {
         key: 'isInExpropriationLine',
         label: t('view360.fields.inExpropriationLine'),
         isBoolean: true,
       },
       { key: 'royalDecree', label: t('view360.fields.royalDecree') },
-      { key: 'expropriationRemark', label: t('view360.fields.expropriationRemark') },
-      { key: 'isEncroached', label: t('view360.fields.encroached'), isBoolean: true },
+      {
+        key: 'isEncroached',
+        label: t('view360.fields.encroached'),
+        isBoolean: true,
+        booleanCaptions: ['No', 'Yes'],
+      },
       { key: 'encroachmentRemark', label: t('view360.fields.encroachmentRemark') },
-      { key: 'isLandlocked', label: t('view360.fields.landlocked'), isBoolean: true },
-      { key: 'landlockedRemark', label: t('view360.fields.landlockedRemark') },
+      {
+        key: 'isLandlocked',
+        label: t('view360.fields.landlocked'),
+        isBoolean: true,
+        // The land accessibility answers when there is one; the old flag otherwise (as the 3D brief reads it).
+        read: r =>
+          isLandlocked(r.landAccessibilityType as string | null, r.isLandlocked as boolean | null),
+      },
+      {
+        key: 'landlockedRemark',
+        label: t('view360.fields.landlockedRemark'),
+        // Only the old landlocked remark: a record with no accessibility answer whose old flag says
+        // landlocked. The accessibility's own remark is the description row above, not shown twice.
+        read: r =>
+          isLandlocked(
+            r.landAccessibilityType as string | null,
+            r.isLandlocked as boolean | null,
+          ) === true && !hasLandAccessibilityAnswer(r.landAccessibilityType as string | null)
+            ? r.landlockedRemark
+            : null,
+      },
       { key: 'isForestBoundary', label: t('view360.fields.forestBoundary'), isBoolean: true },
       { key: 'forestBoundaryRemark', label: t('view360.fields.forestBoundaryRemark') },
       { key: 'otherLegalLimitations', label: t('view360.fields.otherLegalLimitations') },
@@ -231,7 +280,6 @@ const landSections = (t: T): SectionDef[] => [
     fields: [
       { key: 'pondArea', label: t('view360.fields.pondArea'), isNumber: true },
       { key: 'pondDepth', label: t('view360.fields.pondDepth'), isNumber: true },
-      { key: 'hasBuilding', label: t('view360.fields.hasBuilding'), isBoolean: true },
       { key: 'remark', label: t('view360.fields.remark') },
     ],
   },
@@ -248,7 +296,12 @@ const buildingSections = (t: T): SectionDef[] => [
       { key: 'builtOnTitleNumber', label: t('view360.fields.builtOnTitleNo') },
       { key: 'isOwnerVerified', label: t('view360.fields.ownerVerified'), isBoolean: true },
       { key: 'ownerName', label: t('view360.fields.ownerName') },
-      { key: 'hasObligation', label: t('view360.fields.hasObligation'), isBoolean: true },
+      {
+        key: 'obligationType',
+        label: t('view360.fields.obligationType'),
+        parameterGroup: 'Obligation',
+      },
+      { key: 'mortgageDetails', label: t('view360.fields.mortgageDetails') },
       { key: 'obligationDetails', label: t('view360.fields.obligationDetails') },
       {
         key: 'buildingConditionType',
@@ -328,7 +381,12 @@ const buildingSections = (t: T): SectionDef[] => [
   {
     title: t('view360.sections.usage'),
     fields: [
-      { key: 'isResidential', label: t('view360.fields.residential'), isBoolean: true },
+      {
+        key: 'isResidential',
+        label: t('view360.fields.residential'),
+        isBoolean: true,
+        booleanCaptions: ['Can not', 'Can'],
+      },
       {
         key: 'utilizationType',
         label: t('view360.fields.utilization'),
@@ -398,7 +456,12 @@ const condoSections = (t: T): SectionDef[] => [
         label: t('view360.fields.condition'),
         parameterGroup: 'CondoCondition',
       },
-      { key: 'hasObligation', label: t('view360.fields.hasObligation'), isBoolean: true },
+      {
+        key: 'obligationType',
+        label: t('view360.fields.obligationType'),
+        parameterGroup: 'Obligation',
+      },
+      { key: 'mortgageDetails', label: t('view360.fields.mortgageDetails') },
       { key: 'obligationDetails', label: t('view360.fields.obligationDetails') },
       {
         key: 'documentValidationResultType',
@@ -423,12 +486,18 @@ const condoSections = (t: T): SectionDef[] => [
         isNumber: true,
       },
       {
-        key: 'accessRoadWidth',
-        label: t('view360.fields.accessRoadWidth'),
+        key: 'carriagewayWidth',
+        label: t('view360.fields.carriagewayWidth'),
         isNumber: true,
         decimalPlaces: 2,
       },
-      { key: 'rightOfWay', label: t('view360.fields.rightOfWay') },
+      {
+        key: 'rightOfWayWidth',
+        label: t('view360.fields.rightOfWayWidth'),
+        isNumber: true,
+        decimalPlaces: 2,
+      },
+      { key: 'numberOfLanes', label: t('view360.fields.numberOfLanes') },
       {
         key: 'roadSurfaceType',
         label: t('view360.fields.roadSurface'),
@@ -509,7 +578,6 @@ const condoSections = (t: T): SectionDef[] => [
   {
     title: t('view360.sections.legal'),
     fields: [
-      { key: 'isExpropriated', label: t('view360.fields.expropriated'), isBoolean: true },
       {
         key: 'isInExpropriationLine',
         label: t('view360.fields.inExpropriationLine'),

@@ -40,7 +40,7 @@
     "Yes": "Yes",
     "Correct": "Correct",
     "Incorrect": "Incorrect",
-    "In Correct": "In Correct",
+    "In Correct": "Incorrect",
     "Consistent": "Consistent",
     "Inconsistent": "Inconsistent",
     "Can": "Can",
@@ -48,8 +48,28 @@
     "Appraise": "Appraise",
     "Not Appraised": "Not Appraised",
     "isResidential": {
-      "Can": "Can",
-      "Can not": "Can not"
+      "Can": "Yes",
+      "Can not": "No"
+    },
+    "isEncroached": {
+      "No": "No",
+      "Yes": "Yes"
+    },
+    "isRentedOut": {
+      "No": "No",
+      "Yes": "Yes"
+    },
+    "isLeaseRegistered": {
+      "Not Registered": "Not registered",
+      "Registered": "Registered"
+    },
+    "isLeaseholdPledgeable": {
+      "Not Allowed": "Not allowed",
+      "Allowed": "Allowed"
+    },
+    "isAppraisable": {
+      "Exclude": "Exclude",
+      "Include": "Include"
     }
   },
   "select": {
@@ -58,7 +78,6 @@
     "typeToSearch": "Type to search...",
     "noResults": "No results found",
     "clearSelection": "Clear selection",
-    "other": "Other",
     "otherPlaceholder": "Please specify",
     "clearOther": "Clear and choose again"
   },
@@ -304,5 +323,28 @@
   "collateralMaster": {
     "allTypes": "All types",
     "masterTitle": "{{type}} Master"
+  },
+  "chips": {
+    "other": "Other",
+    "otherPlaceholder": "Specify other...",
+    "otherEdit": "Other: {{text}}, edit",
+    "otherRemove": "Remove other"
+  },
+  "units": {
+    "m": "m",
+    "sqm": "sq.m.",
+    "baht": "THB",
+    "bahtPerYear": "THB/yr",
+    "year": "yr",
+    "percent": "%",
+    "lane": "lanes",
+    "side": "sides",
+    "floor": "floors",
+    "rai": "rai",
+    "ngan": "ngan",
+    "sqwa": "sq.wa",
+    "cm": "cm",
+    "be": "B.E.",
+    "machine": "units"
   }
 }

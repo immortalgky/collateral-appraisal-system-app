@@ -13,6 +13,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { useState } from 'react';
 import { render, screen, fireEvent } from '@/test/test-utils';
+import { FormLayoutContext } from '../form/formLayoutContext';
 import NumberInput from './NumberInput';
 
 // Controlled wrapper for testing
@@ -363,6 +364,20 @@ describe('NumberInput', () => {
       expect(input).toHaveClass('border-0', 'text-right', 'tabular-nums');
       expect(box).toHaveClass('border', 'focus-within:ring-[3px]', 'min-h-ctl');
       expect(box).toContainElement(screen.getByText('m'));
+    });
+
+    it('should set the unit apart from the figure with a thin divider, in both layouts', () => {
+      for (const layout of ['standard', 'compact'] as const) {
+        const { unmount } = render(
+          <FormLayoutContext.Provider value={layout}>
+            <NumberInput label="Width" suffix="m" />
+          </FormLayoutContext.Provider>,
+        );
+        const unit = screen.getByText('m');
+        expect(unit).toHaveClass('border-l', 'text-xs', 'text-(--palette-ink-2)');
+        expect(screen.getByLabelText('Width').parentElement).toContainElement(unit);
+        unmount();
+      }
     });
 
     it('should put the red border on the box in the error state', () => {

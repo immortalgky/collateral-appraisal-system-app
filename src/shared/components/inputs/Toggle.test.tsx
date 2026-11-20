@@ -62,3 +62,49 @@ describe('Toggle sliding pill', () => {
     expect(pill().className).not.toContain('shadow-');
   });
 });
+
+describe('Toggle locked', () => {
+  const render2 = (props: { locked?: boolean }) =>
+    render(<Toggle options={['Normal', 'Urgent']} checked disabled {...props} />);
+
+  it('a plain disabled toggle has a grey pill', () => {
+    render2({});
+    expect(pill().className).toMatch(/bg-gray-500/);
+  });
+
+  it('a locked one keeps the accent pill and stays unclickable', async () => {
+    render2({ locked: true });
+    expect(pill().className).toMatch(/bg-primary-700/);
+    expect(pill().className).not.toMatch(/bg-gray-500/);
+    expect(screen.getByRole('radio', { name: 'Normal' })).toBeDisabled();
+  });
+});
+
+describe('Toggle in a narrow cell', () => {
+  it('never outgrows its cell: the track is capped and the captions can shrink', () => {
+    render(<Toggle options={['Normal', 'Urgent']} checked={false} />);
+    const track = screen.getByRole('radiogroup');
+    expect(track).toHaveClass('max-w-full');
+    expect(track.closest('fieldset')).toHaveClass('min-w-0');
+    const caption = screen.getByRole('radio', { name: 'Normal' }).firstElementChild!;
+    expect(caption).toHaveClass('truncate', 'min-w-0');
+  });
+
+  it('gives the full caption as a title only where it is cut short', () => {
+    const scroll = vi
+      .spyOn(HTMLElement.prototype, 'scrollWidth', 'get')
+      .mockImplementation(function (this: HTMLElement) {
+        return this.textContent === 'Urgent' ? 90 : 60;
+      });
+    const client = vi
+      .spyOn(HTMLElement.prototype, 'clientWidth', 'get')
+      .mockImplementation(function (this: HTMLElement) {
+        return this.textContent === 'Urgent' ? 40 : 60;
+      });
+    render(<Toggle options={['Normal', 'Urgent']} checked={false} />);
+    expect(screen.getByRole('radio', { name: 'Normal' })).not.toHaveAttribute('title');
+    expect(screen.getByRole('radio', { name: 'Urgent' })).toHaveAttribute('title', 'Urgent');
+    scroll.mockRestore();
+    client.mockRestore();
+  });
+});

@@ -4,6 +4,8 @@ import { FormShell } from './FormShell';
 import { PropertyEditorHeader } from './PropertyEditorHeader';
 import PropertyPhotoSection, { type PropertyPhotoSectionRef } from './PropertyPhotoSection';
 import type { EditorTab } from './EditorTabBar';
+import type { PropertyType } from './PropertyNameTriggerIcon';
+import { PropertyNameInHeaderContext } from './propertyNameInHeader';
 
 interface PropertyFormShellProps {
   appraisalId?: string;
@@ -17,6 +19,8 @@ interface PropertyFormShellProps {
   pma?: boolean;
   /** Beside the name in the identity row, e.g. the PMA sync status. */
   meta?: ReactNode;
+  /** Draw the property name in the header, with the fill icon of this type; the forms below then leave their own field out. */
+  nameFieldType?: PropertyType;
   tabs: EditorTab[];
   activeTab?: string;
   onTabChange?: (id: string) => void;
@@ -40,6 +44,7 @@ export function PropertyFormShell({
   photoSectionRef,
   pma,
   meta,
+  nameFieldType,
   tabs,
   activeTab,
   onTabChange,
@@ -47,35 +52,38 @@ export function PropertyFormShell({
 }: PropertyFormShellProps) {
   const layout = useFormLayout();
   return (
-    <FormShell
-      pinnedHeight={SCROLL_OFFSET[layout]}
-      activeTab={activeTab}
-      header={
-        <PropertyEditorHeader
-          appraisalId={appraisalId}
-          propertyId={propertyId}
-          typeCode={typeCode}
-          pma={pma}
-          meta={meta}
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabChange={onTabChange}
-        />
-      }
-      photos={
-        appraisalId && photoSectionRef
-          ? renderGallery => (
-              <PropertyPhotoSection
-                ref={photoSectionRef}
-                appraisalId={appraisalId}
-                propertyId={propertyId}
-                renderGallery={renderGallery}
-              />
-            )
-          : undefined
-      }
-    >
-      {children}
-    </FormShell>
+    <PropertyNameInHeaderContext.Provider value={!!nameFieldType}>
+      <FormShell
+        pinnedHeight={SCROLL_OFFSET[layout]}
+        activeTab={activeTab}
+        header={
+          <PropertyEditorHeader
+            appraisalId={appraisalId}
+            propertyId={propertyId}
+            typeCode={typeCode}
+            pma={pma}
+            meta={meta}
+            nameFieldType={nameFieldType}
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={onTabChange}
+          />
+        }
+        photos={
+          appraisalId && photoSectionRef
+            ? renderGallery => (
+                <PropertyPhotoSection
+                  ref={photoSectionRef}
+                  appraisalId={appraisalId}
+                  propertyId={propertyId}
+                  renderGallery={renderGallery}
+                />
+              )
+            : undefined
+        }
+      >
+        {children}
+      </FormShell>
+    </PropertyNameInHeaderContext.Provider>
   );
 }

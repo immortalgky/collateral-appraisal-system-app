@@ -617,7 +617,13 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
 
       {/* These are the figures the rest of the appraisal reads off this table. */}
       {!isEmpty && showCostSummary && (
-        <div className="mt-[1.1429rem] divide-y divide-(--palette-line-soft) border-t border-(--palette-line-soft)">
+        <div
+          className={clsx(
+            'mt-[1.1429rem] divide-y divide-(--palette-line-soft) border-t border-(--palette-line-soft)',
+            // Compact: a field row after it (is it valued?) needs the line the rows above draw below themselves
+            layout === 'compact' && 'border-b',
+          )}
+        >
           {costSummary.map(item => (
             <CostSummaryRow
               key={item.field}

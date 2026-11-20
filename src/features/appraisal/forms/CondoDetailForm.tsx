@@ -1,5 +1,12 @@
-import { FormFields, FormSection, FormSheet, type FormField } from '@/shared/components/form';
-import { useEffect, useMemo, useState } from 'react';
+import {
+  FormFields,
+  FormSection,
+  FormSheet,
+  booleanChips,
+  PART_WIDTH,
+  type FormField,
+} from '@/shared/components/form';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import CondoAreaDetailForm, { UsableAreaCheck } from './CondoAreaDetailForm';
@@ -28,16 +35,29 @@ import {
   expropriationFields,
   condoFacilityFields,
   environmentFields,
+  environmentProblemItems,
+  otherLegalLimitationsChip,
+  otherLegalLimitationsField,
   inForestBoundaryFormFields,
   remarkFormFields,
+  rentedOutField,
+  roadField,
+  transpotationField,
 } from '../configs/fields';
 import { PropertyNameTriggerIcon } from '../components/PropertyNameTriggerIcon';
 import { FieldLabels } from '../components/FieldLabels';
+import EnvironmentProblemsHeading from '../components/EnvironmentProblemsHeading';
+import LimitationLawHints from '../components/LimitationLawHints';
+import UrbanPlanningColorField from '../components/UrbanPlanningColorField';
+import { PropertyNameInHeaderContext } from '../components/propertyNameInHeader';
+import { useRentedOutFollowsLease } from '../hooks/useRentedOutFollowsLease';
+import { documentValidationToggle } from '../utils/documentValidationToggle';
 
-function CondoDetailForm() {
+function CondoDetailForm({ hideRentedOut = false }: { hideRentedOut?: boolean }) {
   const { t } = useTranslation('appraisal');
   const { t: tc } = useTranslation('common');
   const { setValue, watch } = useFormContext();
+  useRentedOutFollowsLease(!hideRentedOut);
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const lat = watch('latitude');
@@ -81,23 +101,13 @@ function CondoDetailForm() {
             name: field.name,
             wrapperClassName: field.wrapperClassName,
             options: [
-              { name: '2', label: tc('toggle.In Correct') },
+              { name: '2', label: tc('toggle.Incorrect') },
               { name: '1', label: tc('toggle.Correct') },
             ] as [{ name: string; label: string }, { name: string; label: string }],
           };
         // Stored as the code '01' (consistent) / '02' (inconsistent): a toggle, inconsistent on the left.
         if (field.name === 'documentValidationResultType')
-          return {
-            type: 'string-toggle' as const,
-            label: field.label ?? '',
-            name: field.name,
-            required: field.required,
-            wrapperClassName: field.wrapperClassName,
-            options: [
-              { name: '02', label: tc('toggle.Inconsistent') },
-              { name: '01', label: tc('toggle.Consistent') },
-            ] as [{ name: string; label: string }, { name: string; label: string }],
-          };
+          return documentValidationToggle(field, key => tc(key as never));
         if (
           (field.name === 'latitude' || field.name === 'longitude') &&
           field.type === 'number-input'
@@ -109,8 +119,20 @@ function CondoDetailForm() {
   );
   const road = useMemo(() => withIcons(roadFields), [withIcons]);
   const locationCheck = useMemo(() => withIcons(locationCheckFields), [withIcons]);
-  const legal = useMemo(() => withIcons(legalFields), [withIcons]);
-  const identity = useMemo(() => withIcons(identityFields), [withIcons]);
+  const legal = useMemo(
+    () =>
+      withIcons(hideRentedOut ? legalFields.filter(f => f.name !== 'isRentedOut') : legalFields),
+    [withIcons, hideRentedOut],
+  );
+  // The name is drawn in the page header when the shell has one (see PropertyNameInHeaderContext).
+  const nameInHeader = useContext(PropertyNameInHeaderContext);
+  const identity = useMemo(
+    () =>
+      withIcons(
+        nameInHeader ? identityFields.filter(f => f.name !== 'propertyName') : identityFields,
+      ),
+    [withIcons, nameInHeader],
+  );
   // One FormFields call, so the land office and the coordinates are read as one row (6 + 3 + 3).
   const officeAndCoordinates = useMemo(
     () => [...landOfficeFields, ...withIcons(coordinateFields)],
@@ -135,7 +157,8 @@ function CondoDetailForm() {
           if (field.type === 'dropdown' && field.name === 'fireInsuranceCode')
             return {
               ...field,
-              wrapperClassName: 'col-span-4',
+              // A row of its own in the left column of the 6 + 6 rows around it.
+              wrapperClassName: `col-span-12 ${PART_WIDTH.half}`,
               label: t('forms.condo.fireInsuranceCode'),
               options: fireInsuranceOptions,
             };
@@ -158,16 +181,30 @@ function CondoDetailForm() {
         </FormSection>
 
         <FormSection title={t('forms.condo.groups.location')} icon="map-location-dot">
-          <FormFields fields={locationCheck} />
           <FormFields fields={addressFields} />
           <FormFields fields={dopaAddressFields} />
           {/* The Latitude field's rightIcon opens the MapLocationPicker. */}
           <FormFields fields={officeAndCoordinates} />
           <FormFields fields={road} />
+          {/* The check of the position comes last, as the report prints it. */}
+          <FormFields fields={locationCheck} />
         </FormSection>
 
         <FormSection title={t('forms.condo.groups.surroundings')} icon="tree-city">
-          <FormFields fields={surroundingFields} />
+          <FormFields fields={surroundingToPlanning} />
+          <UrbanPlanningColorField />
+          <FormFields fields={surroundingRest} />
+          {/* The neighbouring problems close the group, as they do on the land form. */}
+          <EnvironmentProblemsHeading />
+          <FormFields fields={environmentProblemItems} />
+        </FormSection>
+
+        <FormSection title={t('forms.condo.groups.access')} icon="road">
+          <FormFields fields={accessFields} />
+        </FormSection>
+
+        <FormSection title={t('forms.condo.groups.utilities')} icon="bolt">
+          <FormFields fields={utilityFields} />
         </FormSection>
 
         <FormSection title={t('forms.condo.groups.building')} icon="building-columns">
@@ -182,11 +219,10 @@ function CondoDetailForm() {
           <FormFields fields={unitFields} />
         </FormSection>
 
-        <FormSection
-          title={t('landCharacteristicsForm.sections.limitation')}
-          icon="triangle-exclamation"
-        >
-          <FormFields fields={limitationFields} />
+        <FormSection title={t('forms.condo.groups.limitation')} icon="triangle-exclamation">
+          <FormFields fields={limitationChipFields} />
+          <LimitationLawHints />
+          <FormFields fields={limitationFollowFields} />
         </FormSection>
 
         <FormSection title={t('forms.condo.groups.referencePrices')} icon="money-bill">
@@ -231,6 +267,7 @@ const urbanPlanChips: FormField = {
 
 const byName = new Map(
   [
+    otherLegalLimitationsField,
     ...condoFields,
     ...condoFieldsTail,
     ...condoLocationFields,
@@ -254,6 +291,10 @@ const byName = new Map(
     ...inForestBoundaryFormFields,
     // Chips on this screen only: the config stays a dropdown elsewhere.
     urbanPlanChips,
+    rentedOutField,
+    // The road in front and the ways of getting there: the land form's fields, reused.
+    roadField.find(f => f.name === 'roadPassInFrontOfLand')!,
+    ...transpotationField,
   ].map(field => [field.name, field]),
 );
 
@@ -271,12 +312,16 @@ const pick = (
   });
 
 const identityFields = pick(
-  ['propertyName', 'col-span-6'],
-  ['condoName', 'col-span-6'],
-  ['roomNumber', 'col-span-6'],
-  ['floorNumber', 'col-span-6'],
-  ['buildingNumber', 'col-span-6'],
-  ['condoRegistrationNumber', 'col-span-6'],
+  // The names take a row each (the condo's is long); the numbers follow four to a row, then the
+  // model beside the usable area, half and half: room, floor, building, registration / model,
+  // usable area / title deed.
+  ['propertyName', 'col-span-12'],
+  ['condoName', 'col-span-12'],
+  ['roomNumber', 'col-span-3'],
+  ['floorNumber', 'col-span-3'],
+  ['buildingNumber', 'col-span-3'],
+  ['condoRegistrationNumber', 'col-span-3'],
+  // The model and the usable area share a row, half and half (6 + 6).
   ['modelName', 'col-span-6'],
   // Carries the check against the area table below (withIcons), wherever it sits.
   ['usableArea', 'col-span-6'],
@@ -284,13 +329,16 @@ const identityFields = pick(
 );
 
 const legalFields = pick(
-  // The owner's name sits on its own line under the check, as on the land form.
-  ['isOwnerVerified', 'col-span-4'],
-  ['ownerName', 'col-span-8'],
-  'hasObligation',
-  ['obligationDetails', 'col-span-12'],
-  // On a row of its own under the obligation; the long captions keep their width when narrow.
-  ['documentValidationResultType', 'col-span-4', 4],
+  // The check and the owner's name are one row (toggle + field), as on the land form.
+  ['isOwnerVerified', 'col-span-3'],
+  ['ownerName', 'col-span-9'],
+  'obligationType',
+  'mortgageDetails',
+  'obligationDetails',
+  // The document check sits right under the obligations, and rented out on the row after it: each a
+  // lone toggle on a full-row cell, at its own width. (`isRentedOut` can be filtered out by name.)
+  ['documentValidationResultType', 'col-span-12'],
+  ['isRentedOut', 'col-span-12'],
 );
 
 const addressFields = pick(
@@ -305,10 +353,12 @@ const dopaAddressFields = pick(
   ['dopaProvinceName', 'col-span-4'],
 );
 
+// The toggle alone on its row, then the two prices half and half (the fire insurance rows below
+// keep to the same two columns).
 const governmentPriceFields = pick(
-  ['isMissingFromSurvey', 'col-span-4'],
-  ['governmentPricePerSqm', 'col-span-4'],
-  ['governmentPrice', 'col-span-4'],
+  ['isMissingFromSurvey', 'col-span-12'],
+  ['governmentPricePerSqm', 'col-span-6'],
+  ['governmentPrice', 'col-span-6'],
 );
 
 // The land office and the coordinates make one row (6 + 3 + 3), right under the DOPA address.
@@ -316,25 +366,41 @@ const landOfficeFields = pick(['landOffice', 'col-span-6']);
 
 const coordinateFields = pick(['latitude', 'col-span-3'], ['longitude', 'col-span-3']);
 
-// First field of the location section, as on the land form.
-const locationCheckFields = pick(['locationType', 'col-span-3', 3]);
+// Last field of the location section, as on the land form; the remark opens under it while incorrect.
+const locationCheckFields = pick(
+  ['locationType', 'col-span-3', 3],
+  ['locationRemark', 'col-span-12'],
+);
 
+// Street (as wide as the land office above it), soi and the distance to the main road: 6 + 3 + 3.
 const roadFields = pick(
-  ['street', 'col-span-4'],
-  ['soi', 'col-span-4'],
-  ['distanceFromMainRoad', 'col-span-4'],
-  ['accessRoadWidth', 'col-span-6'],
-  ['rightOfWay', 'col-span-6'],
-  ['roadSurfaceType', 'col-span-6'],
+  ['street', 'col-span-6'],
+  ['soi', 'col-span-3'],
+  ['distanceFromMainRoad', 'col-span-3'],
+);
+
+// Access first (the right of way in and out, then the ways of getting there: chips, each on a row of
+// its own), then the road in front on a full row, then, as on the land form, the carriageway,
+// right-of-way and lanes 4 + 4 + 4, and the surface.
+const accessFields = pick(
+  'landEntranceExitType',
+  'landEntranceExitTypeOther',
+  'transportationAccessType',
+  'transportationAccessTypeOther',
+  ['roadPassInFrontOfLand', 'col-span-12'],
+  ['carriagewayWidth', 'col-span-4'],
+  ['rightOfWayWidth', 'col-span-4'],
+  ['numberOfLanes', 'col-span-4'],
+  'roadSurfaceType',
   'roadSurfaceTypeOther',
 );
 
-const surroundingFields = pick(
-  'publicUtilityType',
-  'publicUtilityTypeOther',
-  'landEntranceExitType',
-  'landEntranceExitTypeOther',
-  'urbanPlanningType',
+const utilityFields = pick('publicUtilityType', 'publicUtilityTypeOther');
+
+const surroundingToPlanning = pick('urbanPlanningType');
+
+// After the planning type and its colour cards.
+const surroundingRest = pick(
   ['landFillType', 'col-span-8'],
   'landFillTypeOther',
   'landUseType',
@@ -344,30 +410,33 @@ const surroundingFields = pick(
 );
 
 const buildingFields = pick(
-  ['buildingAge', 'col-span-3'],
-  ['numberOfFloors', 'col-span-3'],
-  ['isUnderConstruction', 'col-span-6'],
+  // Whether it is under construction opens the group, alone on a full-row cell with the toggle at its
+  // own width (picking the condition "under construction" turns it on: `defaultWhen`). The age and the
+  // floors follow, each on a row of its own at half width.
+  ['isUnderConstruction', 'col-span-12'],
+  ['buildingAge', `col-span-12 ${PART_WIDTH.half}`],
+  ['numberOfFloors', `col-span-12 ${PART_WIDTH.half}`],
   'buildingConditionType',
   'buildingConditionTypeOther',
-  ['buildingFormType', 'col-span-6'],
-  ['constructionMaterialType', 'col-span-6'],
+  ['buildingFormType', 'col-span-12'],
+  ['constructionMaterialType', 'col-span-12'],
   'roofType',
   'roofTypeOther',
   'facilityType',
   'facilityTypeOther',
 );
 
-// As on the land form: the two expropriation toggles and the royal decree make one row at every
-// width (3 + 3 + 6), the remarks open as full rows under it, then the forest toggle and its remark.
-const limitationFields = pick(
-  ['isExpropriated', 'col-span-3', 3],
-  ['isInExpropriationLine', 'col-span-3', 3],
-  ['royalDecree', 'col-span-6'],
-  'expropriationRemark',
-  'expropriationLineRemark',
-  ['isForestBoundary', 'col-span-3', 3],
-  'forestBoundaryRemark',
-);
+// As on the land form: the limitations found are one chip group; the expropriation line and the forest
+// line are plain yes/no chips (their detail is in the Law & Regulation tab, see `LimitationLawHints`),
+// and "Others" opens its text.
+const limitationChipFields = [
+  booleanChips(
+    'limitationFlags',
+    'Limitations Found',
+    pick('isInExpropriationLine', 'isForestBoundary').concat(otherLegalLimitationsChip),
+  ),
+];
+const limitationFollowFields = pick('otherLegalLimitations');
 
 const unitFields = pick(
   'decorationType',

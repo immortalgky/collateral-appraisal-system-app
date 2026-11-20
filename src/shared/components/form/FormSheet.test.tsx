@@ -73,6 +73,102 @@ describe.each(['standard', 'compact'] as const)('FormSheet / FormSection (%s)', 
     expect(within(section).getByRole('button', { name: '+ Add' })).toBeInTheDocument();
   });
 
+  it("keeps the quarter and third spans down to 56rem of the form shell, not the rail's 84.2857rem", () => {
+    renderSheet();
+    const body = screen.getByRole('region', { name: 'Information' })
+      .lastElementChild as HTMLElement;
+    if (layout === 'standard') {
+      expect(body.className).toContain('@max-[56rem]/form-shell:');
+      expect(body.className).not.toContain('84.2857rem');
+    }
+  });
+
+  it('draws a toggle and its field as one auto | 1fr row in Standard only', () => {
+    const pair: FormField[] = [
+      {
+        type: 'boolean-toggle',
+        name: 'ok',
+        label: 'Checked',
+        options: ['No', 'Yes'],
+        wrapperClassName: 'col-span-3',
+      },
+      { type: 'text-input', name: 'name', label: 'Name', wrapperClassName: 'col-span-9' },
+    ];
+    render(
+      <FormLayoutProvider layout={layout}>
+        <Harness>
+          <FormSheet>
+            <FormSection title="Pair">
+              <FormFields fields={pair} />
+            </FormSection>
+          </FormSheet>
+        </Harness>
+      </FormLayoutProvider>,
+    );
+    const row = document.querySelector<HTMLElement>('[data-field="ok"]')!.parentElement!;
+    if (layout === 'standard') {
+      expect(row).toHaveClass('grid-cols-[auto_minmax(0,1fr)]', 'col-span-12');
+      expect(row).toContainElement(document.querySelector('[data-field="name"]'));
+      // The pair's own grid sizes the two, so neither keeps a span of its own.
+      expect(document.querySelector('[data-field="ok"]')!.className).not.toMatch(/col-span/);
+    } else {
+      expect(row).not.toHaveClass('grid-cols-[auto_minmax(0,1fr)]');
+    }
+  });
+
+  it('shares one toggle column between consecutive toggle + field rows, so the fields line up', () => {
+    const rows: FormField[] = [
+      {
+        type: 'boolean-toggle',
+        name: 'a',
+        label: 'A',
+        options: ['No', 'Yes'],
+        wrapperClassName: 'col-span-3',
+      },
+      { type: 'text-input', name: 'aText', label: 'A text', wrapperClassName: 'col-span-9' },
+      {
+        type: 'boolean-toggle',
+        name: 'b',
+        label: 'B',
+        options: ['No', 'Yes'],
+        wrapperClassName: 'col-span-3',
+      },
+      { type: 'text-input', name: 'bText', label: 'B text', wrapperClassName: 'col-span-9' },
+      { type: 'text-input', name: 'between', label: 'Between', wrapperClassName: 'col-span-12' },
+      {
+        type: 'boolean-toggle',
+        name: 'c',
+        label: 'C',
+        options: ['No', 'Yes'],
+        wrapperClassName: 'col-span-3',
+      },
+      { type: 'text-input', name: 'cText', label: 'C text', wrapperClassName: 'col-span-9' },
+    ];
+    render(
+      <FormLayoutProvider layout={layout}>
+        <Harness>
+          <FormSheet>
+            <FormSection title="Rows">
+              <FormFields fields={rows} />
+            </FormSection>
+          </FormSheet>
+        </Harness>
+      </FormLayoutProvider>,
+    );
+    const rowOf = (f: string) =>
+      document.querySelector<HTMLElement>(`[data-field="${f}"]`)!.parentElement!;
+    if (layout === 'standard') {
+      // Rows one and two are one grid (one `auto` column); a field between them starts a new one.
+      expect(rowOf('a')).toBe(rowOf('b'));
+      expect(rowOf('a')).toBe(rowOf('aText'));
+      expect(rowOf('a')).toBe(rowOf('bText'));
+      expect(rowOf('c')).not.toBe(rowOf('a'));
+      expect(rowOf('c')).toBe(rowOf('cText'));
+    } else {
+      expect(rowOf('a')).not.toHaveClass('grid-cols-[auto_minmax(0,1fr)]');
+    }
+  });
+
   it('draws the icon in Standard only; Compact has the band alone', () => {
     const { container } = renderSheet();
     const icon = container.querySelector('section#info header svg');
@@ -114,10 +210,11 @@ describe.each(['standard', 'compact'] as const)('FormSheet / FormSection (%s)', 
       expect(name.firstElementChild).toContainElement(screen.getByText('*'));
     } else {
       // A pair: the config's span is dropped, a short field takes half of a wide row, a textarea a row.
-      expect(name).toHaveClass('grid-cols-[10.8571rem_minmax(0,1fr)]', '@[60rem]/sheet:col-span-6');
+      expect(name).toHaveClass('grid-cols-[13.1429rem_minmax(0,1fr)]', '@[60rem]/sheet:basis-1/2');
+      expect(name).toHaveAttribute('data-half');
       expect(name).not.toHaveClass('col-span-6');
-      expect(remark).toHaveClass('col-span-12');
-      expect(remark).not.toHaveClass('@[60rem]/sheet:col-span-6');
+      expect(remark).toHaveClass('basis-full');
+      expect(remark).not.toHaveAttribute('data-half');
     }
   });
 });
@@ -133,7 +230,7 @@ describe('FormFields outside a FormSection', () => {
     );
     const name = container.querySelector('[data-field="name"]') as HTMLElement;
     expect(name).toHaveClass('col-span-6');
-    expect(name).not.toHaveClass('grid-cols-[10.8571rem_minmax(0,1fr)]');
+    expect(name).not.toHaveClass('grid-cols-[13.1429rem_minmax(0,1fr)]');
   });
 });
 
@@ -208,7 +305,7 @@ describe('FormFields row groups', () => {
     expect(second).not.toHaveClass('col-start-1');
   });
 
-  it('Standard: a chip group takes the whole row whatever its span; Compact keeps its own', () => {
+  it('Standard and Compact: a chip group takes the whole row whatever its span', () => {
     const chips: FormField[] = [
       { type: 'text-input', name: 'a', label: 'A', wrapperClassName: 'col-span-6' },
       {
@@ -240,16 +337,18 @@ describe('FormFields row groups', () => {
     expect(c).not.toHaveAttribute('data-keep-row');
     std.unmount();
     renderChips('compact');
-    expect(document.querySelector('[data-field="b"]')).toHaveClass('@[60rem]/sheet:col-span-6');
+    // Compact: a choice group is a row of its own too
+    expect(document.querySelector('[data-field="b"]')).not.toHaveAttribute('data-half');
   });
 
   it('Compact: the first pair of a run starts a row; the pairs keep their own spans', () => {
     renderPair('compact');
     const [first, second] = Array.from(document.querySelectorAll('[data-field]'));
-    expect(first).toHaveClass('@[60rem]/sheet:col-start-1');
-    expect(second).not.toHaveClass('@[60rem]/sheet:col-start-1');
+    // A line break before the first pair (a flex row has no col-start-1), none before the second.
+    expect(first.previousElementSibling).toHaveAttribute('aria-hidden');
+    expect(second.previousElementSibling).toBe(first);
     expect(first).not.toHaveAttribute('data-keep-row');
-    expect(first).toHaveClass('@[60rem]/sheet:col-span-6');
+    expect(first).toHaveAttribute('data-half');
   });
 });
 
@@ -327,22 +426,26 @@ describe('FormFields choice groups in Compact', () => {
     options: Array.from({ length: n }, (_, i) => ({ value: String(i), label: `Option ${i}` })),
     wrapperClassName: 'col-span-6',
   });
-  const half = '@[60rem]/sheet:col-span-6';
 
-  it('puts a group of up to four options in a half pair and a longer one on a row of its own', () => {
+  it('puts every choice group on a row of its own, whatever its size, unless the form keeps its span', () => {
+    const kept = { ...choice(3, 'kept'), keepSpan: true } as FormField;
     const { container } = render(
       <FormLayoutProvider layout="compact">
         <Harness>
           <FormSheet>
             <FormSection id="c" title="Choices">
-              <FormFields fields={[choice(4, 'short'), choice(5, 'long')]} />
+              <FormFields fields={[choice(2, 'two'), choice(4, 'four'), choice(5, 'five'), kept]} />
             </FormSection>
           </FormSheet>
         </Harness>
       </FormLayoutProvider>,
     );
-    expect(container.querySelector('[data-field="short"]')).toHaveClass(half);
-    expect(container.querySelector('[data-field="long"]')).not.toHaveClass(half);
-    expect(container.querySelector('[data-field="long"]')).toHaveClass('col-span-12');
+    for (const name of ['two', 'four', 'five']) {
+      const el = container.querySelector(`[data-field="${name}"]`);
+      expect(el).not.toHaveAttribute('data-half');
+      expect(el).toHaveClass('basis-full');
+    }
+    // kept: declared by the form, a half beside its neighbour
+    expect(container.querySelector('[data-field="kept"]')).toHaveAttribute('data-half');
   });
 });
