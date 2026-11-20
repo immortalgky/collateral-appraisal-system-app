@@ -278,6 +278,7 @@ const CreateLeaseAgreementBuildingPage = () => {
                 appraisalId={appraisalId}
                 propertyId={propertyId}
                 typeCode="LSB"
+                nameFieldType="LSB"
                 photoSectionRef={photoSectionRef}
                 tabs={editorTabs}
                 activeTab={shownTab}

@@ -60,7 +60,11 @@ const LAYOUTS: Record<string, TabLayout> = {
     buildingType: 'LB',
     rentedOutOnly: true,
   },
-  U: { panels: ['condo', 'construction'], condo: true },
+  U: {
+    panels: ['condo', 'construction', 'lease-agreement', 'rental-info'],
+    condo: true,
+    rentedOutOnly: true,
+  },
   MAC: { panels: ['machinery'] },
   LSL: { panels: ['land', 'lease-agreement', 'rental-info'] },
   LSB: { panels: ['building', 'construction', 'lease-agreement', 'rental-info'] },

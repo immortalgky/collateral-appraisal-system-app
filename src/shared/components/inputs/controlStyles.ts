@@ -19,7 +19,8 @@ function sizeKey(layout: FormLayoutMode, cell: boolean): SizeKey {
 // Full literals on purpose: Tailwind finds classes by scanning the source text.
 const HEIGHT = {
   standard: { min: 'min-h-ctl', fixed: 'h-ctl' },
-  cell: { min: 'min-h-8', fixed: 'h-8' },
+  // The same height as a Compact field: a cell control matches the normal control (17.7)
+  cell: { min: 'min-h-ctl-c', fixed: 'h-ctl-c' },
   compact: { min: 'min-h-ctl-c', fixed: 'h-ctl-c' },
 } as const;
 const RADIUS = {
@@ -34,7 +35,8 @@ const RADIUS = {
  * (line-height does not help), while `height:auto` + `min-height` renders the same box unclipped
  * (17.12). Anything else (a button trigger, a read-only `<div>`, a native `<select>` that daisyUI
  * sizes itself) passes `fixed` and keeps `h-*`, so its content can never grow it.
- * `cell`: a table cell input, 28px in Compact and the plain Standard control in Standard (17.7).
+ * `cell`: a table cell input, as tall as the normal control in both layouts (17.7); only the side
+ * padding is tighter.
  */
 export function controlFrame(
   layout: FormLayoutMode,
@@ -148,11 +150,8 @@ const CHIP = {
   standard: { box: 'h-chip px-[0.8571rem]', gap: 'gap-[0.5714rem]' },
   compact: { box: 'h-chip-c px-[0.7143rem]', gap: 'gap-[0.3571rem]' },
 } as const;
-/** A chip holding a text input ("อื่นๆ: ___"): the toggle part pads the left edge itself. */
-const CHIP_WITH_INPUT = {
-  standard: 'h-chip pr-[0.2857rem]',
-  compact: 'h-chip-c pr-[0.2143rem]',
-} as const;
+/** The "other" chip while it is a text field: chip height, the input and a "×" inside. */
+const CHIP_TYPING = { standard: 'h-chip', compact: 'h-chip-c' } as const;
 
 /** Spacing between the chips of one group (17.5). */
 export const chipGroupGap = (layout: FormLayoutMode) => CHIP[layout].gap;
@@ -161,21 +160,10 @@ export const chipGroupGap = (layout: FormLayoutMode) => CHIP[layout].gap;
  * A radio pill / checkbox chip (17.5): fixed height, `leading-normal` for Thai, no `overflow-hidden`
  * (a chip wider than its row truncates its label span instead). Focus is the global outline.
  */
-export function chipClass(
-  layout: FormLayoutMode,
-  selected: boolean,
-  disabled: boolean,
-  withInput = false,
-): string {
+export function chipClass(layout: FormLayoutMode, selected: boolean, disabled: boolean): string {
   return clsx(
     'inline-flex items-center max-w-full rounded-full border text-sm leading-normal whitespace-nowrap transition-colors duration-200',
-    withInput
-      ? clsx(
-          CHIP_WITH_INPUT[layout],
-          // The input has no focus style of its own; the whole chip shows the global focus outline.
-          'has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-(--focus-edge)',
-        )
-      : CHIP[layout].box,
+    CHIP[layout].box,
     selected
       ? clsx(
           'font-medium text-white',
@@ -189,6 +177,21 @@ export function chipClass(
   );
 }
 
+/**
+ * The "other" chip while the appraiser types in it: a light accent fill and a 1px accent border (red
+ * when its text is owed), the input inside, and a soft ring on focus instead of an outline.
+ */
+export function otherInputChipClass(layout: FormLayoutMode, invalid: boolean): string {
+  return clsx(
+    'inline-flex items-center max-w-full rounded-full border text-sm leading-normal whitespace-nowrap transition-[color,box-shadow] duration-200',
+    'bg-(--palette-accent-wash) text-(--palette-ink)',
+    CHIP_TYPING[layout],
+    invalid
+      ? 'border-danger focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--color-danger)_22%,transparent)]'
+      : 'border-(--palette-accent) focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--palette-accent)_22%,transparent)]',
+  );
+}
+
 /** Required mark after a label. */
 export const REQUIRED_MARK = 'text-(--palette-req) ml-0.5';
 /** Error message under a control (the caller adds the `mt-1`). */
@@ -198,7 +201,3 @@ export const HELPER_TEXT = 'text-xs text-(--palette-ink-2)';
 /** Character counter `n/max` (thousands separators, right-aligned by the caller). */
 export const counterClass = (over: boolean) =>
   clsx('text-xs tabular-nums', over ? ERROR_TEXT : 'text-(--palette-ink-2)');
-
-/** Left padding of the toggle part of a chip that holds a text input (same as a plain chip's). */
-export const chipTogglePad = (layout: FormLayoutMode) =>
-  layout === 'standard' ? 'pl-[0.8571rem] pr-[0.4286rem]' : 'pl-[0.7143rem] pr-[0.3571rem]';

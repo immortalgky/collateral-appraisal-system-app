@@ -1,4 +1,4 @@
-import { Fragment, useId, useState } from 'react';
+import { useId, useState } from 'react';
 import clsx from 'clsx';
 import { useController, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -7,15 +7,8 @@ import { useParameterAsCheckboxOptions } from '../../utils/parameterUtils';
 import { useFormReadOnly } from '../form/context';
 import { useFormLayout } from '../form/formLayoutContext';
 import { ValidationText } from '../form/ValidationText';
-import {
-  chipClass,
-  chipGroupGap,
-  chipTogglePad,
-  NO_GLOBAL_OUTLINE,
-  ERROR_TEXT,
-  REQUIRED_MARK,
-} from './controlStyles';
-import { OtherInput, OtherNote, type OtherSpec } from './OtherText';
+import { chipClass, chipGroupGap, ERROR_TEXT, REQUIRED_MARK } from './controlStyles';
+import { ChipCheck, OtherChip, OtherNote, type OtherSpec } from './OtherText';
 import type { AtLeastOne } from '@/shared/types';
 
 export interface CheckboxOption {
@@ -41,6 +34,8 @@ interface CheckboxGroupBaseProps {
   clearAllThreshold?: number;
   /** The "อื่นๆ" companion field, typed inside its chip while that option is selected. */
   other?: OtherSpec;
+  /** Option values that stand alone: picking one clears the rest, picking any other clears it. */
+  exclusiveValues?: string[];
 }
 
 type CheckboxGroupProps = CheckboxGroupBaseProps &
@@ -58,6 +53,7 @@ const CheckboxGroup = ({
   showClearAll = true,
   clearAllThreshold = 2,
   other,
+  exclusiveValues,
 }: CheckboxGroupProps) => {
   const { t } = useTranslation('common');
   const formReadOnly = useFormReadOnly();
@@ -80,10 +76,13 @@ const CheckboxGroup = ({
   const handleToggle = (value: string) => {
     if (disabled) return;
     setFocusOther(value === other?.is && !selectedValues.includes(value));
-    const newValues = selectedValues.includes(value)
-      ? selectedValues.filter(v => v !== value)
-      : [...selectedValues, value];
-    field.onChange(newValues);
+    if (selectedValues.includes(value)) {
+      field.onChange(selectedValues.filter(v => v !== value));
+    } else if (exclusiveValues?.includes(value)) {
+      field.onChange([value]);
+    } else {
+      field.onChange([...selectedValues.filter(v => !exclusiveValues?.includes(v)), value]);
+    }
   };
 
   const handleClearAll = () => {
@@ -108,55 +107,34 @@ const CheckboxGroup = ({
       >
         {resolvedOptions.map(option => {
           const isSelected = selectedValues.includes(option.value);
-          const withInput = !!other && isSelected && option.value === other.is;
-          const toggle = (
+          if (other && isSelected && option.value === other.is)
+            return (
+              <OtherChip
+                key={option.value}
+                spec={other}
+                layout={layout}
+                disabled={disabled}
+                focusOnMount={focusOther}
+                optionLabel={option.label}
+                onRemove={() => handleToggle(option.value)}
+              />
+            );
+          return (
             <button
+              key={option.value}
               type="button"
               onClick={() => handleToggle(option.value)}
               disabled={disabled}
               aria-pressed={isSelected}
               title={option.label}
-              className={
-                withInput
-                  ? clsx(
-                      'inline-flex min-w-0 shrink-0 items-center self-stretch rounded-l-full leading-normal',
-                      NO_GLOBAL_OUTLINE,
-                      chipTogglePad(layout),
-                      disabled ? 'cursor-not-allowed' : 'cursor-pointer',
-                    )
-                  : chipClass(layout, isSelected, disabled)
-              }
+              className={chipClass(layout, isSelected, disabled)}
             >
-              {isSelected && (
-                // The check mark: 0.6429rem wide, 2px stroke, white, 0.4286rem before the label.
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 10 8"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="mr-[0.4286rem] w-[0.6429rem] shrink-0"
-                >
-                  <path d="M1 4.2 3.7 7 9 1" />
-                </svg>
-              )}
+              {isSelected && <ChipCheck />}
               {option.icon && (
                 <Icon style="solid" name={option.icon} className="mr-[0.4286rem] shrink-0" />
               )}
-              <span className="min-w-0 truncate">
-                {option.label}
-                {withInput && ':'}
-              </span>
+              <span className="min-w-0 truncate">{option.label}</span>
             </button>
-          );
-          if (!withInput) return <Fragment key={option.value}>{toggle}</Fragment>;
-          return (
-            <span key={option.value} className={chipClass(layout, true, disabled, true)}>
-              {toggle}
-              <OtherInput spec={other} disabled={disabled} focusOnMount={focusOther} />
-            </span>
           );
         })}
         {showClearButton && (

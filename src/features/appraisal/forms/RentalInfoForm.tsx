@@ -6,6 +6,7 @@ import {
   FormSection,
   FormSheet,
   FormTable,
+  FormTableBlock,
   FormTableDash,
   FormTableRowActions,
   useFormLayout,
@@ -705,13 +706,16 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
           {/* Up Front Entries */}
           <FormSection title={t('forms.rentalInfo.groups.upFront')} icon="money-bill">
             <div className="col-span-12">
-              <FormTable
-                columns={upFrontColumns}
-                rows={upFrontRows}
-                rowKey={row => row.id}
-                add={[{ label: t('forms.rentalInfo.addUpFront'), onClick: addUpFront }]}
-                empty={{ icon: 'money-bill', message: t('forms.rentalInfo.upFrontEmpty') }}
-              />
+              {/* Compact: the label column, with the add link under it */}
+              <FormTableBlock compactTitle={t('forms.rentalInfo.groups.upFront')}>
+                <FormTable
+                  columns={upFrontColumns}
+                  rows={upFrontRows}
+                  rowKey={row => row.id}
+                  add={[{ label: t('forms.rentalInfo.addUpFront'), onClick: addUpFront }]}
+                  empty={{ icon: 'money-bill', message: t('forms.rentalInfo.upFrontEmpty') }}
+                />
+              </FormTableBlock>
               {upFrontFields.length > 0 &&
                 upFrontTotalInput > 0 &&
                 Math.abs(upFrontTotal - upFrontTotalInput) > 0.01 && (

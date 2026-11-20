@@ -5,6 +5,7 @@ import {
   leaseDatesFeesField,
   leaseTermsField,
   leaseRentalTermsField,
+  leaseLegalField,
   leaseOtherField,
 } from '../configs/fields';
 import { FieldLabels } from '../components/FieldLabels';
@@ -43,38 +44,47 @@ const byName = new Map(
     ...leaseDatesFeesField,
     ...leaseTermsField,
     ...leaseRentalTermsField,
+    ...leaseLegalField,
     ...leaseOtherField,
   ].map(field => [field.name, field]),
 );
 
-const pick = (...entries: (string | [name: string, span: string])[]): FormField[] =>
+const pick = (
+  ...entries: (string | [name: string, span: string, narrowSpan?: 3 | 4 | 6 | 12])[]
+): FormField[] =>
   entries.map(entry => {
-    const [name, span] = typeof entry === 'string' ? [entry] : entry;
+    const [name, span, narrowSpan] = typeof entry === 'string' ? [entry] : entry;
     const field = byName.get(name);
     // Fail loudly: a renamed config field would otherwise just vanish from the form.
     if (!field) throw new Error(`LeaseAgreementForm: no field config named "${name}"`);
     if (!span) return field;
     const rest = (field.wrapperClassName ?? '').replace(/\bcol-span-\d+\b/g, '').trim();
-    return { ...field, wrapperClassName: `${span} ${rest}`.trim() };
+    return { ...field, wrapperClassName: `${span} ${rest}`.trim(), narrowSpan };
   });
 
 const leaseFields = pick(
-  ['contractNo', 'col-span-12'],
-  ['lessorName', 'col-span-12'],
-  ['lesseeName', 'col-span-12'],
-  ['leaseStartDate', 'col-span-6'],
-  ['leaseEndDate', 'col-span-6'],
-  // The contract's term and what is left of it, together under the dates they span.
-  ['leasePeriodAsContract', 'col-span-6'],
-  ['remainingLeaseAsAppraisalDate', 'col-span-6'],
+  // Who and which contract: three to a row.
+  ['contractNo', 'col-span-4'],
+  ['lessorName', 'col-span-4'],
+  ['lesseeName', 'col-span-4'],
+  // The term: its start and end beside its length and what is left of it, a quarter each.
+  ['leaseStartDate', 'col-span-3'],
+  ['leaseEndDate', 'col-span-3'],
+  ['leasePeriodAsContract', 'col-span-3'],
+  ['remainingLeaseAsAppraisalDate', 'col-span-3'],
+  // The money: rent, its adjustment and the extra expenses.
+  ['leaseRentFee', 'col-span-4'],
+  ['rentAdjust', 'col-span-4'],
+  ['additionalExpenses', 'col-span-4'],
   ['contractRenewal', 'col-span-6'],
   ['leaseTerminate', 'col-span-6'],
-  ['leaseRentFee', 'col-span-6'],
-  ['rentAdjust', 'col-span-3'],
-  ['additionalExpenses', 'col-span-3'],
   ['sublease', 'col-span-12'],
   'rentalTermsImpactingPropertyUse',
   'terminationOfLease',
+  // Registration and pledging of the lease: two optional answers on one row (3 + 4) with their
+  // hints under them, before the remark. They keep their width down to the narrow rule.
+  ['isLeaseRegistered', 'col-span-3', 3],
+  ['isLeaseholdPledgeable', 'col-span-4', 4],
   'remark',
 );
 

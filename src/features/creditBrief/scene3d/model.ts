@@ -22,6 +22,7 @@ import { dedupe, labelList, list, num, plural, positive } from './values';
 import { ghostTowersOf, type Plan, planOf, plotsOf, towersOf } from './drawable';
 import { layoutVillage, plotSize, type VillageLayout } from './villageLayout';
 import type { PaletteKey } from './palette';
+import { isLandlocked, isLandNotAccessible } from '@/shared/utils/landlocked';
 
 /**
  * The 3D collateral scene as plain data: what to draw, with every user-visible string already
@@ -800,7 +801,7 @@ function neighbourSpecs(
     if (!b || !kind) continue;
     const distance = Math.max(0, num(b.distance));
     const isAccess = dir === roadSide;
-    const width = num(detail?.accessRoadWidth);
+    const width = num(detail?.carriagewayWidth);
     const thickness =
       kind === 'road' ? (isAccess && width > 0 ? width : OTHER_ROAD) : kind === 'water' ? 8 : 10;
     const rows = [
@@ -848,7 +849,7 @@ function neighbourSpecs(
   // (when no road is recorded at all) and a neighbouring plot on each other side. Looks only.
   const front: Dir = roadSide ?? 'south';
   const hasRoad = out.some(n => n.kind === 'road');
-  const width = num(detail?.accessRoadWidth);
+  const width = num(detail?.carriagewayWidth);
   for (const dir of DIRS) {
     if (out.some(n => n.dir === dir)) continue;
     const road = dir === front && !hasRoad;
@@ -869,24 +870,42 @@ function neighbourSpecs(
   return out;
 }
 
-const LEGAL_FLAGS = [
-  ['isLandlocked', 'landlocked'],
-  ['isExpropriated', 'expropriated'],
-  ['isInExpropriationLine', 'inExpropriationLine'],
-  ['isEncroached', 'encroached'],
-  ['isForestBoundary', 'forestBoundary'],
-] as const;
+/** What the legal flags read: a property, or the land of a project. */
+type LegalFlagsSource = Pick<
+  BriefAsset,
+  'isInExpropriationLine' | 'isEncroached' | 'isForestBoundary' | 'isLandlocked'
+> &
+  Partial<Pick<BriefAsset, 'landAccessibilityType'>>;
+
+/**
+ * Landlocked for a property: the accessibility answers first (see `isLandlocked`). A block project
+ * land still asks both the accessibility and the old landlocked toggle, so there an explicit "Yes"
+ * on the toggle is never overridden by the accessibility.
+ */
+const isLandlockedSource = (a: LegalFlagsSource, project: boolean) =>
+  project
+    ? isLandNotAccessible(a.landAccessibilityType) || a.isLandlocked === true
+    : isLandlocked(a.landAccessibilityType, a.isLandlocked) === true;
+
+const LEGAL_FLAGS: readonly (readonly [
+  string,
+  (a: LegalFlagsSource, project: boolean) => boolean,
+])[] = [
+  ['landlocked', isLandlockedSource],
+  ['inExpropriationLine', a => !!a.isInExpropriationLine],
+  ['encroached', a => !!a.isEncroached],
+  ['forestBoundary', a => !!a.isForestBoundary],
+];
 
 /** What the legal flags and their names read: a property, or the land of a project. */
-type LegalSource = Pick<BriefAsset, (typeof LEGAL_FLAGS)[number][0]> &
-  Partial<Pick<BriefAsset, 'landTitles' | 'roomNumber'>>;
+type LegalSource = LegalFlagsSource & Partial<Pick<BriefAsset, 'landTitles' | 'roomNumber'>>;
 
 /**
  * What names a property in a legal warning when there are several: a condo unit by its room (else
  * "unit n", as its pin), a parcel by its deed number (else "parcel n"). Never `title`, which is
  * free text when no number is recorded.
  */
-function legalName(env: SceneEnv, a: LegalSource, i: number, kind: 'land' | 'condo') {
+function legalName(env: SceneEnv, a: LegalSource, i: number, kind: 'land' | 'condo' | 'project') {
   if (kind === 'condo') {
     const room = roomOf(a);
     return room ? env.t('values.unitRoom', { room }) : env.t('values.unitNumber', { n: i + 1 });
@@ -905,11 +924,13 @@ function legalName(env: SceneEnv, a: LegalSource, i: number, kind: 'land' | 'con
 function legalPieces(
   land: LegalSource[],
   env: SceneEnv,
-  kind: 'land' | 'condo' = 'land',
+  kind: 'land' | 'condo' | 'project' = 'land',
 ): string[] {
   const multi = land.length > 1;
   return land.flatMap((a, i) => {
-    const on = LEGAL_FLAGS.filter(([field]) => a[field]).map(([, key]) => env.t(`legal.${key}`));
+    const on = LEGAL_FLAGS.filter(([, test]) => test(a, kind === 'project')).map(([key]) =>
+      env.t(`legal.${key}`),
+    );
     if (!on.length) return [];
     return [multi ? `${legalName(env, a, i, kind)}: ${on.join(', ')}` : on.join(' · ')];
   });
@@ -1011,7 +1032,6 @@ function landSpec(plan: Plan, env: SceneEnv): LandSceneSpec {
     industrial: drawUse.includes('04'),
   };
   const legalLabels = legalPieces(plan.land, env);
-  const far = detail?.farFromElectricity;
   const parcelRows = [
     row(t('rows.deedArea'), area ? areaText(env, area) : t('values.notRecorded')),
     row(t('rows.shape'), codedLabel(env, 'LandShape', shape, detail?.landShapeTypeOther) ?? DASH),
@@ -1021,23 +1041,13 @@ function landSpec(plan: Plan, env: SceneEnv): LandSceneSpec {
     ),
     row(
       t('rows.soilLevel'),
-      num(detail?.soilLevel) !== 0 ? `${nf(num(detail?.soilLevel), 2)} ${t('units.cm')}` : DASH,
+      num(detail?.soilLevel) !== 0 ? `${nf(num(detail?.soilLevel), 2)} ${t('units.m')}` : DASH,
     ),
     row(
       t('rows.landfill'),
       codedLabel(env, 'Landfill', detail?.landFillType, detail?.landFillTypeOther) ?? DASH,
     ),
     row(t('rows.landUse'), labels(env, 'LandUse', use)),
-    row(
-      t('rows.electricity'),
-      far == null
-        ? DASH
-        : far
-          ? num(detail?.electricityDistance) > 0
-            ? t('values.farElectricity', { distance: nf(num(detail?.electricityDistance), 2) })
-            : t('values.farNoDistance')
-          : t('values.notFar'),
-    ),
     ...(legalLabels.length ? [row(t('rows.legal'), legalLabels.join(' · '))] : []),
     // A distance with no text says nothing is drawn there, but it is recorded data: list it.
     ...DIRS.flatMap(dir => {
@@ -1226,7 +1236,7 @@ function condoSpec(plan: Plan, env: SceneEnv): CondoSceneSpec {
   // What the text states: the recorded height, with the clamp warning beside it. Only the picture is capped.
   const statedFloors = stated ?? floors;
 
-  const roadWidth = num(condos.map(c => c.accessRoadWidth).find(w => num(w) > 0));
+  const roadWidth = num(condos.map(c => c.carriagewayWidth).find(w => num(w) > 0));
   const roadSurface = condos.find(c => c.roadSurfaceType)?.roadSurfaceType ?? null;
   const water = views.includes('09') ? 'sea' : views.includes('02') ? 'river' : null;
   // The stadium court is on the ground, so it does not call for a podium.
@@ -1621,7 +1631,7 @@ function blockSpec(project: BriefProject, env: SceneEnv): BlockSceneSpec {
   const recorded = dedupe(list(project.facilities));
   const facilitiesAssumed = recorded.length === 0;
   const drawn = facilitiesAssumed ? USUAL_FACILITIES : recorded;
-  const roadWidth = num(project.land?.accessRoadWidth);
+  const roadWidth = num(project.land?.carriagewayWidth);
   const roadSurface = project.land?.roadSurfaceType ?? null;
   return {
     kind: 'block',
@@ -1919,7 +1929,7 @@ function villageSpec(project: BriefProject, env: SceneEnv): VillageSceneSpec {
   const fits =
     deedW >= layout.width + 2 * PARCEL_MARGIN && deedD >= layout.depth + 2 * PARCEL_MARGIN;
   const text = area ? areaText(env, area) : null;
-  const legalLabels = legalPieces(project.land ? [project.land] : [], env);
+  const legalLabels = legalPieces(project.land ? [project.land] : [], env, 'project');
   const sizeNote = fits
     ? []
     : [row(t('rows.note'), t(area ? 'notes.villageEnlarged' : 'notes.villageSizeUnknown'))];
@@ -1983,7 +1993,7 @@ function villageSpec(project: BriefProject, env: SceneEnv): VillageSceneSpec {
     roadInfo: { title: t('titles.internalRoad'), rows: [] },
     entranceInfo: {
       title: t('titles.entranceRoad'),
-      rows: roadRows(env, num(project.land?.accessRoadWidth), project.land?.roadSurfaceType),
+      rows: roadRows(env, num(project.land?.carriagewayWidth), project.land?.roadSurfaceType),
     },
     callout,
     landCallout: {

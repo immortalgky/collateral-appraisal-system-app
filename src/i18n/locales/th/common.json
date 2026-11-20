@@ -48,8 +48,28 @@
     "Appraise": "ประเมิน",
     "Not Appraised": "ไม่ประเมิน",
     "isResidential": {
-      "Can": "ใช่",
-      "Can not": "ไม่ใช่"
+      "Can": "ได้",
+      "Can not": "ไม่ได้"
+    },
+    "isEncroached": {
+      "No": "ไม่มี",
+      "Yes": "มี"
+    },
+    "isRentedOut": {
+      "No": "ไม่มี",
+      "Yes": "มี"
+    },
+    "isLeaseRegistered": {
+      "Not Registered": "ไม่จดทะเบียน",
+      "Registered": "จดทะเบียน"
+    },
+    "isLeaseholdPledgeable": {
+      "Not Allowed": "ไม่ได้",
+      "Allowed": "ได้"
+    },
+    "isAppraisable": {
+      "Exclude": "ไม่พิจารณา",
+      "Include": "พิจารณา"
     }
   },
   "select": {
@@ -58,7 +78,6 @@
     "typeToSearch": "พิมพ์เพื่อค้นหา...",
     "noResults": "ไม่พบผลลัพธ์",
     "clearSelection": "ล้างที่เลือก",
-    "other": "อื่นๆ",
     "otherPlaceholder": "กรุณาระบุ",
     "clearOther": "ล้างและเลือกใหม่"
   },
@@ -304,5 +323,28 @@
   "collateralMaster": {
     "allTypes": "ทุกประเภท",
     "masterTitle": "ข้อมูลหลัก {{type}}"
+  },
+  "chips": {
+    "other": "อื่นๆ",
+    "otherPlaceholder": "ระบุอื่นๆ...",
+    "otherEdit": "อื่นๆ: {{text}}, แก้ไข",
+    "otherRemove": "ลบอื่นๆ"
+  },
+  "units": {
+    "m": "ม.",
+    "sqm": "ตร.ม.",
+    "baht": "บาท",
+    "bahtPerYear": "บาท/ปี",
+    "year": "ปี",
+    "percent": "%",
+    "lane": "เลน",
+    "side": "ด้าน",
+    "floor": "ชั้น",
+    "rai": "ไร่",
+    "ngan": "งาน",
+    "sqwa": "ตร.ว.",
+    "cm": "ซม.",
+    "be": "พ.ศ.",
+    "machine": "เครื่อง"
   }
 }

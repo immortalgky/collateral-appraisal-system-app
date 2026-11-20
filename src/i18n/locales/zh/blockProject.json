@@ -910,6 +910,7 @@
       "latitude": "Latitude",
       "longitude": "Longitude",
       "builtOnTitleDeedNumber": "Title Number",
+      "licenseNumber": "施工许可证编号",
       "licenseExpirationDate": "License Expiration Date",
       "utilities": "Utilities",
       "utilitiesOther": "Other Utilities",
@@ -923,8 +924,9 @@
       "numberOfUnits": "Number of Units",
       "numberOfFloors": "Number of Floors",
       "conditionType": "Condition",
-      "hasObligation": "Is Obligation",
-      "obligationDetails": "Obligation",
+      "obligationType": "权利负担",
+      "mortgageDetails": "抵押详情",
+      "obligationDetails": "其他负担详情",
       "documentValidationType": "Document Validation",
       "isLocationCorrect": "Location Correct",
       "distance": "Distance (m)",
@@ -973,8 +975,9 @@
       "landDescription": "Land Description",
       "isOwnerVerified": "Check Owner",
       "ownerName": "Owner",
-      "hasObligation": "Is Obligation",
-      "obligationDetails": "Obligation"
+      "obligationType": "权利负担",
+      "mortgageDetails": "抵押详情",
+      "obligationDetails": "其他负担详情"
     },
     "pricing": {
       "floorIncrementEveryXFloor": "Every X Floor",

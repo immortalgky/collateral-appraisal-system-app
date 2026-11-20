@@ -64,3 +64,40 @@ export function rowGroupRoles(
   });
   return roles;
 }
+
+const TOGGLE_TYPES = new Set(['boolean-toggle', 'string-toggle']);
+const isToggle = (f: { type?: string }) => TOGGLE_TYPES.has(f.type ?? '');
+
+/**
+ * A Standard row made of exactly one toggle and one other field whose spans add up to 12 (a check
+ * and the owner it checks, 3 + 9). A toggle is as wide as its captions, whatever its cell, so the
+ * pair is drawn as one `auto | 1fr` grid: the toggle takes what it needs and the field the rest.
+ * Returns, for the first field of each such row, the index of the second; `toggleFirst` says which
+ * of the two is the toggle. Chip groups take a whole Standard row, so they are never part of one.
+ */
+export function togglePairs(
+  fields: { type?: string; variant?: string; keepSpan?: boolean; wrapperClassName?: string }[],
+): Map<number, { second: number; toggleFirst: boolean }> {
+  const pairs = new Map<number, { second: number; toggleFirst: boolean }>();
+  let row: number[] = [];
+  let sum = 0;
+  const flush = () => {
+    if (row.length === 2 && sum === 12) {
+      const [a, b] = row.map(i => fields[i]);
+      if (isToggle(a) !== isToggle(b) && !isChipGroup(a) && !isChipGroup(b))
+        pairs.set(row[0], { second: row[1], toggleFirst: isToggle(a) });
+    }
+    row = [];
+    sum = 0;
+  };
+  fields.forEach((f, i) => {
+    const span = isChipGroup(f) ? 12 : plainSpan(f.wrapperClassName);
+    if (span == null || span >= 12) return flush();
+    if (sum + span > 12) flush();
+    row.push(i);
+    sum += span;
+    if (sum === 12) flush();
+  });
+  flush();
+  return pairs;
+}

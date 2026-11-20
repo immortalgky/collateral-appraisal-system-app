@@ -126,7 +126,7 @@ function AreaInput({
   return (
     <div className="grid grid-cols-12 items-end gap-3.5">
       <FormFields fields={fields} namePrefix={scope?.name} index={scope?.index} />
-      <div className="col-span-12 text-right leading-tight tabular-nums sm:col-span-6">
+      <div className="col-span-12 text-right leading-tight tabular-nums sm:col-span-5">
         <div className="text-base font-semibold text-(--palette-ink)">
           {t('titleEntry.area.total', { wa: money(totalWa) })}
         </div>
@@ -187,8 +187,13 @@ export function TitleFormView({
   const positionFields = pick(
     ...POSITION_ORDER.map((name): [string, string] => [name, POSITION_SPANS[name]]),
   );
+  // Rai and ngan are a sixth of the row each, the wa a quarter, and the total reads out in the
+  // rest (2 + 2 + 3 + 5).
   const areaFields = pick(
-    ...AREA_ORDER.map((name): [string, string] => [areaNames[name], 'col-span-4 sm:col-span-2']),
+    ...AREA_ORDER.map((name): [string, string] => [
+      areaNames[name],
+      name === 'squareWa' ? 'col-span-4 sm:col-span-3' : 'col-span-4 sm:col-span-2',
+    ]),
   );
   const hasPosition = ['rawang', 'landParcelNumber', 'surveyNumber', 'aerialMapName'].some(shows);
 

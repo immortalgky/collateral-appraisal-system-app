@@ -5,7 +5,7 @@ import NumberInput from '@/shared/components/inputs/NumberInput';
 import {
   FormTable,
   FormTableDash,
-  FormTableHeading,
+  FormTableBlock,
   type FormTableColumn,
 } from '@/shared/components/form';
 import { useFormReadOnly } from '@/shared/components/form/context';
@@ -104,13 +104,14 @@ const BoundaryFields = ({ readOnly, showTitle = true }: BoundaryFieldsProps) => 
 
   return (
     <div className="col-span-12">
-      {showTitle && <FormTableHeading>{t('forms.land.sectionTitleBoundary')}</FormTableHeading>}
-      <FormTable
-        columns={columns}
-        rows={[...BOUNDARY_ROWS]}
-        rowKey={row => row.key}
-        readOnly={readOnlyForm}
-      />
+      <FormTableBlock title={showTitle ? t('forms.land.sectionTitleBoundary') : undefined}>
+        <FormTable
+          columns={columns}
+          rows={[...BOUNDARY_ROWS]}
+          rowKey={row => row.key}
+          readOnly={readOnlyForm}
+        />
+      </FormTableBlock>
     </div>
   );
 };

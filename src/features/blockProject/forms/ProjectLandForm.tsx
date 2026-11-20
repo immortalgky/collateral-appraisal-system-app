@@ -142,6 +142,7 @@ export default function ProjectLandForm() {
                 {/* A project land does not store title order, so no order controls. */}
                 <TitleDeedForm
                   orderable={false}
+                  deductions={false}
                   hint={t('landDetail.titlesSummary', {
                     n: formatNumber(titles?.length ?? 0),
                     rnw: toRaiNganWa(titlesWa),

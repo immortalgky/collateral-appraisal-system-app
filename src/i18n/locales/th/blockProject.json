@@ -910,6 +910,7 @@
       "latitude": "ละติจูด",
       "longitude": "ลองจิจูด",
       "builtOnTitleDeedNumber": "โฉนดที่ดินเลขที่",
+      "licenseNumber": "เลขที่ใบอนุญาตก่อสร้าง",
       "licenseExpirationDate": "วันหมดอายุใบอนุญาต",
       "utilities": "สาธารณูปโภค",
       "utilitiesOther": "สาธารณูปโภคอื่น ๆ",
@@ -923,8 +924,9 @@
       "numberOfUnits": "จำนวนยูนิต",
       "numberOfFloors": "จำนวนชั้น",
       "conditionType": "สภาพอาคาร",
-      "hasObligation": "ภาระผูกพัน",
-      "obligationDetails": "รายละเอียดภาระผูกพัน",
+      "obligationType": "ภาระผูกพัน",
+      "mortgageDetails": "รายละเอียดการจำนอง",
+      "obligationDetails": "รายละเอียดภาระอื่นๆ",
       "documentValidationType": "ผลตรวจสอบเอกสาร",
       "isLocationCorrect": "ที่ตั้งถูกต้อง",
       "distance": "ระยะทาง (ม.)",
@@ -973,8 +975,9 @@
       "landDescription": "รายละเอียดที่ดิน",
       "isOwnerVerified": "ตรวจสอบกรรมสิทธิ์",
       "ownerName": "ผู้ถือกรรมสิทธิ์",
-      "hasObligation": "ภาระผูกพัน",
-      "obligationDetails": "รายละเอียดภาระผูกพัน"
+      "obligationType": "ภาระผูกพัน",
+      "mortgageDetails": "รายละเอียดการจำนอง",
+      "obligationDetails": "รายละเอียดภาระอื่นๆ"
     },
     "pricing": {
       "floorIncrementEveryXFloor": "ทุก X ชั้น",

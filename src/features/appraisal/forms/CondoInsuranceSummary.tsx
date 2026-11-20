@@ -35,6 +35,7 @@ const money2 = (v: unknown) => {
  */
 export default function CondoInsuranceSummary() {
   const { t } = useTranslation('appraisal');
+  const { t: tc } = useTranslation('common');
   const { setValue } = useFormContext();
   const formReadOnly = useFormReadOnly();
   const priceId = useId();
@@ -80,7 +81,7 @@ export default function CondoInsuranceSummary() {
         <FormFieldShell
           name="buildingInsurancePrice"
           label={priceLabel}
-          wrapperClassName="col-span-4"
+          wrapperClassName="col-span-6"
           read
         >
           <FormReadValue
@@ -93,7 +94,7 @@ export default function CondoInsuranceSummary() {
         <FormFieldShell
           name="buildingInsurancePriceOverride"
           label={overrideLabel}
-          wrapperClassName="col-span-4"
+          wrapperClassName="col-span-6"
           read
         >
           <FormReadValue
@@ -113,13 +114,14 @@ export default function CondoInsuranceSummary() {
         name="buildingInsurancePrice"
         label={t('forms.condo.buildingInsurancePrice')}
         labelFor={priceId}
-        wrapperClassName="col-span-4"
+        wrapperClassName="col-span-6"
       >
         <NumberInput
           id={priceId}
           value={computedValue}
           maxIntegerDigits={16}
           decimalPlaces={2}
+          suffix={tc('units.baht')}
           disabled
           helperText={formula}
         />
@@ -128,7 +130,7 @@ export default function CondoInsuranceSummary() {
         name="buildingInsurancePriceOverride"
         label={t('forms.condo.buildingInsurance')}
         labelFor={overrideId}
-        wrapperClassName="col-span-4"
+        wrapperClassName="col-span-6"
       >
         <NumberInput
           id={overrideId}
@@ -138,6 +140,7 @@ export default function CondoInsuranceSummary() {
           value={override ?? computedValue}
           maxIntegerDigits={16}
           decimalPlaces={2}
+          suffix={tc('units.baht')}
           helperText={
             isEdited ? (
               <>
@@ -157,9 +160,7 @@ export default function CondoInsuranceSummary() {
                   </>
                 )}
               </>
-            ) : (
-              t('forms.condo.buildingInsuranceCalculated')
-            )
+            ) : undefined
           }
         />
       </FormFieldShell>

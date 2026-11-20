@@ -302,6 +302,7 @@ const CreateBuildingPage = () => {
                 appraisalId={appraisalId}
                 propertyId={propertyId}
                 typeCode="B"
+                nameFieldType="B"
                 photoSectionRef={photoSectionRef}
                 tabs={editorTabs}
                 activeTab={shownTab}

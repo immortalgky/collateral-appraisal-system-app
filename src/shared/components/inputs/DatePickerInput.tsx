@@ -92,7 +92,7 @@ interface DatePickerInputProps {
   id?: string;
   /** Names the box where there is no visible label (a table cell). */
   'aria-label'?: string;
-  /** A table cell field (DESIGN.md 17.7): 28px in a Compact form, the plain Standard box otherwise. */
+  /** A table cell field (DESIGN.md 17.7): as tall as the normal box in both layouts. */
   cell?: boolean;
   /** Value from react-hook-form (ISO string or Date) */
   value?: string | Date | null;

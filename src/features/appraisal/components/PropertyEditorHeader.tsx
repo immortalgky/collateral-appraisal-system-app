@@ -7,6 +7,7 @@ import {
   flattenFormErrors,
   useRegisterMissingReveal,
 } from '@/shared/components/form';
+import { useFormReadOnly } from '@/shared/components/form/context';
 import { useMissingFields } from '@/shared/components/form/missing';
 import { itemCount } from '@/shared/components/form/missing/types';
 import useBreadcrumbExtras from '@/shared/hooks/useBreadcrumbExtras';
@@ -15,6 +16,8 @@ import type { PropertyGroup, PropertyItem } from '../types';
 import { formatAreaNumber, toRaiNganWa } from '../utils/areaFormat';
 import { resolveTypeCode } from '../utils/propertyTypeConfig';
 import { MACHINE_TYPES, PlaceValue, brandModel } from './PropertyCardContent';
+import { PropertyNameHeaderField } from './PropertyNameHeaderField';
+import type { PropertyType } from './PropertyNameTriggerIcon';
 import { PropertyTypeChip } from './PropertyTypeChip';
 import { EditorHeader } from './EditorHeader';
 import type { EditorTab } from './EditorTabBar';
@@ -29,6 +32,8 @@ interface PropertyEditorHeaderProps {
   pma?: boolean;
   /** Beside the type chip and position, e.g. the PMA sync status. */
   meta?: ReactNode;
+  /** Draw the name as an input here (its fill icon follows this type); read-only keeps the title. */
+  nameFieldType?: PropertyType;
   /**
    * One entry per section of the form. A single section still gets a one-tab strip (not a tab
    * list): it is the row that joins the header to the sheet below it. Editors rendered without this
@@ -56,11 +61,13 @@ export const PropertyEditorHeader = ({
   typeCode,
   pma = false,
   meta,
+  nameFieldType,
   tabs = [],
   activeTab,
   onTabChange,
 }: PropertyEditorHeaderProps) => {
   const { t } = useTranslation('appraisal');
+  const formReadOnly = useFormReadOnly();
   const { groups } = useEnrichedPropertyGroups(propertyId ? appraisalId : undefined);
 
   const found = useMemo(() => findProperty(groups, propertyId), [groups, propertyId]);
@@ -123,6 +130,11 @@ export const PropertyEditorHeader = ({
           : isNew
             ? t('editorHeader.newProperty')
             : t('editorHeader.untitled'))
+      }
+      titleField={
+        nameFieldType && !formReadOnly ? (
+          <PropertyNameHeaderField propertyType={nameFieldType} />
+        ) : undefined
       }
       titleMuted={!name && !pma}
       facts={

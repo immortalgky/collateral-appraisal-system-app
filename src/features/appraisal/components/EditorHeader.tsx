@@ -7,6 +7,8 @@ interface EditorHeaderProps {
   /** Before the title: the type pill, e.g. `<PropertyTypeChip size="md" />`. */
   badge?: ReactNode;
   title: ReactNode;
+  /** An editable name in place of the title (the property forms); the title is not drawn. */
+  titleField?: ReactNode;
   /** Grey italic, for a name that is not there yet ("new", "untitled"). */
   titleMuted?: boolean;
   /** Quiet text after the title: position, key facts. Wrap its own separators. */
@@ -41,6 +43,7 @@ interface EditorHeaderProps {
 export function EditorHeader({
   badge,
   title,
+  titleField,
   titleMuted = false,
   facts,
   actions,
@@ -70,14 +73,16 @@ export function EditorHeader({
           )}
         >
           {badge}
-          <h2
-            className={clsx(
-              'min-w-0 break-words text-base font-semibold',
-              titleMuted ? 'italic text-(--palette-ink-2)' : 'text-(--palette-ink)',
-            )}
-          >
-            {title}
-          </h2>
+          {titleField ?? (
+            <h2
+              className={clsx(
+                'min-w-0 break-words text-base font-semibold',
+                titleMuted ? 'italic text-(--palette-ink-2)' : 'text-(--palette-ink)',
+              )}
+            >
+              {title}
+            </h2>
+          )}
           {facts && (
             <div className="flex min-w-0 flex-wrap items-center text-xs text-(--palette-ink-2)">
               {facts}

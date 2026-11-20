@@ -2,22 +2,14 @@ import Icon from '@/shared/components/Icon';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import {
   FormTable,
-  FormTableRowActions,
+  FormTableCell,
   type FormField,
   type FormTableColumn,
   type FormTableRowElementProps,
 } from '@/shared/components/form';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import clsx from 'clsx';
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useRef,
-  useState,
-  type HTMLAttributes,
-  type Ref,
-} from 'react';
+import { createContext, useContext, useMemo, useRef, useState } from 'react';
 import {
   closestCenter,
   DndContext,
@@ -38,7 +30,12 @@ import { CSS } from '@dnd-kit/utilities';
 import { get, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useFormReadOnly } from '@/shared/components/form/context';
+import { useFormLayout } from '@/shared/components/form/formLayoutContext';
+import { tableStyles } from '@/shared/components/form/table/styles';
 import LandTitleInputModal from '../LandTitleInputModal';
+import LandDeductionRows, { LandAreaSummary } from './LandDeductionRows';
+import RowTrash from './RowTrash';
+import RowDragHandle, { type HandleProps } from './RowDragHandle';
 import { toRaiNganWa } from '../TitleFormView';
 
 interface LandTitleTableProps {
@@ -46,6 +43,11 @@ interface LandTitleTableProps {
   fields: FormField[];
   /** Order controls: off where the order is not saved (a block project's land). */
   orderable?: boolean;
+  /**
+   * The area-deduction lines under the deeds, in the same columns: the deeds' total, the
+   * encroachment switch with its rows, and the net area. Off, the table ends in its plain total.
+   */
+  deductions?: boolean;
 }
 
 const byTitleNumber = new Intl.Collator('th', { numeric: true }).compare;
@@ -75,9 +77,6 @@ const POSITION_KEYS = {
   landParcelNumber: 'titleEntry.fields.landParcelNumber',
   surveyNumber: 'titleEntry.fields.surveyNumber',
 } as const;
-
-/** What a row's drag handle needs from `useSortable`. */
-type HandleProps = HTMLAttributes<HTMLElement> & { ref: Ref<HTMLButtonElement> };
 
 /** Whether the rows can be dragged; read by every row, so the row component stays one identity. */
 const OrderContext = createContext(false);
@@ -124,30 +123,58 @@ const SortableRow = ({ position, children, ...rest }: FormTableRowElementProps) 
 };
 
 function DragHandle({ index, label }: { index: number; label: string }) {
-  const handle = useContext(HandleContext);
-  return (
-    <button
-      {...handle}
-      type="button"
-      data-handle={index}
-      onClick={event => event.stopPropagation()}
-      className="mx-auto flex size-6 cursor-grab touch-none items-center justify-center rounded text-(--palette-ink-2) transition-colors hover:bg-(--palette-surface-3) active:cursor-grabbing"
-      aria-label={label}
-    >
-      <Icon style="solid" name="grip-vertical" className="text-[1.0714rem]" />
-    </button>
-  );
+  return <RowDragHandle handle={useContext(HandleContext)} label={label} data-handle={index} />;
 }
 
 const hasValue = (value: unknown) => value != null && String(value).trim() !== '';
 
 /** Always from rai/ngan/wa, never the stored total, which can be stale on older rows. */
-const totalWaOf = (row: TitleRow) =>
+export const totalWaOf = (row: TitleRow) =>
   (Number(row.rai) || 0) * 400 + (Number(row.ngan) || 0) * 100 + (Number(row.squareWa) || 0);
 
-const LandTitleTable = ({ name, fields, orderable = true }: LandTitleTableProps) => {
+/** The "add title deed" row: the last row of the deeds, under a dashed rule. */
+function AddTitleRow({
+  columns,
+  label,
+  onAdd,
+}: {
+  columns: { key: string }[];
+  label: string;
+  onAdd: () => void;
+}) {
+  // Starts under the row numbers, not the drag handles.
+  const at = Math.max(
+    columns.findIndex(c => c.key !== 'handle'),
+    0,
+  );
+  const border = 'border-dashed border-(--palette-line)';
+  return (
+    <tr>
+      {columns.slice(0, at).map(c => (
+        <FormTableCell key={c.key} className={border} />
+      ))}
+      <FormTableCell colSpan={columns.length - at} className={border}>
+        <button
+          type="button"
+          onClick={onAdd}
+          className="text-xs font-semibold text-(--palette-accent-ink) hover:underline"
+        >
+          + {label}
+        </button>
+      </FormTableCell>
+    </tr>
+  );
+}
+
+const LandTitleTable = ({
+  name,
+  fields,
+  orderable = true,
+  deductions = false,
+}: LandTitleTableProps) => {
   const { t } = useTranslation('appraisal');
   const readOnly = useFormReadOnly();
+  const layout = useFormLayout();
   const { control, formState, trigger } = useFormContext();
   const { append, remove, update, move, replace } = useFieldArray({ control, name });
   const containerRef = useRef<HTMLDivElement>(null);
@@ -233,7 +260,9 @@ const LandTitleTable = ({ name, fields, orderable = true }: LandTitleTableProps)
   const items: TitleItem[] = values.map((row, index) => ({ row, index }));
 
   const columns: FormTableColumn<TitleItem>[] = [
-    ...(canOrder
+    // The deduction rows under the deeds have a handle too, in this same column, so it is there
+    // whenever either list can be dragged.
+    ...(canOrder || (deductions && !readOnly)
       ? [
           {
             key: 'handle',
@@ -241,9 +270,10 @@ const LandTitleTable = ({ name, fields, orderable = true }: LandTitleTableProps)
             align: 'center',
             width: '2.2857rem',
             header: <span className="sr-only">{t('titleEntry.list.dnd.handle')}</span>,
-            cell: ({ index }) => (
-              <DragHandle index={index} label={t('titleEntry.list.dnd.handle')} />
-            ),
+            cell: ({ index }) =>
+              canOrder ? (
+                <DragHandle index={index} label={t('titleEntry.list.dnd.handle')} />
+              ) : null,
           } satisfies FormTableColumn<TitleItem>,
         ]
       : []),
@@ -272,20 +302,32 @@ const LandTitleTable = ({ name, fields, orderable = true }: LandTitleTableProps)
     },
     {
       key: 'document',
-      header: t('titleEntry.list.document'),
+      // The order is sorted from here: by title number, as the saved order (LandTitles.SequenceNumber).
+      header: canOrder ? (
+        <button
+          type="button"
+          onClick={sortByNumber}
+          disabled={isSortedByNumber}
+          title={t('titleEntry.list.sortByNumber')}
+          className="inline-flex items-center gap-1 rounded text-(--palette-accent-ink) hover:underline disabled:cursor-default disabled:no-underline"
+        >
+          {t('titleEntry.list.document')}
+          <Icon style="solid" name="arrow-up-arrow-down" className="text-[0.8571rem]" />
+        </button>
+      ) : (
+        t('titleEntry.list.document')
+      ),
+      // Just the number; the book and page stay one hover away, in the title.
       cell: ({ row }) => (
-        <>
-          <span className="break-all font-semibold text-(--palette-ink-strong)">
-            {hasValue(row.titleNumber) ? String(row.titleNumber) : '—'}
-          </span>{' '}
-          <span className="text-xs text-(--palette-ink-2)">
-            ·{' '}
-            {t('titleEntry.list.bookPage', {
-              book: hasValue(row.bookNumber) ? row.bookNumber : '—',
-              page: hasValue(row.pageNumber) ? row.pageNumber : '—',
-            })}
-          </span>
-        </>
+        <span
+          className="break-all font-semibold text-(--palette-ink-strong)"
+          title={t('titleEntry.list.bookPage', {
+            book: hasValue(row.bookNumber) ? row.bookNumber : '—',
+            page: hasValue(row.pageNumber) ? row.pageNumber : '—',
+          })}
+        >
+          {hasValue(row.titleNumber) ? String(row.titleNumber) : '—'}
+        </span>
       ),
     },
     {
@@ -311,21 +353,16 @@ const LandTitleTable = ({ name, fields, orderable = true }: LandTitleTableProps)
       align: 'end',
       header: t('titleEntry.list.area'),
       className: 'whitespace-nowrap',
-      total: areaText(grandTotalWa),
+      // With deductions the total is part of the area summary under the table.
+      total: deductions ? undefined : areaText(grandTotalWa),
       cell: ({ row }) => areaText(totalWaOf(row)),
     },
     {
       key: 'actions',
       kind: 'action',
-      width: '6rem',
+      width: '3rem',
       cell: ({ index }, { position }) => (
-        <FormTableRowActions
-          position={position}
-          count={items.length}
-          onEdit={() => open(index)}
-          editLabel={t('titleEntry.list.edit')}
-          onDelete={() => remove(index)}
-        />
+        <RowTrash position={position} onDelete={() => remove(index)} />
       ),
     },
   ];
@@ -359,36 +396,69 @@ const LandTitleTable = ({ name, fields, orderable = true }: LandTitleTableProps)
                 rowElement={SortableRow}
                 rowProps={({ index }) => ({
                   tabIndex: 0,
+                  'aria-label': t('titleEntry.list.editTitle', {
+                    number: hasValue(values[index]?.titleNumber)
+                      ? String(values[index].titleNumber)
+                      : index + 1,
+                  }),
                   onClick: () => open(index),
                   onKeyDown: event => {
-                    if (event.target === event.currentTarget && event.key === 'Enter') open(index);
+                    if (event.target !== event.currentTarget) return;
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      open(index);
+                    }
                   },
                   className:
-                    'cursor-pointer outline-none hover:bg-(--palette-surface-2) focus-visible:bg-(--palette-accent-wash)',
+                    'group/row cursor-pointer outline-none hover:bg-(--palette-surface-2) focus-visible:bg-(--palette-accent-wash)',
                 })}
-                maxHeight={28}
+                // The deduction rows scroll with the deeds; the area summary is a card under the scroll box.
+                maxHeight={deductions ? 40 : 28}
                 totalLabel={t('titleEntry.list.total', { count: values.length })}
-                add={[
-                  {
-                    label: t('titleEntry.list.add'),
-                    onClick: () => setModalState({ type: 'add' }),
-                  },
-                  ...(canOrder
+                tail={columns => (
+                  <>
+                    {!readOnly && (
+                      <AddTitleRow
+                        columns={columns}
+                        label={t('titleEntry.list.add')}
+                        onAdd={() => setModalState({ type: 'add' })}
+                      />
+                    )}
+                    {deductions && <LandDeductionRows columns={columns} />}
+                  </>
+                )}
+                // The add is the table's last row; the box is only for the empty list.
+                add={
+                  values.length === 0
                     ? [
                         {
-                          label: t('titleEntry.list.sortByNumber'),
-                          icon: 'arrow-down-1-9',
-                          disabled: isSortedByNumber,
-                          onClick: sortByNumber,
+                          label: t('titleEntry.list.add'),
+                          onClick: () => setModalState({ type: 'add' }),
                         },
                       ]
-                    : []),
-                ]}
+                    : []
+                }
                 empty={{ icon: 'file-lines', message: t('titleEntry.list.empty') }}
               />
             </SortableContext>
           </DndContext>
         </OrderContext.Provider>
+        {/* FormTable draws its tail only while it has rows, so with no deed the deduction switch and
+            rows get a table of their own, in the same columns, and stay reachable. Moving between the
+            table's tail and this table remounts them, which is harmless: their on-to-off guard starts
+            from "unknown" (a null ref), so only a flip the appraiser makes afterwards asks to clear. */}
+        {deductions && values.length === 0 && (
+          <table className={clsx('mt-3', tableStyles[layout].table)}>
+            <tbody>
+              <LandDeductionRows
+                columns={columns.filter(c => !(readOnly && c.kind === 'action'))}
+              />
+            </tbody>
+          </table>
+        )}
+        {deductions && values.length > 0 && (
+          <LandAreaSummary deedWa={grandTotalWa} deedCount={values.length} areaText={areaText} />
+        )}
       </div>
       {modalState && (
         <LandTitleInputModal

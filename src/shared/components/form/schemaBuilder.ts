@@ -146,6 +146,11 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
     }
 
     case 'boolean-toggle':
+      // `nullable` is only the toggle's look (neither side chosen); a field that is not required is
+      // made nullable below, and a required one rejects null.
+      schema = z.boolean();
+      break;
+
     case 'checkbox':
     case 'switch':
       schema = z.boolean();

@@ -5,10 +5,14 @@ import {
   useFormContext,
   useWatch,
 } from 'react-hook-form';
-import { useContext, useEffect, useId, useMemo, useRef } from 'react';
+import { useContext, useEffect, useId, useMemo, useRef, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
 import type { z } from 'zod';
 
 import Dropdown from '../inputs/Dropdown';
+import { HELPER_TEXT } from '../inputs/controlStyles';
+import Icon from '../Icon';
 import NumberInput from '../inputs/NumberInput';
 import TextInput from '../inputs/TextInput';
 import DateInput from '../inputs/DateInput';
@@ -29,6 +33,7 @@ import { constraintsToInputProps, getFieldConstraints } from './utils';
 import {
   evaluateConditions,
   extractConditionFields,
+  getNestedValue,
   isFieldConditions,
   setNestedValue,
 } from './conditions';
@@ -37,9 +42,11 @@ import { FormFieldShell } from './FormFieldShell';
 import { useFormLayout } from './formLayoutContext';
 import { FormSectionBodyContext } from './formSheetContext';
 import { FormReadValue, READ_TYPES } from './FormReadValue';
-import { isChipGroup, rowGroupRoles, type RowGroupRole } from './rowGroups';
-import type { FormField } from './types';
-import { useParametersByGroup } from '@/shared/utils/parameterUtils';
+import { ValidationLabelContext } from './validationMessage';
+import { COMPACT_FULL_ROW, compactJoins } from './compactPairs';
+import { isChipGroup, rowGroupRoles, togglePairs, type RowGroupRole } from './rowGroups';
+import type { BooleanChips, FlowGroup, FormField, FormFieldItem } from './types';
+import { BooleanChipsField } from './BooleanChips';
 import { useFilterWatchValues } from '@/shared/hooks/useFilterWatchValues';
 import ParameterSearchInput from '../inputs/ParameterSearchInput';
 import type { OtherSpec } from '../inputs/OtherText';
@@ -140,8 +147,8 @@ function useFieldState({ field, namePrefix, index }: UseFieldStateOptions) {
 // =============================================================================
 
 interface FormFieldsProps {
-  /** Array of field configurations to render */
-  fields: FormField[];
+  /** Array of field configurations to render; a flow group (see `flowGroup()`) draws a toggle row with its follow-ups. */
+  fields: FormFieldItem[];
   /** Prefix for nested field names (e.g., "address" for "address.street") */
   namePrefix?: string;
   /** Index for array fields */
@@ -171,6 +178,8 @@ interface FieldRendererProps {
   other?: OtherSpec;
   /** An "other" companion drawn by its chip group: runs its rules, draws nothing. */
   folded?: boolean;
+  /** One control of a joined Compact row (`compactPairs.ts`): no label cell of its own, the row's shell draws it. */
+  bare?: boolean;
 }
 
 /** The form path of a field name under a prefix and an array index. */
@@ -187,17 +196,14 @@ function fullFieldName(name: string, namePrefix: string, index?: number): string
  */
 const MAX_INLINE_OTHER = 200;
 
+type FieldSchema = Parameters<typeof getFieldConstraints>[0] | undefined;
+
 /**
  * Pairs each chip group with its "other" companion: a text field in the same list whose only
  * `showWhen` is the group holding one option value ('99'). The companion keeps rendering its hooks
  * (clear-on-hide, required) but draws nothing; the chip draws the input.
  */
-function pairOthers(
-  fields: FormField[],
-  schema: Parameters<typeof getFieldConstraints>[0] | undefined,
-  namePrefix: string,
-  index?: number,
-) {
+function pairOthers(fields: FormField[], schema: FieldSchema, namePrefix: string, index?: number) {
   const others = new Map<string, OtherSpec>();
   const folded = new Set<string>();
   for (const chip of fields) {
@@ -258,14 +264,14 @@ function pairOthers(
  * <FormFields fields={fields} showCharCount />
  * ```
  */
-export function FormFields({
+function PlainFields({
   fields,
   namePrefix = '',
   index,
   schema: schemaProp,
   showCharCount,
   disabled,
-}: FormFieldsProps) {
+}: Omit<FormFieldsProps, 'fields'> & { fields: FormField[] }) {
   const { control } = useFormContext();
   // Use schema from props, or fall back to context from FormProvider
   const contextSchema = useFormSchema();
@@ -283,38 +289,363 @@ export function FormFields({
   const layout = useFormLayout();
   const inSectionBody = useContext(FormSectionBodyContext);
   const standardBody = layout === 'standard' && inSectionBody;
+  // A chip group ends a run in either layout inside a section body: Standard gives it the whole row,
+  // and in Compact it is a pair of its own (a run is counted by what is drawn, not by its Standard
+  // span, or a 6-wide chip group would pull the next two halves out of step).
   const roles = rowGroupRoles(
     shown.filter(f => !folded.has(f.name)),
-    standardBody,
+    inSectionBody,
   );
   let drawn = 0;
 
+  // Standard: a toggle and the one field beside it are one `auto | 1fr` row (see togglePairs), so the
+  // toggle is never squeezed or overflows into the field. Below 48rem they stack.
+  const drawable = shown.filter(f => !folded.has(f.name));
+  const pairs = standardBody ? togglePairs(drawable) : new Map();
+  // Compact: fields that read as one measurement (compactPairs.ts) are one row.
+  const joins = layout === 'compact' && inSectionBody ? compactJoins(drawable) : new Map();
+  const joinedRest = new Set<string>(
+    [...joins].flatMap(([first, j]) =>
+      j.fields.map((f: FormField) => f.name).filter((n: string) => n !== first),
+    ),
+  );
+  const partnerOf = new Map<string, { field: FormField; toggleFirst: boolean }>();
+  const partners = new Set<string>();
+  pairs.forEach(({ second, toggleFirst }, first) => {
+    partnerOf.set(drawable[first].name, { field: drawable[second], toggleFirst });
+    partners.add(drawable[second].name);
+  });
+  const withoutSpan = (field: FormField): FormField => ({
+    ...field,
+    wrapperClassName: (field.wrapperClassName ?? '').replace(PAIR_SPAN, ' ').trim(),
+    narrowSpan: undefined,
+  });
+
+  const renderField = (field: FormField, rowGroup: RowGroupRole, bare?: boolean) => (
+    <FieldRenderer
+      bare={bare}
+      rowGroup={rowGroup}
+      other={others.get(field.name)}
+      folded={folded.has(field.name)}
+      key={field.key ?? field.name}
+      control={control}
+      field={field}
+      namePrefix={namePrefix}
+      index={index}
+      schema={schema as z.ZodObject<any> | undefined}
+      globalShowCharCount={showCharCount}
+      globalDisabled={disabled}
+    />
+  );
+
+  // Consecutive toggle-first pairs share one grid, so its `auto` column is as wide as the widest
+  // toggle among them and the fields beside them start at the same x.
+  type Block =
+    | { plain: FormField; role: RowGroupRole }
+    | { joined: FormField[]; separator?: string }
+    | { rows: [FormField, FormField][]; toggleFirst: boolean };
+  const blocks: Block[] = [];
+  let open: Extract<Block, { rows: unknown }> | null = null;
+  shown.forEach(field => {
+    const role = folded.has(field.name) ? undefined : roles[drawn++];
+    if (partners.has(field.name) || joinedRest.has(field.name)) return; // drawn with its toggle / row
+    const join = joins.get(field.name);
+    if (join) {
+      blocks.push({ joined: join.fields, separator: join.separator });
+      open = null;
+      return;
+    }
+    const pair = partnerOf.get(field.name);
+    if (!pair) {
+      blocks.push({ plain: field, role });
+      if (!folded.has(field.name)) open = null;
+      return;
+    }
+    const row: [FormField, FormField] = [field, pair.field];
+    if (pair.toggleFirst && open) {
+      open.rows.push(row);
+      return;
+    }
+    const block = { rows: [row], toggleFirst: pair.toggleFirst };
+    blocks.push(block);
+    open = pair.toggleFirst ? block : null;
+  });
+
   return (
     <>
-      {shown.map(field => (
-        <FieldRenderer
-          rowGroup={folded.has(field.name) ? undefined : roles[drawn++]}
-          other={others.get(field.name)}
-          folded={folded.has(field.name)}
-          key={field.key ?? field.name}
-          control={control}
-          field={field}
-          namePrefix={namePrefix}
-          index={index}
-          schema={schema as z.ZodObject<any> | undefined}
-          globalShowCharCount={showCharCount}
-          globalDisabled={disabled}
-        />
-      ))}
+      {blocks.map(block =>
+        'joined' in block ? (
+          <JoinedRow
+            key={block.joined[0].key ?? block.joined[0].name}
+            fields={block.joined}
+            separator={block.separator}
+            namePrefix={namePrefix}
+            index={index}
+          >
+            {block.joined.map(f => renderField(f, undefined, true))}
+          </JoinedRow>
+        ) : 'plain' in block ? (
+          renderField(block.plain, block.role)
+        ) : (
+          <div
+            key={block.rows[0][0].key ?? block.rows[0][0].name}
+            className={clsx(
+              'col-span-12 grid items-start gap-x-10 gap-y-[1.2857rem] @max-[48rem]/form-shell:grid-cols-1',
+              block.toggleFirst
+                ? 'grid-cols-[auto_minmax(0,1fr)]'
+                : 'grid-cols-[minmax(0,1fr)_auto]',
+            )}
+          >
+            {block.rows.flatMap(row => row.map(f => renderField(withoutSpan(f), undefined)))}
+          </div>
+        ),
+      )}
     </>
   );
 }
 
+/** Whether any of `fields` is required now: a joined row draws one `*`. */
+function useAnyRequired(fields: FormField[], namePrefix: string, index?: number) {
+  const watchFields = useMemo(
+    () => [
+      ...new Set(fields.flatMap(f => extractConditionFields(f.requiredWhen, namePrefix, index))),
+    ],
+    [fields, namePrefix, index],
+  );
+  const watched = useWatch({ name: watchFields });
+  const values = useMemo(() => {
+    const obj: Record<string, unknown> = {};
+    watchFields.forEach((name, i) =>
+      setNestedValue(obj, name, Array.isArray(watched) ? watched[i] : watched),
+    );
+    return obj;
+  }, [watchFields, watched]);
+  return fields.some(
+    f =>
+      f.required ||
+      (f.requiredWhen && evaluateConditions(f.requiredWhen, values, namePrefix, index)),
+  );
+}
+
+/**
+ * Compact: the controls of a group of fields (`compactPairs.ts`) in one label-left pair, one label
+ * and the controls side by side. The label is the fields' own labels joined; each control is still
+ * named by its own label for assistive tech. It takes no row break from the Standard span runs
+ * (`rowGroupRoles`): Compact decides its width itself (a half, or a whole row when narrow).
+ */
+function JoinedRow({
+  fields,
+  separator,
+  namePrefix = '',
+  index,
+  children,
+}: {
+  fields: FormField[];
+  separator?: string;
+  namePrefix?: string;
+  index?: number;
+  children: ReactNode[];
+}) {
+  const labelId = useId();
+  const pageReadOnly = useFormReadOnly();
+  const required = useAnyRequired(fields, namePrefix, index);
+  return (
+    <FormFieldShell
+      name={fullFieldName(fields[0].name, namePrefix, index)}
+      label={fields.map(f => f.label).join(separator ? ` ${separator} ` : ' / ')}
+      labelId={labelId}
+      required={required}
+      read={pageReadOnly}
+      tall
+      // Three controls need a wider half than two (about 96px each from 72rem of sheet)
+      wide={fields.length > 2}
+    >
+      <div className="flex items-center gap-2">
+        {children.flatMap((child, k) =>
+          k > 0 && separator
+            ? [
+                <span key={`s${k}`} aria-hidden className="text-sm text-(--palette-ink-2)">
+                  {separator}
+                </span>,
+                child,
+              ]
+            : [child],
+        )}
+      </div>
+    </FormFieldShell>
+  );
+}
+
+const isFlowGroup = (item: FormFieldItem): item is FlowGroup => (item as FlowGroup).type === 'flow';
+const isBooleanChips = (item: FormFieldItem): item is BooleanChips =>
+  (item as BooleanChips).type === 'boolean-chips';
+const isLayoutItem = (item: FormFieldItem): item is FlowGroup | BooleanChips =>
+  isFlowGroup(item) || isBooleanChips(item);
+
+/** A boolean chip group (`booleanChips()`): the chips' booleans and caption, labelled like any field. */
+function BooleanChipsView({
+  group,
+  namePrefix = '',
+  index,
+}: { group: BooleanChips } & Omit<FormFieldsProps, 'fields'>) {
+  const relabel = useContext(FieldLabelContext);
+  const label = relabel
+    ? relabel({ type: 'text-input', name: group.name, label: group.label }).label
+    : group.label;
+  const chips = group.items.map(f => ({
+    name: fullFieldName(f.name, namePrefix, index),
+    label:
+      (relabel ? relabel(f.chip?.labelKey ? { ...f, name: f.chip.labelKey } : f) : f).label ??
+      f.name,
+    chip: f.chip,
+  }));
+  return (
+    <BooleanChipsField
+      name={fullFieldName(group.name, namePrefix, index)}
+      label={label ?? group.label}
+      chips={chips}
+    />
+  );
+}
+
+/**
+ * Renders field configs (see `PlainFields`). Flow groups and boolean chip groups among them split
+ * the list: the fields between two of them are drawn as one list, a flow group as its toggle row
+ * with its follow-ups, a chip group as its own row.
+ */
+export function FormFields(props: FormFieldsProps) {
+  const { fields, ...rest } = props;
+  if (!fields.some(isLayoutItem)) return <PlainFields fields={fields as FormField[]} {...rest} />;
+  const parts: ReactNode[] = [];
+  let chunk: FormField[] = [];
+  const flush = () => {
+    if (chunk.length) parts.push(<PlainFields key={`f${parts.length}`} fields={chunk} {...rest} />);
+    chunk = [];
+  };
+  fields.forEach(item => {
+    if (isLayoutItem(item)) {
+      flush();
+      parts.push(
+        isFlowGroup(item) ? (
+          <FlowGroupView key={`g${parts.length}`} group={item} {...rest} />
+        ) : (
+          <BooleanChipsView key={`c${parts.length}`} group={item} {...rest} />
+        ),
+      );
+    } else chunk.push(item);
+  });
+  flush();
+  return <>{parts}</>;
+}
+
+/** Whether any of `fields` shows now: the block under a toggle row is drawn only then. */
+function useAnyVisible(fields: FormField[], namePrefix: string, index?: number) {
+  const watchFields = useMemo(() => {
+    const names: string[] = [];
+    for (const f of fields) {
+      names.push(...extractConditionFields(f.showWhen, namePrefix, index));
+      names.push(...extractConditionFields(f.hideWhen, namePrefix, index));
+    }
+    return [...new Set(names)];
+  }, [fields, namePrefix, index]);
+  const watched = useWatch({ name: watchFields });
+  const values = useMemo(() => {
+    const obj: Record<string, unknown> = {};
+    watchFields.forEach((name, i) =>
+      setNestedValue(obj, name, Array.isArray(watched) ? watched[i] : watched),
+    );
+    return obj;
+  }, [watchFields, watched]);
+  return fields.some(f => {
+    if (f.hide) return false;
+    let visible = true;
+    if (f.showWhen) visible = evaluateConditions(f.showWhen, values, namePrefix, index);
+    else if (f.hideWhen) visible = !evaluateConditions(f.hideWhen, values, namePrefix, index);
+    return visible;
+  });
+}
+
+/**
+ * A row of yes/no toggles at their own width (`flex-wrap`), and under it the fields they open in a
+ * plain rows, drawn only while one of them shows. Compact keeps its label/value pairs: the same
+ * fields in the same order.
+ */
+function FlowGroupView({
+  group,
+  namePrefix = '',
+  index,
+  ...rest
+}: { group: FlowGroup } & Omit<FormFieldsProps, 'fields'>) {
+  const layout = useFormLayout();
+  const inSectionBody = useContext(FormSectionBodyContext);
+  const standard = layout === 'standard' && inSectionBody;
+  const contextSchema = useFormSchema();
+  // A chip group's "other" text is drawn in its chip, and only when both are in one list: a
+  // companion listed under the row joins the row's list (where it draws nothing), not the block.
+  const { folded } = pairOthers(
+    [...group.row, ...group.follow],
+    (rest.schema ?? contextSchema ?? undefined) as FieldSchema,
+    namePrefix,
+    index,
+  );
+  const rowFields = [...group.row, ...group.follow.filter(f => folded.has(f.name))];
+  const followFields = group.follow.filter(f => !folded.has(f.name));
+  const anyFollow = useAnyVisible(followFields, namePrefix, index);
+
+  if (!standard)
+    return (
+      <PlainFields
+        fields={[...group.row, ...group.follow]}
+        namePrefix={namePrefix}
+        index={index}
+        {...rest}
+      />
+    );
+
+  const inRow = rowFields.map(f => ({
+    ...f,
+    wrapperClassName: clsx(
+      (f.wrapperClassName ?? '').replace(PAIR_SPAN, ' ').trim(),
+      group.rowWidths?.[f.name],
+    ),
+    narrowSpan: undefined,
+  }));
+  const inBlock = asRemarks(followFields);
+  return (
+    // The row and what it opens are spaced like any two rows of the section.
+    <div className="col-span-12 grid gap-y-[1.2857rem]">
+      <div className="flex flex-wrap items-start gap-x-10 gap-y-4">
+        <PlainFields fields={inRow} namePrefix={namePrefix} index={index} {...rest} />
+      </div>
+      {/* Always mounted: a hidden field clears itself on the change, and an unmounted one cannot. */}
+      <div
+        data-flow-follow={anyFollow ? '' : undefined}
+        className={clsx(
+          'grid grid-cols-12 gap-x-[1.1429rem] gap-y-[1.2857rem]',
+          !anyFollow && 'hidden',
+          // The section body's quarter/third fallback, for the narrow fields under the row.
+          '@max-[56rem]/form-shell:[&>.col-span-3]:col-span-6 @max-[56rem]/form-shell:[&>.col-span-4]:col-span-6',
+        )}
+      >
+        <PlainFields fields={inBlock} namePrefix={namePrefix} index={index} {...rest} />
+      </div>
+    </div>
+  );
+}
+
+/** A long remark (the 4,000-character ones) opens four lines tall, so a paragraph shows without scrolling inside the box. */
+const asRemarks = (fields: FormField[]) =>
+  fields.map(f =>
+    f.type === 'textarea' && f.rows === undefined && (f.maxLength ?? 4000) >= 1000
+      ? { ...f, rows: 4 }
+      : f,
+  );
+
+/** A `col-span-*` (or start/end) class, at any breakpoint: a pair's own grid decides the widths. */
+const PAIR_SPAN = /(?:^|\s)(?:[\w-]+:)*col-(?:span|start|end)-\S+/g;
+
 /** Compact keeps these on a pair of their own: textareas and multi-input rows. */
 const FULL_PAIR_TYPES = new Set<FormField['type']>(['textarea', 'location-selector']);
-
-/** A chip group of at most this many options is short enough to share a Compact row. */
-const SHORT_CHOICE_GROUP = 4;
 
 /**
  * Types whose label FormFields draws (in `FormFieldShell`). A single control is labelled by
@@ -357,6 +688,7 @@ function FieldRenderer({
   rowGroup,
   other,
   folded,
+  bare,
 }: FieldRendererProps) {
   // Check visibility, disabled, and required state
   const {
@@ -366,16 +698,16 @@ function FieldRenderer({
   } = useFieldState({ field, namePrefix, index });
   const isDisabled = fieldDisabled || (globalDisabled ?? false);
   const pageReadOnly = useFormReadOnly();
-  const { setValue, getValues } = useFormContext();
+  const { t: tUnit } = useTranslation('common');
+  const { setValue, getValues, watch } = useFormContext();
   const uid = useId();
   const controlId = `${uid}-control`;
   const labelId = `${uid}-label`;
 
-  // Compact: a short chip group takes half a row, a longer one a row of its own.
   const choice = field.type === 'radio-group' || field.type === 'checkbox-group' ? field : null;
-  const groupOptions = useParametersByGroup(choice?.group ?? '');
-  const longChoiceGroup =
-    !!choice && (choice.options?.length ?? groupOptions.length) > SHORT_CHOICE_GROUP;
+  // A chip, checkbox or radio group takes a row of its own, unless the form keeps its span
+  // (`keepSpan`: the house number and its status chips stay side by side).
+  const choiceGroup = !!choice && !choice.keepSpan;
 
   const filterWatchValues = useFilterWatchValues(
     field.type === 'dropdown' ? (field as any).filterOptions : undefined,
@@ -490,6 +822,27 @@ function FieldRenderer({
     setValue,
   ]);
 
+  // Fill this field when the appraiser picks a value of `defaultWhen.field`. RHF tells a user's
+  // change (`type: 'change'`, from the control's onChange) from a reset or a setValue (no type), so
+  // opening a record, which resets, never overwrites what it holds.
+  const defaultWhen = field.defaultWhen;
+  const defaultSource = defaultWhen && fullFieldName(defaultWhen.field, namePrefix, index);
+  useEffect(() => {
+    if (!defaultWhen || !defaultSource) return;
+    const subscription = watch((values, info) => {
+      if (info.type !== 'change' || info.name !== defaultSource) return;
+      const picked = getNestedValue(values, defaultSource);
+      const hit = defaultWhen.cases.find(c => c.is === picked);
+      // After the change has finished emitting: set from inside it, the box kept showing the old
+      // figure until the next render.
+      if (hit)
+        queueMicrotask(() =>
+          setValue(name, hit.value, { shouldDirty: true, shouldValidate: true }),
+        );
+    });
+    return () => subscription.unsubscribe();
+  }, [defaultWhen, defaultSource, name, watch, setValue]);
+
   // Clear field value when hidden by showWhen/hideWhen (clearOnHide defaults to true)
   const prevVisibleRef = useRef<boolean | null>(null);
 
@@ -550,10 +903,13 @@ function FieldRenderer({
     clearOnEnable: _coe,
     enabledValue: _ev,
     clearOnHide: _coh,
+    defaultWhen: _dfw,
     hiddenValue: _hv,
     formatPattern: _fp,
     formatPatternMessage: _fpm,
     help: _help,
+    hint,
+    disabledHint,
     inputMask,
     placeholder: fieldPlaceholder,
     ...passedField
@@ -571,6 +927,10 @@ function FieldRenderer({
   const labelAddon = field.help ? (
     <FieldHelp config={field.help} namePrefix={namePrefix} index={index} />
   ) : undefined;
+
+  // The helper line under the control; while the field's own rule locks it, the lock's reason.
+  const locked = fieldDisabled && !!disabledHint;
+  const helperLine = locked ? disabledHint : hint;
 
   // Render the appropriate field component
   const renderFieldComponent = () => {
@@ -593,6 +953,7 @@ function FieldRenderer({
             {...textProps}
             id={controlId}
             label={undefined}
+            {...(bare && { 'aria-label': field.label })}
             inputMask={inputMask}
             error={error?.message}
           />
@@ -607,6 +968,12 @@ function FieldRenderer({
           required: isRequired,
           disabled: isDisabled,
           ...(fieldPlaceholder && { placeholder: fieldPlaceholder }),
+          // A unit key ('m', 'sqm', 'baht'): the unit in the user's language, or the text as given.
+          ...(passedField.suffix && {
+            suffix: tUnit(`units.${passedField.suffix}` as never, {
+              defaultValue: passedField.suffix,
+            }) as string,
+          }),
         };
         return (
           <NumberInput
@@ -615,6 +982,7 @@ function FieldRenderer({
             {...numberProps}
             id={controlId}
             label={undefined}
+            {...(bare && { 'aria-label': field.label })}
             error={error?.message}
           />
         );
@@ -696,6 +1064,7 @@ function FieldRenderer({
             {...boolToggleRest}
             name={name}
             disabled={isDisabled}
+            locked={locked}
             label={undefined}
           />
         );
@@ -889,21 +1258,8 @@ function FieldRenderer({
   // disabled on an editable page keeps its control.
   // data-field is how scrollToField locates this field: a [name=...] selector cannot be used
   // because Dropdown never forwards `name` to the DOM.
-  return (
-    <FormFieldShell
-      name={name}
-      label={labelText}
-      labelFor={!read && LABEL_FOR_TYPES.has(passedField.type) ? controlId : undefined}
-      labelId={!read && LABELLED_BY_TYPES.has(passedField.type) ? labelId : undefined}
-      required={isRequired}
-      addon={labelAddon}
-      wrapperClassName={field.wrapperClassName}
-      full={FULL_PAIR_TYPES.has(passedField.type) || longChoiceGroup}
-      rowGroup={rowGroup}
-      chips={isChipGroup(field)}
-      narrowSpan={field.narrowSpan}
-      read={read}
-    >
+  const content = (
+    <>
       {read ? (
         <FormReadValue
           field={field}
@@ -915,6 +1271,48 @@ function FieldRenderer({
       ) : (
         renderFieldComponent()
       )}
+      {!read &&
+        helperLine &&
+        (locked ? (
+          // Why it is locked: the accent line with a lock, not the grey helper.
+          <p className="mt-1 flex items-start gap-1.5 text-xs text-(--palette-accent-ink)">
+            <Icon name="lock" style="solid" className="mt-0.5 shrink-0" />
+            {helperLine}
+          </p>
+        ) : (
+          <p className={`mt-1 ${HELPER_TEXT}`}>{helperLine}</p>
+        ))}
+    </>
+  );
+  // A joined row's control: the row's shell draws the label; the `data-field` is what a form
+  // error on this field scrolls to.
+  if (bare)
+    return (
+      <div data-field={name} className="min-w-0 flex-1">
+        <ValidationLabelContext.Provider value={field.label}>
+          {content}
+        </ValidationLabelContext.Provider>
+      </div>
+    );
+  return (
+    <FormFieldShell
+      name={name}
+      label={labelText}
+      labelFor={!read && LABEL_FOR_TYPES.has(passedField.type) ? controlId : undefined}
+      labelId={!read && LABELLED_BY_TYPES.has(passedField.type) ? labelId : undefined}
+      required={isRequired}
+      addon={labelAddon}
+      wrapperClassName={field.wrapperClassName}
+      full={
+        FULL_PAIR_TYPES.has(passedField.type) || choiceGroup || COMPACT_FULL_ROW.has(field.name)
+      }
+      tall={FULL_PAIR_TYPES.has(passedField.type) || !!choice}
+      rowGroup={rowGroup}
+      chips={isChipGroup(field)}
+      narrowSpan={field.narrowSpan}
+      read={read}
+    >
+      {content}
     </FormFieldShell>
   );
 }

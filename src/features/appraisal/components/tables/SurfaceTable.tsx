@@ -6,7 +6,7 @@ import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import {
   FormTable,
   FormTableDash,
-  FormTableHeading,
+  FormTableBlock,
   FormTableRowActions,
   type FormTableColumn,
 } from '@/shared/components/form';
@@ -252,19 +252,26 @@ const SurfaceTable = ({ name, showTitle = true }: SurfaceTableProps) => {
     <div className="col-span-12">
       {/* data-field: scroll target for array-level errors (see form/utils.ts). */}
       <div data-field={name}>
-        {showTitle && <FormTableHeading>{t('surfaceTable.sectionLabel')}</FormTableHeading>}
-        <FormTable
-          columns={columns}
-          rows={items}
-          rowKey={item => item.id}
-          minWidth={51.4286}
-          rowNote={({ row, index }) => {
-            const warning = warningFor(row, index);
-            return warning && <span className="text-xs text-(--palette-warn)">{warning}</span>;
-          }}
-          add={[{ label: t('surfaceTable.addFloor'), onClick: handleAdd }]}
-          empty={{ icon: 'layer-group', message: t('surfaceTable.empty') }}
-        />
+        <FormTableBlock
+          title={showTitle ? t('surfaceTable.sectionLabel') : undefined}
+          // Compact: the label column, also where the section head names the table already
+          compactTitle={t('surfaceTable.sectionLabel')}
+          // its 720px minimum does not fit the control column of a narrow sheet
+          wide
+        >
+          <FormTable
+            columns={columns}
+            rows={items}
+            rowKey={item => item.id}
+            minWidth={51.4286}
+            rowNote={({ row, index }) => {
+              const warning = warningFor(row, index);
+              return warning && <span className="text-xs text-(--palette-warn)">{warning}</span>;
+            }}
+            add={[{ label: t('surfaceTable.addFloor'), onClick: handleAdd }]}
+            empty={{ icon: 'layer-group', message: t('surfaceTable.empty') }}
+          />
+        </FormTableBlock>
       </div>
     </div>
   );

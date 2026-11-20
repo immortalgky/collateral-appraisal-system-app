@@ -25,7 +25,7 @@ const SHEET = {
  * ```tsx
  * <FormSheet>
  *   <FormSection title={t('...')} icon="building">
- *     <FormFields fields={...} />      // 12-column grid; anything else needs `col-span-12`
+ *     <FormFields fields={...} />      // Standard: 12-column grid, anything else needs `col-span-12`
  *   </FormSection>
  * </FormSheet>
  * ```
@@ -60,10 +60,12 @@ const SECTION = {
   standard: {
     section: 'rounded-section border border-(--palette-line) bg-(--palette-surface) shadow-sm',
     header: 'flex items-center gap-2 border-b border-(--palette-line-soft) px-4 py-[0.6429rem]',
-    // Spans 3 and 4 are fields a quarter and a third wide; below the form shell's breakpoint
-    // (84.2857rem, the rail's) at most two fit a row. Fields of a run that makes one row
-    // (`data-keep-row`: address 6+3+3, latitude/longitude 6+6) keep their spans down to 48rem.
-    body: 'grid grid-cols-12 gap-x-[1.1429rem] gap-y-[1.2857rem] px-4 pt-[0.8571rem] pb-4 @max-[84.2857rem]/form-shell:[&>.col-span-3:not([data-keep-row])]:col-span-6 @max-[84.2857rem]/form-shell:[&>.col-span-4:not([data-keep-row])]:col-span-6 @max-[48rem]/form-shell:[&>.col-span-3]:col-span-6 @max-[48rem]/form-shell:[&>.col-span-4]:col-span-6',
+    // Spans 3 and 4 are fields a quarter and a third wide; below 56rem (784px, a quarter field is
+    // then still ~170px) at most two fit a row. This is not the rail's breakpoint (84.2857rem,
+    // formShellWidth.ts): with the right-hand panel open the shell is ~1055px, under the rail's but
+    // wide enough for the designed rows. Fields of a run that makes one row (`data-keep-row`:
+    // address 6+3+3, latitude/longitude 6+6) keep their spans down to 48rem.
+    body: 'grid grid-cols-12 gap-x-[1.1429rem] gap-y-[1.2857rem] px-4 pt-[0.8571rem] pb-4 @max-[56rem]/form-shell:[&>.col-span-3:not([data-keep-row])]:col-span-6 @max-[56rem]/form-shell:[&>.col-span-4:not([data-keep-row])]:col-span-6 @max-[48rem]/form-shell:[&>.col-span-3]:col-span-6 @max-[48rem]/form-shell:[&>.col-span-4]:col-span-6',
   },
   compact: {
     section: 'first:[&>header]:border-t-0',
@@ -72,7 +74,17 @@ const SECTION = {
     // The pairs draw `border-l` and `border-b`. Shifting the body left by the border hides the left
     // edge under the sheet's own, so only the divider between two pairs shows; the bottom one
     // slides under the next band's top border.
-    body: '-mb-px -ml-px grid grid-cols-12',
+    // A wrapping flex row, not a grid: a pair is `basis-full` or, from 60rem, a growing half, so a half
+    // with no partner fills the row. Anything else in the body (a table, a block) is a whole row.
+    body: clsx(
+      '-mb-px -ml-px flex flex-wrap [&>:not([data-half])]:basis-full [&>*]:min-w-0 @[60rem]/sheet:[&>[data-row-break]]:block',
+      // A 12-column grid of a form's own around fields (a card of fields, the growth-rate rows) lays
+      // out the same way: wrapping flex rows with no gaps, a lone half filling its row. Full literals
+      // so Tailwind sees them.
+      '[&_.grid-cols-12:has(>[data-field])]:flex [&_.grid-cols-12:has(>[data-field])]:flex-wrap [&_.grid-cols-12:has(>[data-field])]:gap-0',
+      '[&_.grid-cols-12:has(>[data-field])>:not([data-half])]:basis-full [&_.grid-cols-12:has(>[data-field])>*]:min-w-0',
+      '@[60rem]/sheet:[&_.grid-cols-12:has(>[data-field])>[data-row-break]]:block',
+    ),
   },
 };
 

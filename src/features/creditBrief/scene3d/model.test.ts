@@ -63,7 +63,7 @@ const asset = (o: Partial<BriefAsset> = {}): BriefAsset => ({
   pondDepth: null,
   farFromElectricity: null,
   electricityDistance: null,
-  accessRoadWidth: null,
+  carriagewayWidth: null,
   roadSurfaceType: null,
   boundaries: [],
   isLandlocked: null,
@@ -373,7 +373,7 @@ describe('neighbours and the access road', () => {
   ];
 
   it('picks the road side as the access road and uses its recorded width', () => {
-    const spec = landSpec([land({ boundaries, accessRoadWidth: 8, roadSurfaceType: '05' })]);
+    const spec = landSpec([land({ boundaries, carriagewayWidth: 8, roadSurfaceType: '05' })]);
     expect(spec.roadSide).toBe('south');
     const south = spec.neighbours.find(n => n.dir === 'south');
     expect(south).toMatchObject({ kind: 'road', isAccess: true, thickness: 8, surface: '05' });
@@ -387,7 +387,7 @@ describe('neighbours and the access road', () => {
           { direction: 'east', adjacentArea: 'ถนน B', distance: 0 },
           { direction: 'west', adjacentArea: null, distance: 5 },
         ],
-        accessRoadWidth: 12,
+        carriagewayWidth: 12,
       }),
     ]);
     expect(spec.neighbours.filter(n => !n.assumed).map(n => n.dir)).toEqual(['south', 'east']);
@@ -501,17 +501,17 @@ describe('legal flags across parcels', () => {
   it('shows a flag on any land property, prefixed with its parcel when there are several', () => {
     const spec = landSpec([
       land({ title: '1234', landShapeType: '04' }),
-      land({ sequenceNumber: 2, title: null, isEncroached: true, isExpropriated: true }),
+      land({ sequenceNumber: 2, title: null, isEncroached: true, isInExpropriationLine: true }),
     ]);
     expect(spec.legal?.sub).toBe(
-      'values.parcelNumber{"n":2}: legal.expropriated, legal.encroached',
+      'values.parcelNumber{"n":2}: legal.inExpropriationLine, legal.encroached',
     );
     expect(spec.parcel.info.rows.find(r => r.label === 'rows.legal')?.value).toBe(spec.legal?.sub);
   });
 
   it('numbers an untitled parcel by its place in the list, not by its sequence number', () => {
     const spec = landSpec([
-      land({ sequenceNumber: 7, isLandlocked: true }),
+      land({ sequenceNumber: 7, landAccessibilityType: '02' }),
       land({ sequenceNumber: 9, isEncroached: true }),
     ]);
     expect(spec.legal?.sub).toBe(
@@ -522,11 +522,11 @@ describe('legal flags across parcels', () => {
   it('prefixes with the deed number when the parcel has one, and keeps one parcel unprefixed', () => {
     const deed = (titleNumber: string) => [{ titleNumber }] as unknown as BriefAsset['landTitles'];
     const two = landSpec([
-      land({ landTitles: deed('1234'), isLandlocked: true }),
+      land({ landTitles: deed('1234'), landAccessibilityType: '02' }),
       land({ landTitles: deed('5678') }),
     ]);
     expect(two.legal?.sub).toBe('1234: legal.landlocked');
-    const one = landSpec([land({ isLandlocked: true })]);
+    const one = landSpec([land({ landAccessibilityType: '02' })]);
     expect(one.legal?.sub).toBe('legal.landlocked');
   });
 
@@ -765,10 +765,32 @@ describe('pond, land use, legal flags, machines', () => {
   it('lists only the legal flags that are on', () => {
     expect(landSpec([land()]).legal).toBeNull();
     const spec = landSpec([
-      land({ isLandlocked: true, isEncroached: true, isExpropriated: false }),
+      land({ landAccessibilityType: '02', isEncroached: true, isInExpropriationLine: false }),
     ]);
     expect(spec.legal?.sub).toBe('legal.landlocked · legal.encroached');
     expect(spec.legal?.tone).toBe('danger');
+  });
+
+  it('reads landlocked from the land accessibility "cannot be reached" (02), and from the old flag only when there is no answer', () => {
+    const sub = (over: Record<string, unknown>) =>
+      landSpec([land(over as never)]).legal?.sub ?? null;
+    expect(sub({ landAccessibilityType: '02' })).toBe('legal.landlocked');
+    // An answer wins over the old flag.
+    expect(sub({ landAccessibilityType: '01', isLandlocked: true })).toBeNull();
+    expect(sub({ landAccessibilityType: '03', isLandlocked: true })).toBeNull();
+    // No answer: the old flag still answers.
+    expect(sub({ landAccessibilityType: null, isLandlocked: true })).toBe('legal.landlocked');
+    expect(sub({ landAccessibilityType: null, isLandlocked: false })).toBeNull();
+  });
+
+  it('keeps the condo legal flags on the old landlocked flag: a unit has no accessibility (null)', () => {
+    const sub = (over: Record<string, unknown>) =>
+      condoSpec([condoUnit({ landAccessibilityType: null, ...over } as never)]).legal?.sub ?? null;
+    expect(sub({ isLandlocked: true })).toBe('legal.landlocked');
+    expect(sub({ isLandlocked: false })).toBeNull();
+    expect(sub({ isLandlocked: true, isForestBoundary: true })).toBe(
+      'legal.landlocked · legal.forestBoundary',
+    );
   });
 
   it('puts machines in the first factory or warehouse, and says so when there is none', () => {
@@ -800,16 +822,6 @@ describe('pond, land use, legal flags, machines', () => {
     expect(spec.buildings[spec.machineHost].type).toBe('10');
     expect(spec.machines?.callout.sub).toBe('callouts.machinesNoPosition');
   });
-
-  it('reads "far from electricity" the right way round', () => {
-    const rows = (far: boolean | null) =>
-      landSpec([land({ farFromElectricity: far, electricityDistance: 40 })]).parcel.info.rows.find(
-        r => r.label === 'rows.electricity',
-      )?.value;
-    expect(rows(true)).toBe('values.farElectricity{"distance":"40"}');
-    expect(rows(false)).toBe('values.notFar');
-    expect(rows(null)).toBe('—');
-  });
 });
 
 describe('zero means not recorded', () => {
@@ -834,7 +846,7 @@ describe('zero means not recorded', () => {
   it('uses the default road width and says so for a 0 access road width', () => {
     const spec = landSpec([
       land({
-        accessRoadWidth: 0,
+        carriagewayWidth: 0,
         boundaries: [{ direction: 'south', adjacentArea: 'ถนน', distance: 0 }],
       }),
     ]);
@@ -844,12 +856,14 @@ describe('zero means not recorded', () => {
     );
   });
 
-  it('shows 0 soil level and 0 electricity distance as not recorded', () => {
-    const spec = landSpec([
-      land({ soilLevel: 0, farFromElectricity: true, electricityDistance: 0 }),
-    ]);
+  it('shows the soil level in metres, as entered, with no scaling', () => {
+    const spec = landSpec([land({ soilLevel: 1.5 })]);
+    expect(row(spec, 'rows.soilLevel')).toBe('1.5 units.m');
+  });
+
+  it('shows a 0 soil level as not recorded', () => {
+    const spec = landSpec([land({ soilLevel: 0 })]);
     expect(row(spec, 'rows.soilLevel')).toBe('—');
-    expect(row(spec, 'rows.electricity')).toBe('values.farNoDistance');
   });
 
   it('treats a 0 building area and a 0 usable area as not recorded', () => {
@@ -940,10 +954,10 @@ describe('condo', () => {
   });
 
   it('builds the same priority-0 legal callout and hover row as a land from the condo flags', () => {
-    const spec = condoSpec([condoUnit({ isExpropriated: true, isForestBoundary: true })]);
+    const spec = condoSpec([condoUnit({ isInExpropriationLine: true, isForestBoundary: true })]);
     expect(spec.legal).toMatchObject({
       title: 'callouts.legal',
-      sub: 'legal.expropriated · legal.forestBoundary',
+      sub: 'legal.inExpropriationLine · legal.forestBoundary',
       tone: 'danger',
       priority: 0,
     });
@@ -1636,7 +1650,7 @@ describe('horizontal (LB) project: a village', () => {
         land: {
           landShapeType: null,
           roadFrontage: null,
-          accessRoadWidth: null,
+          carriagewayWidth: null,
           roadSurfaceType: null,
           landUseType: [],
           isLandlocked: true,
@@ -1653,11 +1667,35 @@ describe('horizontal (LB) project: a village', () => {
     expect(spec.has).toMatchObject({ pool: true, club: true, garden: false });
   });
 
+  it('reads the village landlocked flag from the accessibility OR the toggle: an explicit Yes is never overridden', () => {
+    const land = (over: Record<string, unknown>) => ({
+      landShapeType: null,
+      roadFrontage: null,
+      carriagewayWidth: null,
+      roadSurfaceType: null,
+      landUseType: [],
+      isLandlocked: null,
+      isExpropriated: null,
+      isInExpropriationLine: null,
+      isEncroached: null,
+      isForestBoundary: null,
+      ...over,
+    });
+    const legal = (over: Record<string, unknown>) =>
+      village(lb(3, { land: land(over) } as never)).legal;
+    expect(legal({ landAccessibilityType: '02' })).toMatchObject({ priority: 0, tone: 'danger' });
+    // A block project land asks both, so the toggle's Yes stands even beside a reachable accessibility.
+    expect(legal({ landAccessibilityType: '01', isLandlocked: true })).not.toBeNull();
+    expect(legal({ landAccessibilityType: '01', isLandlocked: false })).toBeNull();
+    expect(legal({ landAccessibilityType: null, isLandlocked: true })).not.toBeNull();
+    expect(legal({ landAccessibilityType: null, isLandlocked: false })).toBeNull();
+  });
+
   it('draws the deed rectangle when it holds the layout, and a dashed one around the village otherwise', () => {
     const land = {
       landShapeType: '05',
       roadFrontage: 300,
-      accessRoadWidth: null,
+      carriagewayWidth: null,
       roadSurfaceType: null,
       landUseType: [],
       isLandlocked: null,
@@ -1803,7 +1841,7 @@ describe('horizontal (LB) project: a village', () => {
         const land = {
           landShapeType: '04',
           roadFrontage: null,
-          accessRoadWidth: null,
+          carriagewayWidth: null,
           roadSurfaceType: null,
           landUseType: [],
           isLandlocked: null,
@@ -1841,7 +1879,7 @@ describe('horizontal (LB) project: a village', () => {
       land: {
         landShapeType: null,
         roadFrontage: 0,
-        accessRoadWidth: 0,
+        carriagewayWidth: 0,
         roadSurfaceType: null,
         landUseType: [],
         isLandlocked: false,
@@ -2027,7 +2065,7 @@ describe('hover rows state the recorded storey count, not the cap', () => {
 describe('a field that arrives as null where it used to be 0 gives the same scene', () => {
   const same = <T>(build: (v: number | null) => T) => expect(build(null)).toEqual(build(0));
 
-  it.each(['roadFrontage', 'pondArea', 'pondDepth', 'accessRoadWidth'] as const)(
+  it.each(['roadFrontage', 'pondArea', 'pondDepth', 'carriagewayWidth'] as const)(
     'land %s',
     field => {
       same(v =>
@@ -2043,7 +2081,7 @@ describe('a field that arrives as null where it used to be 0 gives the same scen
     expect(landSpec([land({ pondArea: null, pondDepth: 2 })]).pond).toBeNull();
   });
 
-  it.each(['usableArea', 'accessRoadWidth'] as const)('condo %s', field => {
+  it.each(['usableArea', 'carriagewayWidth'] as const)('condo %s', field => {
     same(v => condoSpec([condoUnit({ [field]: v })]));
   });
 
@@ -2104,14 +2142,14 @@ describe('a field that arrives as null where it used to be 0 gives the same scen
     });
   });
 
-  it.each(['roadFrontage', 'accessRoadWidth'] as const)('project land %s', field => {
+  it.each(['roadFrontage', 'carriagewayWidth'] as const)('project land %s', field => {
     same(v => {
       const project = {
         ...baseProject(),
         landAreaRai: 10,
         unitCount: 1,
         plots: [{ plotNumber: '1', houseNumber: '1', isSold: false }],
-        land: { landShapeType: '05', roadFrontage: 30, accessRoadWidth: 6, [field]: v },
+        land: { landShapeType: '05', roadFrontage: 30, carriagewayWidth: 6, [field]: v },
       } as unknown as BriefProject;
       return buildSceneSpec([], project, env);
     });
@@ -2222,13 +2260,11 @@ describe('recorded figures are not rounded', () => {
     nf: (n, digits = 0) => n.toLocaleString('en-US', { maximumFractionDigits: digits }),
   };
 
-  it('prints a road width and an electricity distance to two decimals, on every surface', () => {
+  it('prints a road width to two decimals, on every surface', () => {
     const parcel = buildSceneSpec(
       [
         land({
-          accessRoadWidth: 8.25,
-          farFromElectricity: true,
-          electricityDistance: 12.5,
+          carriagewayWidth: 8.25,
           boundaries: [
             { direction: 'north', adjacentArea: 'ถนนซอย 5', distance: 1, isAccess: true },
           ] as never,
@@ -2239,9 +2275,8 @@ describe('recorded figures are not rounded', () => {
     ) as LandSceneSpec;
     const text = JSON.stringify([parcel.parcel.info, parcel.neighbours.map(n => n.info)]);
     expect(text).toContain('8.25');
-    expect(text).toContain('12.5');
     const condo = buildSceneSpec(
-      [condoUnit({ accessRoadWidth: 8.25 })],
+      [condoUnit({ carriagewayWidth: 8.25 })],
       null,
       real,
     ) as CondoSceneSpec;

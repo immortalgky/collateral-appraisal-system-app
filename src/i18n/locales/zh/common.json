@@ -48,8 +48,28 @@
     "Appraise": "评估",
     "Not Appraised": "不评估",
     "isResidential": {
-      "Can": "是",
-      "Can not": "否"
+      "Can": "可",
+      "Can not": "不可"
+    },
+    "isEncroached": {
+      "No": "无",
+      "Yes": "有"
+    },
+    "isRentedOut": {
+      "No": "无",
+      "Yes": "有"
+    },
+    "isLeaseRegistered": {
+      "Not Registered": "未登记",
+      "Registered": "已登记"
+    },
+    "isLeaseholdPledgeable": {
+      "Not Allowed": "不可",
+      "Allowed": "可"
+    },
+    "isAppraisable": {
+      "Exclude": "不计入",
+      "Include": "计入"
     }
   },
   "select": {
@@ -58,7 +78,6 @@
     "typeToSearch": "输入以搜索...",
     "noResults": "未找到结果",
     "clearSelection": "清除选择",
-    "other": "其他",
     "otherPlaceholder": "请注明",
     "clearOther": "清除并重新选择"
   },
@@ -304,5 +323,28 @@
   "collateralMaster": {
     "allTypes": "所有类型",
     "masterTitle": "{{type}}主数据"
+  },
+  "chips": {
+    "other": "其他",
+    "otherPlaceholder": "请注明其他...",
+    "otherEdit": "其他：{{text}}，编辑",
+    "otherRemove": "移除其他"
+  },
+  "units": {
+    "m": "米",
+    "sqm": "平方米",
+    "baht": "泰铢",
+    "bahtPerYear": "泰铢/年",
+    "year": "年",
+    "percent": "%",
+    "lane": "车道",
+    "side": "面",
+    "floor": "层",
+    "rai": "莱",
+    "ngan": "垠",
+    "sqwa": "平方哇",
+    "cm": "厘米",
+    "be": "佛历",
+    "machine": "台"
   }
 }

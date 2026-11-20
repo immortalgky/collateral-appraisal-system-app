@@ -4,11 +4,13 @@ import {
   createBuildingForm,
   createBuildingFormBase,
   createCondoForm,
+  createLandForm,
   createLandAndBuildingForm,
   createLandFormBase,
   createLeaseAgreementBuildingForm,
   createLeaseAgreementCondoForm,
   createLeaseAgreementLandAndBuildingForm,
+  createLeaseAgreementLandForm,
   createProjectLandForm,
 } from './form';
 
@@ -25,18 +27,48 @@ const shapeOf = (schema: z.ZodTypeAny): Record<string, z.ZodTypeAny> => {
   return (inner as z.ZodObject<z.ZodRawShape>).shape;
 };
 
-const building = ['buildingInsurancePrice', 'buildingCostValue'];
-const condo = ['totalBuildingArea'];
+const building = ['buildingInsurancePrice', 'buildingCostValue', 'notAppraisableReason'];
+const problems = ['hasOtherEnvironmentProblem', 'otherEnvironmentProblemRemark'];
+const surroundings = ['environmentType', 'environmentTypeOther'];
+// isExpropriated and its remark are no longer asked, but the record holds them: a save must send them back.
+const expropriation = ['isExpropriated', 'expropriationRemark'];
+// The decree, their remarks and the landlocked flag are asked in the Law & Regulation tab now.
+const lawTab = ['royalDecree', 'expropriationLineRemark', 'forestBoundaryRemark'];
+const land = [
+  ...surroundings,
+  ...problems,
+  ...expropriation,
+  ...lawTab,
+  'isLandlocked',
+  'landlockedRemark',
+  'landLocationRemark',
+  'evictionRemark',
+  'hasElectricity',
+  'electricityDistance',
+];
+const condo = [
+  'totalBuildingArea',
+  'roadPassInFrontOfLand',
+  'transportationAccessType',
+  'transportationAccessTypeOther',
+  'locationRemark',
+  'otherLegalLimitations',
+  ...expropriation,
+  ...lawTab,
+  ...problems,
+];
 
 describe('property form schemas keep what the record holds', () => {
   it.each([
+    ['land', createLandForm, land],
+    ['lease land', createLeaseAgreementLandForm, land],
     ['building', createBuildingForm, building],
     ['condo', createCondoForm, condo],
-    ['land and building', createLandAndBuildingForm, building],
+    ['land and building', createLandAndBuildingForm, [...building, ...land]],
     ['lease building', createLeaseAgreementBuildingForm, building],
     ['lease condo', createLeaseAgreementCondoForm, condo],
-    ['lease land and building', createLeaseAgreementLandAndBuildingForm, building],
-    ['project land', createProjectLandForm, ['encroachmentArea', 'landOffice']],
+    ['lease land and building', createLeaseAgreementLandAndBuildingForm, [...building, ...land]],
+    ['project land', createProjectLandForm, ['encroachmentArea', 'landOffice', ...surroundings]],
   ])('%s', (_name, schema, keys) => {
     expect(Object.keys(shapeOf(schema))).toEqual(expect.arrayContaining(keys));
   });

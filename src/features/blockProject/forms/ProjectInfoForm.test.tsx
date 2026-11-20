@@ -76,7 +76,8 @@ describe('ProjectInfoForm construction progress', () => {
     expect(fields).not.toContain('isUnderConstruction');
     expect(fields).not.toContain('constructionProgressPercent');
     expect(fields).toContain('unitForSaleCount');
-    // L keeps the license expiration date LB has.
+    // L keeps the license number and expiration date LB has.
+    expect(fields).toContain('licenseNumber');
     expect(fields).toContain('licenseExpirationDate');
   });
 });
