@@ -163,6 +163,7 @@ export const AppraisalSummarySchema = z.object({
   followupStaffId: z.string().nullable().optional(),
   followupStaffName: z.string().nullable().optional(),
   followupMethod: z.string().nullable().optional(),
+  feeId: z.string().nullable().optional(),
 });
 
 export type AppraisalSummaryDto = z.infer<typeof AppraisalSummarySchema>;

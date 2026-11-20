@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type {
   AddFeeItemRequestType,
@@ -32,8 +32,8 @@ export type AppraisalFee = Sent<
  * Get fees for an appraisal
  * GET /appraisals/{appraisalId}/fees
  */
-export const useGetAppraisalFees = (appraisalId: string) => {
-  return useQuery({
+export const appraisalFeesQueryOptions = (appraisalId: string) =>
+  queryOptions({
     queryKey: ['appraisal', appraisalId, 'fees'],
     queryFn: async (): Promise<AppraisalFee[]> => {
       const { data } = await axios.get(`/appraisals/${appraisalId}/fees`);
@@ -41,7 +41,9 @@ export const useGetAppraisalFees = (appraisalId: string) => {
     },
     enabled: !!appraisalId,
   });
-};
+
+export const useGetAppraisalFees = (appraisalId: string) =>
+  useQuery(appraisalFeesQueryOptions(appraisalId));
 
 /**
  * Create a new appraisal fee

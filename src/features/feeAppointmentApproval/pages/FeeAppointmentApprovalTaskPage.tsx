@@ -19,7 +19,7 @@ import {
 import type { FeeAppointmentApprovalLine } from '../types/feeAppointmentApproval';
 import { useFeeTypeLabel } from '@/features/appraisal/utils/useFeeTypeLabel';
 import { useGetAppraisalFees, useUpdateAppraisalFee } from '@/features/appraisal/api/fee';
-import { BANK_ABSORB_FEE_TYPES } from '@/features/appraisal/components/FeeInformationSection';
+import { BANK_ABSORB_FEE_TYPES } from '@/features/appraisal/utils/feePaymentRules';
 
 // ---- Helpers ----
 
