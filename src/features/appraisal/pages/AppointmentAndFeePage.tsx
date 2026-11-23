@@ -10,10 +10,6 @@ import { useAuthStore } from '@/features/auth/store';
 import AppointmentInfoCard from '../components/AppointmentInfoCard';
 import AppointmentHistoryDrawer from '../components/AppointmentHistoryDrawer';
 import RescheduleModal from '../components/RescheduleModal';
-import FeeInformationSection, {
-  BANK_ABSORB_FEE_TYPES,
-  FULL_BANK_ABSORB_FEE_TYPES,
-} from '../components/FeeInformationSection';
 import PaymentInformationSection from '../components/PaymentInformationSection';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import {
@@ -39,6 +35,8 @@ import {
 } from '../api/fee';
 import { useSubmitFeeAppointmentApproval } from '../api/feeAppointmentApprovalSubmit';
 import { deriveFeeApprovalState, buildApprovalSummaryParts } from '../utils/feeApprovalState';
+import { FULL_BANK_ABSORB_FEE_TYPES, nextAbsorbAmount } from '../utils/feePaymentRules';
+import FeeInformationSection from '../components/FeeInformationSection';
 
 /**
  * Appointment & Fee page for the appraisal workflow.
@@ -193,14 +191,10 @@ export default function AppointmentAndFeePage() {
   const handleUpdateFeePaymentType = async (value: string) => {
     if (!currentFee) return;
     try {
-      const wasFullAbsorb = FULL_BANK_ABSORB_FEE_TYPES.includes(currentFee.feePaymentType ?? '');
-      const bankAbsorbAmount = FULL_BANK_ABSORB_FEE_TYPES.includes(value)
-        ? (currentFee.totalFeeAfterVAT ?? 0)
-        : BANK_ABSORB_FEE_TYPES.includes(value)
-          ? wasFullAbsorb
-            ? 0
-            : (currentFee.bankAbsorbAmount ?? 0)
-          : 0;
+      const bankAbsorbAmount = nextAbsorbAmount(currentFee.feePaymentType ?? '', value, {
+        bankAbsorbAmount: currentFee.bankAbsorbAmount ?? 0,
+        totalFeeAfterVAT: currentFee.totalFeeAfterVAT ?? 0,
+      });
       await updateAppraisalFee.mutateAsync({
         appraisalId,
         feeId: currentFee.id ?? '',

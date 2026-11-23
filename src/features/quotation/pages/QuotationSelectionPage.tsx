@@ -24,6 +24,8 @@ import { SegmentGapsAlert } from '../components/SegmentBadges';
 import AdminShortlistPanel from '../components/AdminShortlistPanel';
 import NegotiationPanel from '../components/NegotiationPanel';
 import AppraisalReportListingTable from '../components/AppraisalReportListingTable';
+import WinnerFeeReview from '../components/winnerFee/WinnerFeeReview';
+import { useWinnerFeeDrafts } from '../hooks/useWinnerFeeDrafts';
 import InvitedCompaniesTable from '../components/InvitedCompaniesTable';
 import QuotationTrackingLog from '../components/QuotationTrackingLog';
 import FinalizeModal from '../components/FinalizeModal';
@@ -46,6 +48,7 @@ import { useAuthStore } from '@/features/auth/store';
 import { hasRoleOrPermission } from '@/shared/utils/accessControl';
 import SlideOverPanel from '@/shared/components/SlideOverPanel';
 import { AdminCompanyQuotationDetailContent } from './AdminCompanyQuotationDetailPage';
+import { Badge } from '@/shared/components';
 
 /**
  * Combined RM + Admin quotation page.
@@ -85,6 +88,7 @@ const QuotationSelectionPage = () => {
   const [requestNegotiation, setRequestNegotiation] = useState(false);
   const [negotiationNote, setNegotiationNote] = useState('');
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const feeDrafts = useWinnerFeeDrafts();
 
   // Admin finalize state
   const [isFinalizeOpen, setIsFinalizeOpen] = useState(false);
@@ -128,11 +132,23 @@ const QuotationSelectionPage = () => {
     setReason('');
     setRequestNegotiation(false);
     setNegotiationNote('');
+    feeDrafts.reset();
     setIsConfirmOpen(true);
   };
 
-  const handleConfirmPick = () => {
+  // Closing the dialog discards unsaved fee changes.
+  const closePickDialog = () => {
+    setIsConfirmOpen(false);
+    feeDrafts.reset();
+  };
+
+  const handleConfirmPick = async () => {
     if (!pickedId) return;
+    // Fee changes are saved first; the winner is only picked once they all went through.
+    if (!(await feeDrafts.saveAll())) {
+      toast.error(t('winnerFee.saveFailed'));
+      return;
+    }
     pick(
       {
         companyQuotationId: pickedId,
@@ -980,11 +996,38 @@ const QuotationSelectionPage = () => {
       {/* ─── Modals ───────────────────────────────────────────────────────────── */}
 
       {/* RM pick confirmation */}
-      <Modal
+      <SlideOverPanel
         isOpen={isConfirmOpen}
-        onClose={() => setIsConfirmOpen(false)}
+        onClose={closePickDialog}
         title={t('selectWinner.title')}
-        size="sm"
+        width="2xl"
+        footer={
+          <div className="flex items-center justify-end gap-3">
+            {Object.entries(feeDrafts.drafts).length > 0 && (
+              <Badge tone="yellow">{t('winnerFee.unsavedChanges')}</Badge>
+            )}
+            <Button
+              variant="outline"
+              onClick={closePickDialog}
+              disabled={isPickPending || feeDrafts.isSaving}
+            >
+              {t('common:actions.cancel')}
+            </Button>
+            <Button onClick={handleConfirmPick} disabled={isPickPending || feeDrafts.isSaving}>
+              {isPickPending || feeDrafts.isSaving ? (
+                <>
+                  <Icon name="spinner" style="solid" className="size-4 mr-2 animate-spin" />
+                  {t('selectWinner.selecting')}
+                </>
+              ) : (
+                <>
+                  <Icon name="crown" style="solid" className="size-4 mr-2" />
+                  {t('buttons.confirmSelection')}
+                </>
+              )}
+            </Button>
+          </div>
+        }
       >
         <div className="flex flex-col gap-4">
           <div className="p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg border border-indigo-100 dark:border-indigo-500/20 flex items-start gap-2">
@@ -1000,6 +1043,16 @@ const QuotationSelectionPage = () => {
               />
             </p>
           </div>
+
+          {pickedCompany && (
+            <WinnerFeeReview
+              appraisals={quotation.appraisals ?? []}
+              company={pickedCompany}
+              drafts={feeDrafts.drafts}
+              onDraftChange={feeDrafts.setDraft}
+              onReset={feeDrafts.reset}
+            />
+          )}
 
           {/* Request negotiation toggle */}
           <div className="flex flex-col gap-2 pt-1 border-t border-(--palette-line-soft)">
@@ -1044,31 +1097,8 @@ const QuotationSelectionPage = () => {
               </div>
             )}
           </div>
-
-          <div className="flex justify-end gap-3 pt-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsConfirmOpen(false)}
-              disabled={isPickPending}
-            >
-              {t('common:actions.cancel')}
-            </Button>
-            <Button onClick={handleConfirmPick} disabled={isPickPending}>
-              {isPickPending ? (
-                <>
-                  <Icon name="spinner" style="solid" className="size-4 mr-2 animate-spin" />
-                  {t('selectWinner.selecting')}
-                </>
-              ) : (
-                <>
-                  <Icon name="crown" style="solid" className="size-4 mr-2" />
-                  {t('buttons.confirmSelection')}
-                </>
-              )}
-            </Button>
-          </div>
         </div>
-      </Modal>
+      </SlideOverPanel>
 
       {/* Admin cancel confirmation */}
       <Modal
