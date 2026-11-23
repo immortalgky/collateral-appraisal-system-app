@@ -1010,7 +1010,7 @@ export function WQSScoringSection({ comparativeSurveys = [], template }: WQSScor
                   <tr>
                     <td className={clsx('bg-(--palette-surface)', leftColumnBody, bgGradient)}>
                       <div className={'flex flex-rows justify-left gap-2 items-center'}>
-                        <span>{t('wqs.scoringTable.adjustedOfferingPriceLabel')}</span>
+                        <span>{t('wqs.scoringTable.offeringPriceAdjustmentPct')}</span>
                         <span>{t('wqs.scoringTable.percentUnit')}</span>
                       </div>
                     </td>
@@ -1055,12 +1055,8 @@ export function WQSScoringSection({ comparativeSurveys = [], template }: WQSScor
                   </tr>
                   <tr>
                     <td className={clsx('bg-(--palette-surface)', leftColumnBody, bgGradient)}>
-                      {/* The widest cell in this column once Thai — two spans plus the gap-2
-                    between them, which is what sets the content-sized ปัจจัย column's
-                    width. Flagged to team-lead for measurement rather than assumed. */}
                       <div className={'flex flex-rows justify-left gap-2 items-center'}>
-                        <span>{t('wqs.scoringTable.adjustedOfferingPriceLabel')}</span>
-                        <span>{t('wqs.scoringTable.amountUnit')}</span>
+                        <span>{t('wqs.scoringTable.adjustedOfferingPriceManual')}</span>
                       </div>
                     </td>
                     <td
@@ -1164,7 +1160,7 @@ export function WQSScoringSection({ comparativeSurveys = [], template }: WQSScor
                             colSpan={2}
                           >
                             {/* Jan 2534 badge deleted — user's second ask, mock:1422 is a
-                        single-value row ('Number of Years', 'yrs'), no date badge. The
+                        single-value row ('Years since Sale', 'yrs'), no date badge. The
                         stacked <div> it lived in was also why this row alone ran taller
                         than its neighbours (content height beats a declared h-[26px]). */}
                             <RHFInputCell
@@ -1178,8 +1174,10 @@ export function WQSScoringSection({ comparativeSurveys = [], template }: WQSScor
                   </tr>
                   <tr>
                     <td className={clsx('bg-(--palette-surface)', leftColumnBody, bgGradient)}>
-                      <span>{t('wqs.scoringTable.adjustedPeriod')}</span>
-                      <span>{t('wqs.scoringTable.percentUnit')}</span>
+                      <div className={'flex flex-rows justify-left gap-2 items-center'}>
+                        <span>{t('wqs.scoringTable.timeAdjustment')}</span>
+                        <span>{t('wqs.scoringTable.percentPerYearUnit')}</span>
+                      </div>
                     </td>
                     <td
                       className={clsx(priceBandMergedCell, stickyEdgeShadow)}
@@ -1213,12 +1211,11 @@ export function WQSScoringSection({ comparativeSurveys = [], template }: WQSScor
                   <tr>
                     <td className={clsx('bg-(--palette-surface)', leftColumnBody, bgGradient)}>
                       <div className={'flex flex-rows justify-left items-center'}>
-                        {/* Two keys, not one — both siblings keep the unit as its own
-                      `percentUnit` entry, and this row was the only place that baked it
-                      into the label. The space between the two expressions is preserved
-                      by JSX, so it still reads "… (%)". */}
+                        {/* Label and unit are separate keys (`percentUnit`), joined inline by
+                      `{' '}` so the row reads "… (%)" — unlike the neighbouring rows, which
+                      lay the two spans out in a flex row. */}
                         <span>
-                          {t('wqs.scoringTable.cumulativeAdjustedPeriod')}{' '}
+                          {t('wqs.scoringTable.cumulativeTimeAdjustmentPct')}{' '}
                           {t('wqs.scoringTable.percentUnit')}
                         </span>
                       </div>
@@ -1270,7 +1267,7 @@ export function WQSScoringSection({ comparativeSurveys = [], template }: WQSScor
                         leftColumnBody,
                       )}
                     >
-                      <span>{t('wqs.scoringTable.adjustedValueLabel')}</span>
+                      <span>{t('wqs.scoringTable.netPriceAfterAdjustment')}</span>
                     </td>
                     {/* Not `priceBandMergedCell` here — that constant bakes in `bg-(--palette-surface)`,
                   which would collide with this row's own tint (two bg-* utilities for

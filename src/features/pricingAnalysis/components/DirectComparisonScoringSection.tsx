@@ -787,7 +787,7 @@ export const DirectComparisonScoringSection = ({
                   <tr>
                     <td className={clsx('bg-(--palette-surface)', leftColumnBody, bgGradient)}>
                       <div className={'flex flex-rows justify-between items-center'}>
-                        <span>{t('directComparison.rows.adjustedOfferingPriceLabel')}</span>
+                        <span>{t('directComparison.rows.offeringPriceAdjustmentPct')}</span>
                         <span>{t('directComparison.rows.percentUnit')}</span>
                       </div>
                     </td>
@@ -827,8 +827,7 @@ export const DirectComparisonScoringSection = ({
                   <tr>
                     <td className={clsx('bg-(--palette-surface)', leftColumnBody, bgGradient)}>
                       <div className={'flex flex-rows justify-between items-center'}>
-                        <span>{t('directComparison.rows.adjustedOfferingPriceLabel')}</span>
-                        <span>{t('directComparison.rows.amountUnit')}</span>
+                        <span>{t('directComparison.rows.adjustedOfferingPriceManual')}</span>
                       </div>
                     </td>
                     <td className={clsx('bg-(--palette-surface)', collateralColumnBody)}></td>
@@ -927,8 +926,8 @@ export const DirectComparisonScoringSection = ({
                   <tr>
                     <td className={clsx('bg-(--palette-surface)', leftColumnBody, bgGradient)}>
                       <div className={'flex flex-rows justify-between items-center'}>
-                        <span>{t('directComparison.rows.adjustedPeriod')}</span>
-                        <span>{t('directComparison.rows.percentUnit')}</span>
+                        <span>{t('directComparison.rows.timeAdjustment')}</span>
+                        <span>{t('directComparison.rows.percentPerYearUnit')}</span>
                       </div>
                     </td>
                     <td className={clsx('bg-(--palette-surface)', collateralColumnBody)}></td>
@@ -957,7 +956,7 @@ export const DirectComparisonScoringSection = ({
                   <tr>
                     <td className={clsx('bg-(--palette-surface)', leftColumnBody, bgGradient)}>
                       <div className="flex flex-rows justify-between items-center">
-                        <span>{t('directComparison.rows.cumulativeAdjustedPeriod')}</span>
+                        <span>{t('directComparison.rows.cumulativeTimeAdjustmentPct')}</span>
                         <span>{t('directComparison.rows.percentUnit')}</span>
                       </div>
                     </td>
@@ -996,7 +995,7 @@ export const DirectComparisonScoringSection = ({
                     puts font-medium on every label in this column. */}
                   <tr>
                     <td className={clsx('bg-(--palette-surface-2) font-semibold', leftColumnBody)}>
-                      <span>{t('directComparison.rows.adjustedValueLabel')}</span>
+                      <span>{t('directComparison.rows.netPriceAfterAdjustment')}</span>
                     </td>
                     <td className={clsx('bg-(--palette-surface-2)', collateralColumnBody)}></td>
                     {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {

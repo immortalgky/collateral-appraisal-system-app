@@ -856,12 +856,15 @@ const CalculationCard = ({ calc }: { calc: Calculation }) => {
   }
   if (calc.adjustOfferPricePct != null) {
     rows.push({
-      label: 'Adj. Offer Price %',
+      label: 'Offer Price Adj. %',
       value: `${formatNumber(calc.adjustOfferPricePct, 2)}%`,
     });
   }
   if (calc.adjustOfferPriceAmt != null) {
-    rows.push({ label: 'Adj. Offer Price Amt', value: formatNumber(calc.adjustOfferPriceAmt, 2) });
+    rows.push({
+      label: 'Adj. Offer Price (manual)',
+      value: formatNumber(calc.adjustOfferPriceAmt, 2),
+    });
   }
   if (calc.sellingPrice != null) {
     rows.push({
@@ -876,11 +879,11 @@ const CalculationCard = ({ calc }: { calc: Calculation }) => {
     rows.push({ label: 'Buy/Sell Period', value: parts.join(' ') });
   }
   if (calc.adjustedPeriodPct != null) {
-    rows.push({ label: 'Adj. Period %', value: `${formatNumber(calc.adjustedPeriodPct, 2)}%` });
+    rows.push({ label: 'Time Adj. % / yr', value: `${formatNumber(calc.adjustedPeriodPct, 2)}%` });
   }
   if (calc.cumulativeAdjPeriod != null) {
     rows.push({
-      label: 'Cumulative Adj. Period',
+      label: 'Cumulative Time Adj. %',
       value: `${formatNumber(calc.cumulativeAdjPeriod, 2)}%`,
     });
   }
