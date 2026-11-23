@@ -84,6 +84,11 @@ export interface AppraisalEvaluationDetail {
   criteria3Rating: number | null;
   criteria4Rating: number | null;
   criteria5Rating: number | null;
+  criteria1Remark: string | null;
+  criteria2Remark: string | null;
+  criteria3Remark: string | null;
+  criteria4Remark: string | null;
+  criteria5Remark: string | null;
   additionalComments: string | null;
   note: string | null;
 }
@@ -121,6 +126,11 @@ export interface CreateEvaluationBody {
   criteria3Rating: number | null;
   criteria4Rating: number | null;
   criteria5Rating: number | null;
+  criteria1Remark: string | null;
+  criteria2Remark: string | null;
+  criteria3Remark: string | null;
+  criteria4Remark: string | null;
+  criteria5Remark: string | null;
   additionalComments: string | null;
   note: string | null;
 }
@@ -134,6 +144,11 @@ export interface UpdateEvaluationBody {
   criteria3Rating: number | null;
   criteria4Rating: number | null;
   criteria5Rating: number | null;
+  criteria1Remark: string | null;
+  criteria2Remark: string | null;
+  criteria3Remark: string | null;
+  criteria4Remark: string | null;
+  criteria5Remark: string | null;
   additionalComments: string | null;
   note: string | null;
 }

@@ -1,6 +1,12 @@
 import { z } from 'zod';
+import { vmsg } from '@/shared/components/form/validationMessage';
 
 const ratingSchema = z.number().int().min(1).max(5).nullable().optional();
+const remarkSchema = z
+  .string()
+  .max(500, vmsg('maxLength', { max: 500 }))
+  .nullable()
+  .optional();
 
 export const evaluationSchema = z.object({
   criteria1Rating: ratingSchema,
@@ -13,6 +19,11 @@ export const evaluationSchema = z.object({
   criteria3Rating: ratingSchema,
   criteria4Rating: ratingSchema,
   criteria5Rating: ratingSchema,
+  criteria1Remark: remarkSchema,
+  criteria2Remark: remarkSchema,
+  criteria3Remark: remarkSchema,
+  criteria4Remark: remarkSchema,
+  criteria5Remark: remarkSchema,
   additionalComments: z.string().nullable().optional(),
   note: z.string().nullable().optional(),
   evaluationStatus: z.enum(['Pending', 'Completed']).optional(),
@@ -29,6 +40,11 @@ export const defaultEvaluationValues: EvaluationFormValues = {
   criteria3Rating: null,
   criteria4Rating: null,
   criteria5Rating: null,
+  criteria1Remark: null,
+  criteria2Remark: null,
+  criteria3Remark: null,
+  criteria4Remark: null,
+  criteria5Remark: null,
   additionalComments: null,
   note: null,
   evaluationStatus: 'Pending',

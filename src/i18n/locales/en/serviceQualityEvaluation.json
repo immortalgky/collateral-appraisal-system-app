@@ -49,6 +49,8 @@
       "appraisalDate": "Appraisal Date",
       "reportReceivedDate": "Report Received Date"
     },
+    "remarkPlaceholder": "Remark",
+    "remarkAriaLabel": "{{criteria}} remark",
     "comments": {
       "additionalLabel": "Additional Comments from the Evaluators",
       "additionalPlaceholder": "Enter additional comments...",

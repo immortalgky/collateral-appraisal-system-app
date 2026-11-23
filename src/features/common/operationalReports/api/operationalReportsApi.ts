@@ -75,9 +75,11 @@ export function useOperationalReport<T extends AnyReportRow = AnyReportRow>(
 // ─── Export hook ──────────────────────────────────────────────────────────────
 
 export type ExportFormat = 'xlsx' | 'csv' | 'pdf';
+export type ExportLang = 'th' | 'en';
 
 interface UseReportExportReturn {
-  exportReport: (format: ExportFormat) => Promise<void>;
+  /** `lang` is sent only by reports that have Thai headers; the server treats a missing one as English. */
+  exportReport: (format: ExportFormat, lang?: ExportLang) => Promise<void>;
   isExporting: boolean;
 }
 
@@ -96,7 +98,7 @@ export function useReportExport(
   const [isExporting, setIsExporting] = useState(false);
 
   const exportReport = useCallback(
-    async (format: ExportFormat) => {
+    async (format: ExportFormat, lang?: ExportLang) => {
       if (isExportingRef.current) return;
       isExportingRef.current = true;
       setIsExporting(true);
@@ -104,6 +106,7 @@ export function useReportExport(
       try {
         // Build export params without pagination — server returns all matching rows
         const exportParams: Record<string, string | number | undefined> = { format };
+        if (lang) exportParams.lang = lang;
         if (filter.sortBy) exportParams.sortBy = filter.sortBy;
         if (filter.sortDir) exportParams.sortDir = filter.sortDir;
         if (filter.appraisalNumber) exportParams.appraisalNumber = filter.appraisalNumber;

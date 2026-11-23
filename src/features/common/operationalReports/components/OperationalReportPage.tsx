@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { format as dateFnsFormat, parseISO } from 'date-fns';
 import Icon from '@shared/components/Icon';
 import Pagination from '@shared/components/Pagination';
@@ -11,6 +12,7 @@ import type { BaseReportFilter, SortDir } from '../api/operationalReportsApi';
 import type { ReportConfig, ColumnDef } from '../config/reports';
 import ExportMenu from './ExportMenu';
 import ReportFilterBar from './ReportFilterBar';
+import LongTextCell from './LongTextCell';
 
 // ─── Default filter state ─────────────────────────────────────────────────────
 
@@ -110,8 +112,10 @@ function SortableTh({
     onSortChange(undefined, undefined);
   };
 
-  const baseCls =
-    'px-4 py-3 text-left text-xs font-medium text-(--palette-gray-500) whitespace-nowrap select-none bg-(--palette-surface-2)';
+  // An explicit alignment in the column's className replaces the default left (CSS order would
+  // otherwise let text-left beat text-center).
+  const alignCls = /text-(right|center)/.test(className ?? '') ? '' : 'text-left';
+  const baseCls = `px-4 py-3 ${alignCls} text-xs font-medium text-(--palette-gray-500) whitespace-nowrap select-none bg-(--palette-surface-2)`;
 
   if (!isSortable) {
     return (
@@ -201,7 +205,12 @@ function OperationalReportPage({ config }: OperationalReportPageProps) {
 
   // ── Data ──────────────────────────────────────────────────────────────────────
   const { data, isLoading, isError, error } = useOperationalReport(slug, activeFilter);
-  const { exportReport, isExporting } = useReportExport(slug, debouncedFilterValues);
+  const isTh = useTranslation().i18n.language?.startsWith('th');
+  const { exportReport, isExporting } = useReportExport(slug, {
+    ...debouncedFilterValues,
+    sortBy,
+    sortDir,
+  });
 
   const rows = data?.items ?? [];
   const totalCount = data?.count ?? 0;
@@ -209,14 +218,20 @@ function OperationalReportPage({ config }: OperationalReportPageProps) {
 
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col min-h-0 gap-4">
+    <div className="flex h-full min-h-0 min-w-0 flex-col gap-4">
       {/* Header — standard SectionHeader with a live record count + Export menu */}
       <SectionHeader
         icon="file-lines"
         iconColor="primary"
         title={displayTitle}
         subtitle={`${totalCount.toLocaleString()} ${totalCount === 1 ? 'record' : 'records'}`}
-        rightIcon={<ExportMenu onExport={exportReport} isExporting={isExporting} />}
+        rightIcon={
+          <ExportMenu
+            onExport={exportReport}
+            isExporting={isExporting}
+            hasThaiHeaders={columns.some(c => c.labelTh)}
+          />
+        }
         className="shrink-0 mb-0"
       />
 
@@ -241,7 +256,7 @@ function OperationalReportPage({ config }: OperationalReportPageProps) {
 
       {/* Table */}
       {!isError && (
-        <div className="flex-1 min-h-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-sm overflow-hidden flex flex-col">
+        <div className="flex-1 min-h-[320px] bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-sm overflow-hidden flex flex-col">
           <div className="flex-1 min-h-0 overflow-auto">
             <table className="w-full min-w-max text-sm">
               <thead className="sticky top-0 z-20">
@@ -249,14 +264,15 @@ function OperationalReportPage({ config }: OperationalReportPageProps) {
                   {columns.map((col, idx) => (
                     <SortableTh
                       key={col.key}
-                      label={col.label}
-                      fullLabel={col.fullLabel}
+                      label={isTh && col.labelTh ? col.labelTh : col.label}
+                      fullLabel={isTh && col.labelTh ? undefined : col.fullLabel}
                       sortKey={col.sortKey ?? toPascalCase(col.field)}
                       activeSortKey={sortBy}
                       activeSortDir={sortDir}
                       onSortChange={handleSortChange}
                       className={[
-                        col.className ?? '',
+                        // Body-cell text colours (e.g. the green Appraisal No.) don't apply to headers.
+                        (col.className ?? '').replace(/text-\(--[^)]*\)/g, ''),
                         idx === 0 ? 'sticky left-0 z-30 shadow-[1px_0_0_0_rgb(229,231,235)]' : '',
                       ]
                         .join(' ')
@@ -294,25 +310,38 @@ function OperationalReportPage({ config }: OperationalReportPageProps) {
                       {columns.map((col, colIdx) => {
                         const raw = (row as Record<string, unknown>)[col.field];
                         const formatted = formatCellValue(raw, col.type);
+                        // An explicit text-center wins over the numeric-type default of right-aligned.
+                        const isCenter = Boolean(col.className?.includes('text-center'));
                         const isRight =
-                          col.className?.includes('text-right') ||
-                          ['money', 'number', 'int', 'percent'].includes(col.type);
+                          !isCenter &&
+                          (col.className?.includes('text-right') ||
+                            ['money', 'number', 'int', 'percent'].includes(col.type));
 
                         return (
                           <td
                             key={col.key}
                             className={[
-                              'px-3 py-1.5 text-xs text-(--palette-ink)',
+                              'px-3 py-1.5 text-xs',
+                              // One colour class per cell: a column's own colour replaces the ink.
+                              col.className?.includes('text-(--') ? '' : 'text-(--palette-ink)',
                               col.className ?? '',
-                              isRight ? 'text-right tabular-nums' : '',
+                              isRight ? 'text-right tabular-nums' : isCenter ? 'tabular-nums' : '',
+                              // Keep line breaks of multi-line comments; `truncate` columns stay one line.
+                              col.type === 'text' && !col.className?.includes('truncate')
+                                ? 'whitespace-pre-line'
+                                : '',
                               colIdx === 0
-                                ? 'sticky left-0 bg-(--palette-surface) shadow-[1px_0_0_0_rgb(229,231,235)] font-medium text-(--palette-ink)'
+                                ? 'sticky left-0 bg-(--palette-surface) shadow-[1px_0_0_0_rgb(229,231,235)] font-medium'
                                 : '',
                             ]
                               .join(' ')
                               .trim()}
                           >
-                            {formatted}
+                            {col.longText && typeof raw === 'string' ? (
+                              <LongTextCell text={raw} />
+                            ) : (
+                              formatted
+                            )}
                           </td>
                         );
                       })}
