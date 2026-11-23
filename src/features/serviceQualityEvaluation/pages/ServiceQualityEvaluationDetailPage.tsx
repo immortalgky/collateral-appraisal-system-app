@@ -106,6 +106,7 @@ function EvaluationTotalRow({ values, totalLabel, configs }: EvaluationTotalRowP
           <StarRating score={starScore} />
         </div>
       </td>
+      <td className="px-3 py-2.5" />
     </tr>
   );
 }
@@ -192,6 +193,11 @@ function ServiceQualityEvaluationDetailPage() {
           criteria3Rating: evaluation.criteria3Rating,
           criteria4Rating: evaluation.criteria4Rating,
           criteria5Rating: evaluation.criteria5Rating,
+          criteria1Remark: evaluation.criteria1Remark ?? null,
+          criteria2Remark: evaluation.criteria2Remark ?? null,
+          criteria3Remark: evaluation.criteria3Remark ?? null,
+          criteria4Remark: evaluation.criteria4Remark ?? null,
+          criteria5Remark: evaluation.criteria5Remark ?? null,
           additionalComments: evaluation.additionalComments ?? null,
           note: evaluation.note ?? null,
           evaluationStatus: evaluation.evaluationStatus === 'Completed' ? 'Completed' : 'Pending',
@@ -233,6 +239,11 @@ function ServiceQualityEvaluationDetailPage() {
           criteria3Rating: values.criteria3Rating ?? null,
           criteria4Rating: values.criteria4Rating ?? null,
           criteria5Rating: values.criteria5Rating ?? null,
+          criteria1Remark: values.criteria1Remark || null,
+          criteria2Remark: values.criteria2Remark || null,
+          criteria3Remark: values.criteria3Remark || null,
+          criteria4Remark: values.criteria4Remark || null,
+          criteria5Remark: values.criteria5Remark || null,
           additionalComments: values.additionalComments ?? null,
           note: values.note ?? null,
         };
@@ -390,13 +401,14 @@ function ServiceQualityEvaluationDetailPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full table-fixed">
+            <table className="w-full min-w-[68rem] table-fixed">
               <colgroup>
                 <col className="w-12" />
-                <col className="w-96" />
+                <col className="w-64" />
                 <col className="w-20" />
                 <col className="w-52" />
                 <col className="w-20" />
+                <col />
                 <col />
               </colgroup>
               <thead className="bg-(--palette-surface-2) border-b border-(--palette-line)">
@@ -418,6 +430,9 @@ function ServiceQualityEvaluationDetailPage() {
                   </th>
                   <th className="text-left font-semibold text-(--palette-gray-600) px-3 py-2.5 text-xs">
                     Description
+                  </th>
+                  <th className="text-left font-semibold text-(--palette-gray-600) px-3 py-2.5 text-xs">
+                    Remark
                   </th>
                 </tr>
               </thead>

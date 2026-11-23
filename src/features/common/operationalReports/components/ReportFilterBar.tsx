@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { format as dateFnsFormat, parseISO } from 'date-fns';
 import Input from '@shared/components/Input';
 import MultiSelectDropdown from '@shared/components/inputs/MultiSelectDropdown';
-import DatePickerInput from '@shared/components/inputs/DatePickerInput';
+import { DateRangeInput } from '@shared/components/inputs';
 import UserAutocomplete from '@shared/components/inputs/UserAutocomplete';
 import DepartmentAutocomplete from '@shared/components/inputs/DepartmentAutocomplete';
 import AoCodeAutocomplete from '@shared/components/inputs/AoCodeAutocomplete';
@@ -11,6 +12,8 @@ import { APPRAISAL_STATUS_FILTER_OPTIONS } from '@shared/constants/appraisalStat
 import { EVALUATION_STATUS_FILTER_OPTIONS } from '@shared/constants/evaluationStatus';
 import { FEE_STATUS_FILTER_OPTIONS } from '@shared/constants/feeStatus';
 import { useParameterOptions } from '@shared/utils/parameterUtils';
+import CompanyAutocomplete from '@shared/components/inputs/CompanyAutocomplete';
+import { useLocalizedCompanyName } from '@shared/utils/companyName';
 import { useCompanyStore } from '@/shared/store';
 import type { BaseReportFilter } from '../api/operationalReportsApi';
 import type { FilterField } from '../config/reports';
@@ -40,6 +43,31 @@ export const FILTER_LABELS: Record<FilterField, string> = {
   aoCode: 'AO Code',
   appraisalType: 'Appraisal Type',
   feeType: 'Fee Payment Type',
+};
+
+const FILTER_LABELS_TH: Partial<Record<FilterField, string>> = {
+  appraisalNumber: 'หมายเลขเล่มประเมิน',
+  createdFrom: 'วันที่สร้างตั้งแต่',
+  createdTo: 'วันที่สร้างถึง',
+  approvedFrom: 'วันที่อนุมัติ ตั้งแต่',
+  approvedTo: 'วันที่อนุมัติ ถึง',
+  status: 'สถานะ',
+  bankingSegment: 'กลุ่มลูกค้า',
+  appraisalCompany: 'บริษัทประเมิน',
+  internalStaff: 'ผู้ประเมินภายใน',
+  channel: 'ช่องทาง',
+  customerName: 'ชื่อลูกค้า',
+  evaluationStatus: 'สถานะการให้คะแนน',
+  payType: 'ประเภทการชำระเงิน',
+  feeStatus: 'สถานะค่าธรรมเนียม',
+  assignType: 'ประเภทการมอบหมาย',
+  purpose: 'วัตถุประสงค์',
+  externalStaff: 'ผู้ประเมินภายนอก',
+  departmentCode: 'แผนก',
+  aoCode: 'รหัส AO',
+  appraisalType: 'ประเภทการประเมิน',
+  feeType: 'ประเภทการชำระค่าธรรมเนียม',
+  // reviewType / stage stay English: the meaning of the AS400 codes is not clear enough to translate.
 };
 
 /** Username fields — bind a usercode, so they use the user autocomplete rather than free text. */
@@ -99,15 +127,19 @@ const DATE_FIELDS = new Set<FilterField>([
   'approvedTo',
 ]);
 
-// Everything else (appraisalNumber, customerName, appraisalCompany, internalStaff, stage) is an
+// From/To bounds that render as one chip and stay ordered (From <= To).
+const DATE_PAIRS: Partial<Record<FilterField, FilterField>> = {
+  createdFrom: 'createdTo',
+  approvedFrom: 'approvedTo',
+};
+const DATE_PAIR_FROM: Partial<Record<FilterField, FilterField>> = Object.fromEntries(
+  Object.entries(DATE_PAIRS).map(([from, to]) => [to, from]),
+);
+
+// Everything else (appraisalNumber, customerName, internalStaff, stage) is an
 // open-ended search where the possible values aren't a known list — kept as a text input.
 
 const csvToArray = (v: string | undefined): string[] => (v ? v.split(',').filter(Boolean) : []);
-
-// DatePickerInput emits a full ISO timestamp with offset (e.g. 2026-07-19T00:00:00+07:00).
-// Report date filters are calendar-date bounds, so trim to yyyy-MM-dd before it reaches the
-// query params — otherwise the offset shifts the bound by a day server-side.
-const toDateOnly = (v: string | null): string | undefined => (v ? v.slice(0, 10) : undefined);
 
 interface ReportFilterBarProps {
   filters: FilterField[];
@@ -119,10 +151,19 @@ interface ReportFilterBarProps {
 /**
  * Inline filter bar + active-filter chips (monitoring list-page idiom). Fixed-value fields use the
  * shared MultiSelectDropdown (multi-select); open-ended fields use a text Input; dates use the
- * shared DatePickerInput. Multi-select values are stored as a comma-separated string — the backend filter
+ * shared DateRangeInput. Multi-select values are stored as a comma-separated string — the backend filter
  * helpers split it into an IN clause.
  */
 function ReportFilterBar({ filters, values, onChange, onReset }: ReportFilterBarProps) {
+  const isTh = useTranslation().i18n.language?.startsWith('th');
+  const labelOf = (field: FilterField) => (isTh && FILTER_LABELS_TH[field]) || FILTER_LABELS[field];
+  // A From/To pair shares one label: "Approved Date From" / "วันที่อนุมัติ ตั้งแต่" -> the range name.
+  const rangeLabelOf = (from: FilterField) =>
+    labelOf(from)
+      .replace(/ From$|ตั้งแต่$/, '')
+      .trim();
+  const allOf = (label: string) => (isTh ? 'ทั้งหมด' : `All ${label}`);
+  const searchOf = (label: string) => (isTh ? `ค้นหา${label}` : `Search ${label}`);
   const channelOptions = useParameterOptions(PARAMETER_MULTI_FIELDS.channel ?? 'Channel');
   const payTypeOptions = useParameterOptions(PARAMETER_MULTI_FIELDS.payType ?? 'FeePaymentMethod');
   const purposeOptions = useParameterOptions(PARAMETER_MULTI_FIELDS.purpose ?? 'AppraisalPurpose');
@@ -141,15 +182,17 @@ function ReportFilterBar({ filters, values, onChange, onReset }: ReportFilterBar
   // Match against both the English and Thai names — company-name display sites are locale-aware,
   // so a value typed/pasted from one of them may be either.
   const companies = useCompanyStore(s => s.companies);
-  const selectedCompanyId = useMemo(
+  const selectedCompany = useMemo(
     () =>
       companies.find(
         c =>
           c.companyName === values.appraisalCompany ||
           c.companyNameLocal === values.appraisalCompany,
-      )?.id,
+      ),
     [companies, values.appraisalCompany],
   );
+  const selectedCompanyId = selectedCompany?.id;
+  const localizeCompanyName = useLocalizedCompanyName();
 
   const optionsFor = (field: FilterField): ListBoxItem[] =>
     MULTI_OPTION_FIELDS[field] ?? paramOptionsFor(field);
@@ -161,6 +204,9 @@ function ReportFilterBar({ filters, values, onChange, onReset }: ReportFilterBar
         .map(v => opts.find(o => o.value === v)?.label ?? v)
         .join(', ');
     }
+    if (field === 'appraisalCompany' && selectedCompany) {
+      return localizeCompanyName(selectedCompany.companyName, selectedCompany.companyNameLocal);
+    }
     if (DATE_FIELDS.has(field)) {
       try {
         return dateFnsFormat(parseISO(raw), 'dd/MM/yyyy');
@@ -171,13 +217,40 @@ function ReportFilterBar({ filters, values, onChange, onReset }: ReportFilterBar
     return raw;
   };
 
+  const valueOf = (field: FilterField) => (values as Record<string, string | undefined>)[field];
+
   const chips: ActiveFilterChip[] = filters
-    .filter(field => Boolean((values as Record<string, unknown>)[field]))
-    .map(field => ({
-      key: field,
-      label: `${FILTER_LABELS[field]}: ${displayValue(field, String((values as Record<string, unknown>)[field]))}`,
-      onClear: () => onChange({ [field]: undefined }),
-    }));
+    .filter(
+      field => Boolean(valueOf(field)) || Boolean(DATE_PAIRS[field] && valueOf(DATE_PAIRS[field]!)),
+    )
+    .filter(field => !DATE_PAIR_FROM[field])
+    .map(field => {
+      const to = DATE_PAIRS[field];
+      if (!to) {
+        return {
+          key: field,
+          label: `${labelOf(field)}: ${displayValue(field, String(valueOf(field)))}`,
+          onClear: () => onChange({ [field]: undefined }),
+        };
+      }
+      // One chip per date range: "Approved Date: 23/11/2026 – 24/11/2026", or "from …" / "to …".
+      const fromText = valueOf(field) && displayValue(field, valueOf(field)!);
+      const toText = valueOf(to) && displayValue(to, valueOf(to)!);
+      const range =
+        fromText && toText
+          ? `${fromText} – ${toText}`
+          : fromText
+            ? `${isTh ? 'ตั้งแต่' : 'from'} ${fromText}`
+            : `${isTh ? 'ถึง' : 'to'} ${toText}`;
+      const name = labelOf(field)
+        .replace(/ From$|ตั้งแต่$/, '')
+        .trim();
+      return {
+        key: field,
+        label: `${name}: ${range}`,
+        onClear: () => onChange({ [field]: undefined, [to]: undefined }),
+      };
+    });
 
   if (filters.length === 0) return null;
 
@@ -185,26 +258,37 @@ function ReportFilterBar({ filters, values, onChange, onReset }: ReportFilterBar
     <div className="shrink-0 flex flex-col gap-2">
       <div className="flex flex-wrap items-end gap-2.5">
         {filters.map(field => {
+          // The To key of a pair is rendered by its From key's range control.
+          if (DATE_PAIR_FROM[field]) return null;
           const val = ((values as Record<string, unknown>)[field] as string) ?? '';
-          const label = FILTER_LABELS[field];
+          const to = DATE_PAIRS[field];
+          const label = to ? rangeLabelOf(field) : labelOf(field);
           const isMultiOption = field in MULTI_OPTION_FIELDS;
           const isParamMulti = field in PARAMETER_MULTI_FIELDS;
 
           return (
-            <div key={field} className="flex flex-col gap-1 min-w-[160px]">
+            <div key={field} className={`flex flex-col gap-1 max-w-full ${to ? 'w-64' : 'w-56'}`}>
               <label className="text-xs font-medium text-(--palette-gray-600)">{label}</label>
               {isMultiOption || isParamMulti ? (
-                <MultiSelectDropdown
-                  options={optionsFor(field)}
-                  value={csvToArray(val)}
-                  onChange={arr => onChange({ [field]: arr.length ? arr.join(',') : undefined })}
-                  placeholder={`All ${label}`}
-                  showValuePrefix={false}
-                />
-              ) : DATE_FIELDS.has(field) ? (
-                <DatePickerInput
-                  value={val || null}
-                  onChange={v => onChange({ [field]: toDateOnly(v) })}
+                // MultiSelectDropdown sizes to its content (w-fit); stretch its root and button
+                // from here rather than restyling the shared component.
+                <div className="[&>div]:w-full [&>div>button]:w-full">
+                  <MultiSelectDropdown
+                    options={optionsFor(field)}
+                    value={csvToArray(val)}
+                    onChange={arr => onChange({ [field]: arr.length ? arr.join(',') : undefined })}
+                    placeholder={allOf(label)}
+                    showValuePrefix={false}
+                  />
+                </div>
+              ) : to ? (
+                <DateRangeInput
+                  from={val}
+                  to={((values as Record<string, unknown>)[to] as string) ?? ''}
+                  onChange={(from, toVal) =>
+                    onChange({ [field]: from || undefined, [to]: toVal || undefined })
+                  }
+                  placeholder={label}
                 />
               ) : field in USER_SCOPE_FIELDS ? (
                 <UserAutocomplete
@@ -212,27 +296,34 @@ function ReportFilterBar({ filters, values, onChange, onReset }: ReportFilterBar
                   onChange={v => onChange({ [field]: v || undefined })}
                   scope={USER_SCOPE_FIELDS[field]!}
                   companyId={field === 'externalStaff' ? selectedCompanyId : undefined}
-                  placeholder={`Search ${label}`}
+                  placeholder={searchOf(label)}
+                />
+              ) : field === 'appraisalCompany' ? (
+                // The control binds a Guid; the filter value (and the BE param) stays the English name.
+                <CompanyAutocomplete
+                  value={selectedCompanyId ?? ''}
+                  onChange={id =>
+                    onChange({ appraisalCompany: companies.find(c => c.id === id)?.companyName })
+                  }
+                  placeholder={searchOf(label)}
                 />
               ) : field === 'departmentCode' ? (
                 <DepartmentAutocomplete
                   value={val}
                   onChange={v => onChange({ [field]: v || undefined })}
-                  placeholder={`Search ${label}`}
+                  placeholder={searchOf(label)}
                 />
               ) : field === 'aoCode' ? (
                 <AoCodeAutocomplete
                   value={val}
                   onChange={v => onChange({ [field]: v || undefined })}
-                  placeholder={`Search ${label}`}
+                  placeholder={searchOf(label)}
                 />
               ) : (
                 <Input
                   value={val}
                   onChange={e => onChange({ [field]: e.target.value || undefined })}
-                  placeholder={`Search ${label}`}
-                  fullWidth={false}
-                  className="min-w-[160px]"
+                  placeholder={searchOf(label)}
                 />
               )}
             </div>

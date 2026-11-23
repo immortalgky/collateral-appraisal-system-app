@@ -145,13 +145,20 @@ export interface Rcas008Row {
   appraisalCompany?: string | null;
   approvedDate?: string | null;
   bankingSegment?: string | null;
+  bankingSegmentName?: string | null;
   totalScorePct?: number | null;
   scoreReportQuality?: number | null;
+  remarkReportQuality?: string | null;
   scoreDeliveryTime?: number | null;
+  remarkDeliveryTime?: string | null;
   scorePersonnel?: number | null;
+  remarkPersonnel?: string | null;
   scoreResponseTime?: number | null;
+  remarkResponseTime?: string | null;
   scoreCoordination?: number | null;
+  remarkCoordination?: string | null;
   remark?: string | null;
+  note?: string | null;
   evaluationStatus?: string | null;
 }
 

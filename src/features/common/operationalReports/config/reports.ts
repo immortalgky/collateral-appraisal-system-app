@@ -21,9 +21,13 @@ export interface ColumnDef {
    * The Excel/PDF export carries the full wording in its own column definitions.
    */
   fullLabel?: string;
+  /** Thai header. When any column of a report has one, the page shows it in Thai UI and the Export menu offers a ไทย/English choice. */
+  labelTh?: string;
   /** camelCase field name in the API response */
   field: string;
   type: ColumnType;
+  /** Long free text: capped width, two lines, full text in the hover title. */
+  longText?: true;
   /** Optional sort key sent to the server. Defaults to PascalCase of field. */
   sortKey?: string;
   className?: string;
@@ -259,21 +263,27 @@ export const OPERATIONAL_REPORTS: ReportConfig[] = [
   {
     slug: 'rcas008',
     title: 'RCAS008 - Service Quality Evaluation',
-    filters: ['appraisalNumber', 'approvedFrom', 'approvedTo', 'bankingSegment', 'appraisalCompany', 'evaluationStatus', 'purpose', 'appraisalType'],
+    filters: ['appraisalNumber', 'appraisalCompany', 'bankingSegment', 'appraisalType', 'purpose', 'approvedFrom', 'approvedTo', 'evaluationStatus'],
     columns: [
-      APPRAISAL_NO,
-      { key: 'appraisalCompany', label: 'Company', field: 'appraisalCompany', type: 'text' },
-      { key: 'internalAppraisalStaff', label: 'Internal Staff', field: 'internalAppraisalStaff', type: 'text' },
-      { key: 'approvedDate', label: 'Approved Date', field: 'approvedDate', type: 'date', sortKey: 'ApprovedDate' },
-      { key: 'bankingSegment', label: 'Banking Segment', field: 'bankingSegment', type: 'text' },
-      { key: 'totalScorePct', label: 'Total Score %', field: 'totalScorePct', type: 'percent', className: 'text-right' },
+      { ...APPRAISAL_NO, labelTh: 'หมายเลขเล่มประเมิน', className: 'text-(--palette-primary-text)' },
+      { key: 'appraisalCompany', labelTh: 'บริษัทประเมิน', label: 'Company', field: 'appraisalCompany', type: 'text' },
+      { key: 'internalAppraisalStaff', labelTh: 'ผู้ประเมินภายใน', label: 'Internal Staff', field: 'internalAppraisalStaff', type: 'text' },
+      { key: 'approvedDate', labelTh: 'วันที่อนุมัติ', label: 'Approved Date', field: 'approvedDate', type: 'date', sortKey: 'ApprovedDate', className: 'text-center' },
+      { key: 'bankingSegment', labelTh: 'กลุ่มลูกค้า', label: 'Banking Segment', field: 'bankingSegmentName', type: 'text', className: 'text-center' },
+      { key: 'totalScorePct', labelTh: 'คะแนนรวม', label: 'Total Score %', field: 'totalScorePct', type: 'percent', className: 'text-center' },
       // Scores are abbreviated on screen; fullLabel carries the FSD wording (items 7–15) as a tooltip.
-      { key: 'scoreReportQuality', label: 'Report Quality', fullLabel: 'Score of Report book quality', field: 'scoreReportQuality', type: 'int', className: 'text-right' },
-      { key: 'scoreDeliveryTime', label: 'Delivery Time (SLA)', fullLabel: 'Score of Delivery time (SLA)', field: 'scoreDeliveryTime', type: 'int', className: 'text-right' },
-      { key: 'scorePersonnel', label: 'Personnel Preparation', fullLabel: "Score of Preparing the company's personnel for accepting bank assessment work", field: 'scorePersonnel', type: 'int', className: 'text-right' },
-      { key: 'scoreResponseTime', label: 'Response Time', fullLabel: 'Score of Response time to problem resolution', field: 'scoreResponseTime', type: 'int', className: 'text-right' },
-      { key: 'scoreCoordination', label: 'Coordination', fullLabel: 'Score of Coordination and responsibility in work', field: 'scoreCoordination', type: 'int', className: 'text-right' },
-      { key: 'remark', label: 'Remark', field: 'remark', type: 'text' },
+      { key: 'scoreReportQuality', labelTh: 'คุณภาพเล่มรายงาน', label: 'Report Quality', fullLabel: 'Score of Report book quality', field: 'scoreReportQuality', type: 'int', className: 'text-center' },
+      { key: 'remarkReportQuality', labelTh: 'หมายเหตุ', label: 'Report Quality Remark', fullLabel: 'Remark of Report book quality', field: 'remarkReportQuality', type: 'text', longText: true },
+      { key: 'scoreDeliveryTime', labelTh: 'คะแนนระยะเวลา', label: 'Delivery Time (SLA)', fullLabel: 'Score of Delivery time (SLA)', field: 'scoreDeliveryTime', type: 'int', className: 'text-center' },
+      { key: 'remarkDeliveryTime', labelTh: 'หมายเหตุ', label: 'Delivery Time Remark', fullLabel: 'Remark of Delivery time (SLA)', field: 'remarkDeliveryTime', type: 'text', longText: true },
+      { key: 'scorePersonnel', labelTh: 'การจัดเตรียมบุคลากร', label: 'Personnel Preparation', fullLabel: "Score of Preparing the company's personnel for accepting bank assessment work", field: 'scorePersonnel', type: 'int', className: 'text-center' },
+      { key: 'remarkPersonnel', labelTh: 'หมายเหตุ', label: 'Personnel Remark', fullLabel: "Remark of Preparing the company's personnel for accepting bank assessment work", field: 'remarkPersonnel', type: 'text', longText: true },
+      { key: 'scoreResponseTime', labelTh: 'ระยะเวลาการตอบสนอง', label: 'Response Time', fullLabel: 'Score of Response time to problem resolution', field: 'scoreResponseTime', type: 'int', className: 'text-center' },
+      { key: 'remarkResponseTime', labelTh: 'หมายเหตุ', label: 'Response Time Remark', fullLabel: 'Remark of Response time to problem resolution', field: 'remarkResponseTime', type: 'text', longText: true },
+      { key: 'scoreCoordination', labelTh: 'การประสานงาน', label: 'Coordination', fullLabel: 'Score of Coordination and responsibility in work', field: 'scoreCoordination', type: 'int', className: 'text-center' },
+      { key: 'remarkCoordination', labelTh: 'หมายเหตุ', label: 'Coordination Remark', fullLabel: 'Remark of Coordination and responsibility in work', field: 'remarkCoordination', type: 'text', longText: true },
+      { key: 'remark', labelTh: 'ความคิดเห็นเพิ่มเติมจากผู้ประเมิน', label: 'Additional Comments from the Evaluators', field: 'remark', type: 'text', longText: true },
+      { key: 'note', label: 'Note', labelTh: 'บันทึก', field: 'note', type: 'text', longText: true },
     ],
   },
 

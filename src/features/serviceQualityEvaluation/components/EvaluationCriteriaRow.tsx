@@ -4,6 +4,7 @@ import type { EvaluationFormValues } from '../schemas/form';
 import { CRITERIA_WEIGHTS } from '../schemas/form';
 import { GUIDELINE_DESCRIPTIONS, RATING_VALUES } from '../constants/guidelines';
 import Icon from '@shared/components/Icon';
+import Input from '@shared/components/Input';
 
 export type CriteriaIndex = 0 | 1 | 2 | 3 | 4;
 
@@ -51,6 +52,14 @@ interface EvaluationCriteriaRowProps {
   guidance?: Record<string, { en: string; th: string }>;
 }
 
+const REMARK_KEYS = [
+  'criteria1Remark',
+  'criteria2Remark',
+  'criteria3Remark',
+  'criteria4Remark',
+  'criteria5Remark',
+] as const;
+
 const RATING_KEYS: readonly [
   'criteria1Rating',
   'criteria2Rating',
@@ -78,6 +87,7 @@ function EvaluationCriteriaRow({
   const ratingName = RATING_KEYS[index];
 
   const { field: ratingField } = useController({ name: ratingName, control });
+  const { field: remarkField } = useController({ name: REMARK_KEYS[index], control });
 
   const rating = ratingField.value as number | null | undefined;
   const hasRating = rating != null && rating >= 1 && rating <= 5;
@@ -170,6 +180,21 @@ function EvaluationCriteriaRow({
             {t('deliveryTime.detectedDays', { days: (deliveryDetectedDays as number).toFixed(2) })}
           </span>
         )}
+      </td>
+      <td className="px-3 py-2.5">
+        {/* Stays editable when the rating is auto-locked: only `disabled` (Completed / read-only) gates it. */}
+        <Input
+          cell
+          name={remarkField.name}
+          ref={remarkField.ref}
+          value={remarkField.value ?? ''}
+          onChange={e => remarkField.onChange(e.target.value)}
+          onBlur={remarkField.onBlur}
+          maxLength={500}
+          disabled={disabled}
+          placeholder={t('detail.remarkPlaceholder')}
+          aria-label={t('detail.remarkAriaLabel', { criteria: criteriaLabel })}
+        />
       </td>
     </tr>
   );
