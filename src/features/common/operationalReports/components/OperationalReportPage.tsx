@@ -10,7 +10,8 @@ import { useMenuLabel } from '@shared/hooks/useMenuLabel';
 import { useOperationalReport, useReportExport } from '../api/operationalReportsApi';
 import type { BaseReportFilter, SortDir } from '../api/operationalReportsApi';
 import type { ReportConfig, ColumnDef } from '../config/reports';
-import ExportMenu from './ExportMenu';
+import ExportMenu, { type ExportFormat, type ExportLang } from './ExportMenu';
+import PdfLayoutDialog from './PdfLayoutDialog';
 import ReportFilterBar from './ReportFilterBar';
 import LongTextCell from './LongTextCell';
 
@@ -212,6 +213,11 @@ function OperationalReportPage({ config }: OperationalReportPageProps) {
     sortDir,
   });
 
+  // PDF waits for the layout dialog, so the menu's language choice is held until it confirms.
+  const [pdfDialog, setPdfDialog] = useState<{ lang?: ExportLang } | null>(null);
+  const handleExport = (format: ExportFormat, lang?: ExportLang) =>
+    format === 'pdf' ? setPdfDialog({ lang }) : exportReport(format, lang);
+
   const rows = data?.items ?? [];
   const totalCount = data?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
@@ -227,7 +233,7 @@ function OperationalReportPage({ config }: OperationalReportPageProps) {
         subtitle={`${totalCount.toLocaleString()} ${totalCount === 1 ? 'record' : 'records'}`}
         rightIcon={
           <ExportMenu
-            onExport={exportReport}
+            onExport={handleExport}
             isExporting={isExporting}
             hasThaiHeaders={columns.some(c => c.labelTh)}
           />
@@ -367,6 +373,15 @@ function OperationalReportPage({ config }: OperationalReportPageProps) {
           />
         </div>
       )}
+
+      <PdfLayoutDialog
+        isOpen={pdfDialog !== null}
+        onClose={() => setPdfDialog(null)}
+        onExport={layout => {
+          void exportReport('pdf', pdfDialog?.lang, layout);
+          setPdfDialog(null);
+        }}
+      />
     </div>
   );
 }

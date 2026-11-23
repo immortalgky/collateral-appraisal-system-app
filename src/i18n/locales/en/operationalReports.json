@@ -1,0 +1,26 @@
+{
+  "pdf": {
+    "title": "PDF settings",
+    "orientation": {
+      "label": "Orientation",
+      "portrait": "Portrait",
+      "landscape": "Landscape"
+    },
+    "overflow": {
+      "label": "When columns don't fit",
+      "fit": "Fit to page width",
+      "split": "Continue columns on next page",
+      "fitHelp": "All columns on one page width; the font shrinks automatically if needed.",
+      "splitHelp": "Columns that don't fit continue on the next pages; key columns such as Appraisal No. repeat where the report has them."
+    },
+    "fontSize": {
+      "label": "Font size",
+      "option": "{{n}} px",
+      "custom": "Custom",
+      "customLabel": "Custom font size",
+      "fitHelp": "With \"Fit to page width\", this is the maximum size: the table shrinks automatically (down to {{min}} px) if the columns don't fit. The title, filters and sign-offs use this size.",
+      "hint": "Allowed {{min}}–{{max}} px",
+      "error": "Font size must be {{min}}–{{max}} px"
+    }
+  }
+}

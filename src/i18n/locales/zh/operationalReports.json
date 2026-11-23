@@ -1,0 +1,26 @@
+{
+  "pdf": {
+    "title": "PDF 设置",
+    "orientation": {
+      "label": "纸张方向",
+      "portrait": "纵向",
+      "landscape": "横向"
+    },
+    "overflow": {
+      "label": "列放不下时",
+      "fit": "缩放以适应页宽",
+      "split": "多余的列移到下一页",
+      "fitHelp": "所有列保持在同一页宽内，必要时字体会自动缩小。",
+      "splitHelp": "放不下的列会移到后续页面；评估编号等关键列会在包含它们的报表中重复显示。"
+    },
+    "fontSize": {
+      "label": "字体大小",
+      "option": "{{n}} px",
+      "custom": "自定义",
+      "customLabel": "自定义字体大小",
+      "fitHelp": "选择“缩放以适应页宽”时，这是最大字号：如果列放不下，表格会自动缩小（最小 {{min}} px）。标题、筛选条件和签名栏使用此字号。",
+      "hint": "可输入 {{min}}–{{max}} px",
+      "error": "字体大小必须在 {{min}}–{{max}} px 之间"
+    }
+  }
+}

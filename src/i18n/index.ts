@@ -44,6 +44,7 @@ import enAppraisalDataCorrection from './locales/en/appraisalDataCorrection.json
 import enHangfire from './locales/en/hangfire.json';
 import enFailedMessages from './locales/en/failedMessages.json';
 import enTask from './locales/en/task.json';
+import enOperationalReports from './locales/en/operationalReports.json';
 
 // Thai and Chinese are bundled inline too, via an eager glob: a lazily loaded namespace
 // suspends the first component that uses it, and a suspend on a task page hides and
@@ -108,6 +109,7 @@ export const resources = {
     hangfire: enHangfire,
     failedMessages: enFailedMessages,
     task: enTask,
+    operationalReports: enOperationalReports,
   },
   // A namespace with no th/zh file (zh has several) falls back to `en` per key.
   th: bundledNamespaces(thFiles),

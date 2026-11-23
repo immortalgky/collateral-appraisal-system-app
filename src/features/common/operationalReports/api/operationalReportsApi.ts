@@ -77,9 +77,49 @@ export function useOperationalReport<T extends AnyReportRow = AnyReportRow>(
 export type ExportFormat = 'xlsx' | 'csv' | 'pdf';
 export type ExportLang = 'th' | 'en';
 
+export interface PdfLayout {
+  orientation: 'portrait' | 'landscape';
+  overflow: 'fit' | 'split';
+  fontSize: number;
+}
+
+export const PDF_FONT_MIN = 6;
+export const PDF_FONT_MAX = 16;
+const DEFAULT_PDF_LAYOUT: PdfLayout = { orientation: 'landscape', overflow: 'fit', fontSize: 11 };
+const PDF_LAYOUT_KEY = 'operationalReports.pdfLayout';
+
+/** The last PDF choice, shared by every report; defaults on missing or bad data. */
+export function loadPdfLayout(): PdfLayout {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PDF_LAYOUT_KEY) ?? 'null');
+    if (
+      (raw?.orientation === 'portrait' || raw?.orientation === 'landscape') &&
+      (raw.overflow === 'fit' || raw.overflow === 'split') &&
+      Number.isInteger(raw.fontSize) &&
+      raw.fontSize >= PDF_FONT_MIN &&
+      raw.fontSize <= PDF_FONT_MAX
+    )
+      return { orientation: raw.orientation, overflow: raw.overflow, fontSize: raw.fontSize };
+  } catch {
+    // unreadable storage or JSON: fall through to the defaults
+  }
+  return DEFAULT_PDF_LAYOUT;
+}
+
+export function savePdfLayout(layout: PdfLayout) {
+  try {
+    localStorage.setItem(PDF_LAYOUT_KEY, JSON.stringify(layout));
+  } catch {
+    // storage full or blocked: the choice just isn't remembered
+  }
+}
+
 interface UseReportExportReturn {
-  /** `lang` is sent only by reports that have Thai headers; the server treats a missing one as English. */
-  exportReport: (format: ExportFormat, lang?: ExportLang) => Promise<void>;
+  /**
+   * `lang` is sent only by reports that have Thai headers; the server treats a missing one as
+   * English. `pdfLayout` applies to the pdf format only.
+   */
+  exportReport: (format: ExportFormat, lang?: ExportLang, pdfLayout?: PdfLayout) => Promise<void>;
   isExporting: boolean;
 }
 
@@ -98,7 +138,7 @@ export function useReportExport(
   const [isExporting, setIsExporting] = useState(false);
 
   const exportReport = useCallback(
-    async (format: ExportFormat, lang?: ExportLang) => {
+    async (format: ExportFormat, lang?: ExportLang, pdfLayout?: PdfLayout) => {
       if (isExportingRef.current) return;
       isExportingRef.current = true;
       setIsExporting(true);
@@ -132,6 +172,11 @@ export function useReportExport(
         if (filter.aoCode) exportParams.aoCode = filter.aoCode;
         if (filter.appraisalType) exportParams.appraisalType = filter.appraisalType;
         if (filter.feeType) exportParams.feeType = filter.feeType;
+        if (format === 'pdf' && pdfLayout) {
+          exportParams.orientation = pdfLayout.orientation;
+          exportParams.overflow = pdfLayout.overflow;
+          exportParams.fontSize = pdfLayout.fontSize;
+        }
         const params = exportParams;
 
         // The export is generated on demand — minutes of server work before the first byte on a
