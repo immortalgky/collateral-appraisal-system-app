@@ -96,19 +96,19 @@ export function WQSRSQSection({
     // this row bold in both states; the red-warning treatment now lives solely in the
     // summary's ตรวจทาน card (WQSValueRangeCard.tsx), not duplicated here.
     {
-      label: 'Coefficient of decision',
+      label: t('wqs.regression.coefficientOfDecision'),
       value: coefficientOfDecision,
       decimals: 4,
       emphasize: true,
     },
-    { label: 'Standard error', value: standardError, decimals: 2 },
-    { label: 'Intersection point', value: intersectionPoint, decimals: 2 },
-    { label: 'Slope', value: slope, decimals: 2 },
+    { label: t('wqs.regression.standardError'), value: standardError, decimals: 2 },
+    { label: t('wqs.regression.intersectionPoint'), value: intersectionPoint, decimals: 2 },
+    { label: t('wqs.regression.slope'), value: slope, decimals: 2 },
     // "Final value" is the one row the mock sets apart — font-semibold (600) — every
     // other row (including its own label) stays font-medium (500).
-    { label: 'Final value', value: finalValue, decimals: 2, emphasize: true },
-    { label: 'Lowest estimate', value: lowestEstimate, decimals: 2 },
-    { label: 'Highest estimate', value: highestEstimate, decimals: 2 },
+    { label: t('wqs.regression.finalValue'), value: finalValue, decimals: 2, emphasize: true },
+    { label: t('wqs.regression.lowestEstimate'), value: lowestEstimate, decimals: 2 },
+    { label: t('wqs.regression.highestEstimate'), value: highestEstimate, decimals: 2 },
   ];
 
   return (

@@ -801,7 +801,7 @@ export const SaleAdjustmentGridScoringSection = ({
                   <tr>
                     <td className={clsx('bg-(--palette-surface)', leftColumnBody, bgGradient)}>
                       <div className={'flex flex-rows justify-between items-center'}>
-                        <span>{t('saleAdjustmentGrid.rows.adjustedOfferingPriceLabel')}</span>
+                        <span>{t('saleAdjustmentGrid.rows.offeringPriceAdjustmentPct')}</span>
                         <span>{t('saleAdjustmentGrid.rows.percentUnit')}</span>
                       </div>
                     </td>
@@ -841,8 +841,7 @@ export const SaleAdjustmentGridScoringSection = ({
                   <tr>
                     <td className={clsx('bg-(--palette-surface)', leftColumnBody, bgGradient)}>
                       <div className={'flex flex-rows justify-between items-center'}>
-                        <span>{t('saleAdjustmentGrid.rows.adjustedOfferingPriceLabel')}</span>
-                        <span>{t('saleAdjustmentGrid.rows.amountUnit')}</span>
+                        <span>{t('saleAdjustmentGrid.rows.adjustedOfferingPriceManual')}</span>
                       </div>
                     </td>
                     <td className={clsx('bg-(--palette-surface)', collateralColumnBody)}></td>
@@ -941,8 +940,8 @@ export const SaleAdjustmentGridScoringSection = ({
                   <tr>
                     <td className={clsx('bg-(--palette-surface)', leftColumnBody, bgGradient)}>
                       <div className={'flex flex-rows justify-between items-center'}>
-                        <span>{t('saleAdjustmentGrid.rows.adjustedPeriod')}</span>
-                        <span>{t('saleAdjustmentGrid.rows.percentUnit')}</span>
+                        <span>{t('saleAdjustmentGrid.rows.timeAdjustment')}</span>
+                        <span>{t('saleAdjustmentGrid.rows.percentPerYearUnit')}</span>
                       </div>
                     </td>
                     <td className={clsx('bg-(--palette-surface)', collateralColumnBody)}></td>
@@ -971,7 +970,7 @@ export const SaleAdjustmentGridScoringSection = ({
                   <tr>
                     <td className={clsx('bg-(--palette-surface)', leftColumnBody, bgGradient)}>
                       <div className="flex flex-rows justify-between items-center">
-                        <span>{t('saleAdjustmentGrid.rows.cumulativeAdjustedPeriod')}</span>
+                        <span>{t('saleAdjustmentGrid.rows.cumulativeTimeAdjustmentPct')}</span>
                         <span>{t('saleAdjustmentGrid.rows.percentUnit')}</span>
                       </div>
                     </td>
@@ -1010,7 +1009,7 @@ export const SaleAdjustmentGridScoringSection = ({
                     puts font-medium on every label in this column. */}
                   <tr>
                     <td className={clsx('bg-(--palette-surface-2) font-semibold', leftColumnBody)}>
-                      <span>{t('saleAdjustmentGrid.rows.adjustedValueLabel')}</span>
+                      <span>{t('saleAdjustmentGrid.rows.netPriceAfterAdjustment')}</span>
                     </td>
                     <td className={clsx('bg-(--palette-surface-2)', collateralColumnBody)}></td>
                     {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex) => {
