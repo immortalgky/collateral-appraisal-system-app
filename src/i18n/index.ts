@@ -41,6 +41,7 @@ import enCompanyRoundRobinConfig from './locales/en/companyRoundRobinConfig.json
 import enJobSchedules from './locales/en/jobSchedules.json';
 import enAddressMaster from './locales/en/addressMaster.json';
 import enAppraisalDataCorrection from './locales/en/appraisalDataCorrection.json';
+import enAppraisalSuspension from './locales/en/appraisalSuspension.json';
 import enHangfire from './locales/en/hangfire.json';
 import enFailedMessages from './locales/en/failedMessages.json';
 import enTask from './locales/en/task.json';
@@ -106,6 +107,7 @@ export const resources = {
     jobSchedules: enJobSchedules,
     addressMaster: enAddressMaster,
     appraisalDataCorrection: enAppraisalDataCorrection,
+    appraisalSuspension: enAppraisalSuspension,
     hangfire: enHangfire,
     failedMessages: enFailedMessages,
     task: enTask,

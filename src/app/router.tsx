@@ -235,6 +235,9 @@ const AppraisalDataCorrectionSearchPage = lazy(
 const AppraisalDataCorrectionDetailPage = lazy(
   () => import('@/features/appraisalDataCorrection/pages/AppraisalDataCorrectionDetailPage'),
 );
+const AppraisalSuspensionPage = lazy(
+  () => import('@/features/appraisalSuspension/pages/AppraisalSuspensionPage'),
+);
 const SupportingDataMaintenanceListPage = lazy(() =>
   import('@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceListPage').then(
     m => ({
@@ -751,7 +754,9 @@ export const router = createBrowserRouter([
       // ─── Service Quality Evaluation Routes ──────────────────────────────────
       {
         path: 'standalone/service-quality-evaluation',
-        element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="REPORT_EVALUATION_VIEW" />,
+        element: (
+          <RoleProtectedRoute allowedRoles={[]} requiredPermission="REPORT_EVALUATION_VIEW" />
+        ),
         children: [
           { index: true, element: <ServiceQualityEvaluationListPage /> },
           { path: ':appraisalId', element: <ServiceQualityEvaluationDetailPage /> },
@@ -787,6 +792,12 @@ export const router = createBrowserRouter([
           { index: true, element: <AppraisalDataCorrectionSearchPage /> },
           { path: ':appraisalId', element: <AppraisalDataCorrectionDetailPage /> },
         ],
+      },
+      // Appraisal Suspension
+      {
+        path: 'standalone/appraisal-suspension',
+        element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="APPRAISAL_SUSPENSION" />,
+        children: [{ index: true, element: <AppraisalSuspensionPage /> }],
       },
       // ─── Periodical Reappraisal (AS400) ────────────────────────────────────
       {

@@ -1,0 +1,52 @@
+{
+  "page": {
+    "title": "ระงับการใช้ผลประเมิน",
+    "subtitle": "ระงับไม่ให้ช่องทางภายนอกดึงผลประเมินของงานที่เสร็จสิ้นแล้ว",
+    "searchPlaceholder": "ค้นหาด้วยเลขที่งานประเมิน",
+    "filter": {
+      "All": "ทั้งหมด",
+      "Active": "ใช้งาน",
+      "Suspended": "ถูกระงับ"
+    },
+    "clearSearch": "ล้างคำค้นหา",
+    "resultCount_one": "{{count}} รายการ",
+    "resultCount_other": "{{count}} รายการ"
+  },
+  "table": {
+    "col": {
+      "appraisalNumber": "เลขที่งานประเมิน",
+      "customerName": "ชื่อลูกค้า",
+      "appraisalType": "ประเภทงานประเมิน",
+      "appraisedValue": "ราคาประเมิน",
+      "completedAt": "วันที่เสร็จสิ้น",
+      "status": "สถานะ",
+      "actions": "การดำเนินการ"
+    },
+    "empty": "ไม่พบงานประเมิน",
+    "suspended": "ถูกระงับ",
+    "active": "ใช้งาน",
+    "prompt": "กรุณาค้นหาเลขที่งานประเมิน"
+  },
+  "action": {
+    "suspend": "ระงับ",
+    "reactivate": "ยกเลิกการระงับ",
+    "cancel": "ยกเลิก",
+    "saving": "กำลังบันทึก...",
+    "suspendTitle": "ยืนยันการระงับงานประเมิน {{number}}",
+    "reactivateTitle": "ยืนยันการยกเลิกการระงับงานประเมิน {{number}}",
+    "suspendWarning": "ช่องทางภายนอกจะดึงผลประเมินของงานนี้ไม่ได้ จนกว่าจะยกเลิกการระงับ",
+    "reactivateWarning": "ช่องทางภายนอกจะดึงผลประเมินของงานนี้ได้อีกครั้ง",
+    "reasonLabel": "เหตุผล",
+    "reasonPlaceholder": "ระบุเหตุผลในการดำเนินการ",
+    "suspendSuccess": "ระงับงานประเมิน {{number}} แล้ว",
+    "reactivateSuccess": "ยกเลิกการระงับงานประเมิน {{number}} แล้ว",
+    "failed": "บันทึกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"
+  },
+  "history": {
+    "title": "ประวัติการระงับ: {{number}}",
+    "empty": "ไม่มีประวัติการระงับ",
+    "toSuspended": "ใช้งาน → ถูกระงับ",
+    "toReactivated": "ถูกระงับ → ใช้งาน",
+    "open": "ดูประวัติการระงับ"
+  }
+}
