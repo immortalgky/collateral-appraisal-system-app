@@ -1,0 +1,52 @@
+{
+  "page": {
+    "title": "估价暂停",
+    "subtitle": "暂停外部渠道获取已完成估价的结果",
+    "searchPlaceholder": "按估价编号搜索",
+    "filter": {
+      "All": "全部",
+      "Active": "正常",
+      "Suspended": "已暂停"
+    },
+    "clearSearch": "清除搜索",
+    "resultCount_one": "{{count}} 条估价记录",
+    "resultCount_other": "{{count}} 条估价记录"
+  },
+  "table": {
+    "col": {
+      "appraisalNumber": "估价编号",
+      "customerName": "客户",
+      "appraisalType": "估价类型",
+      "appraisedValue": "估价金额",
+      "completedAt": "完成日期",
+      "status": "状态",
+      "actions": "操作"
+    },
+    "empty": "未找到估价记录",
+    "suspended": "已暂停",
+    "active": "正常",
+    "prompt": "请搜索估价编号"
+  },
+  "action": {
+    "suspend": "暂停",
+    "reactivate": "恢复",
+    "cancel": "取消",
+    "saving": "正在保存...",
+    "suspendTitle": "暂停估价 {{number}}？",
+    "reactivateTitle": "恢复估价 {{number}}？",
+    "suspendWarning": "在恢复之前，外部渠道将无法获取此估价的结果。",
+    "reactivateWarning": "外部渠道将可以重新获取此估价的结果。",
+    "reasonLabel": "原因",
+    "reasonPlaceholder": "请输入执行此操作的原因",
+    "suspendSuccess": "估价 {{number}} 已暂停",
+    "reactivateSuccess": "估价 {{number}} 已恢复",
+    "failed": "保存失败，请重试。"
+  },
+  "history": {
+    "title": "暂停记录：{{number}}",
+    "empty": "暂无暂停记录",
+    "toSuspended": "正常 → 已暂停",
+    "toReactivated": "已暂停 → 正常",
+    "open": "查看暂停记录"
+  }
+}

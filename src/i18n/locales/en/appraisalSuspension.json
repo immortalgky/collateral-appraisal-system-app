@@ -1,0 +1,52 @@
+{
+  "page": {
+    "title": "Appraisal Suspension",
+    "subtitle": "Suspend external channels from retrieving a Completed appraisal's result",
+    "searchPlaceholder": "Search by appraisal number",
+    "filter": {
+      "All": "All",
+      "Active": "Active",
+      "Suspended": "Suspended"
+    },
+    "clearSearch": "Clear search",
+    "resultCount_one": "{{count}} appraisal",
+    "resultCount_other": "{{count}} appraisals"
+  },
+  "table": {
+    "col": {
+      "appraisalNumber": "Appraisal No.",
+      "customerName": "Customer",
+      "appraisalType": "Appraisal Type",
+      "appraisedValue": "Appraised Value",
+      "completedAt": "Completed Date",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "empty": "No appraisals found",
+    "suspended": "Suspended",
+    "active": "Active",
+    "prompt": "Please search for an appraisal number"
+  },
+  "action": {
+    "suspend": "Suspend",
+    "reactivate": "Reactivate",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "suspendTitle": "Suspend appraisal {{number}}?",
+    "reactivateTitle": "Reactivate appraisal {{number}}?",
+    "suspendWarning": "External channels will not be able to retrieve this appraisal's result until it is reactivated.",
+    "reactivateWarning": "External channels will be able to retrieve this appraisal's result again.",
+    "reasonLabel": "Reason",
+    "reasonPlaceholder": "Enter the reason for this action",
+    "suspendSuccess": "Appraisal {{number}} has been suspended",
+    "reactivateSuccess": "Appraisal {{number}} has been reactivated",
+    "failed": "Could not save. Please try again."
+  },
+  "history": {
+    "title": "Suspension history: {{number}}",
+    "empty": "No suspension history",
+    "toSuspended": "Active → Suspended",
+    "toReactivated": "Suspended → Active",
+    "open": "View suspension history"
+  }
+}
